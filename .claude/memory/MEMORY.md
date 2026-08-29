@@ -1,0 +1,2 @@
+- [Preservar tipagem do consumidor](feedback_preserve_consumer_typing.md) — refatorar tipos do componente sem quebrar inferência no uso é parte de "corrigir tipagem"
+- [Hierarquia do `ui` + `defaultUi`](feedback_ui_hierarchy_and_defaultui.md) — agrupar `ui` hierarquicamente e derivar `Props.ui` de `DeepPartial<typeof defaultUi>` nos Utils

@@ -1,0 +1,15 @@
+{
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+        "source.format.oxc": "always",
+        "source.fixAll.oxc": "always"
+    },
+    "tailwindCSS.experimental.classRegex": [
+        ["(?:defineDefaults|defineAppConfig)\\(([\\s\\S]+?)\\);", "\"([^\"]*)\""],
+        ["(?:defineDefaults|defineAppConfig)\\(([\\s\\S]+?)\\);", "'([^']*)'"],
+        ["(?:defineDefaults|defineAppConfig)\\(([\\s\\S]+?)\\);", "`([^`]*)`"]
+    ],
+    "oxc.fixKind": "safe_fix_or_suggestion",
+    "oxc.trace.server": "messages"
+}

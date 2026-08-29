@@ -1,0 +1,130 @@
+<template>
+    <div :class="props.ui?.container">
+        <RUtilsLabel />
+
+        <label
+            :class="[
+                props.ui?.group?.container,
+                props.placeholder ? props.ui?.group?.ifPlaceholder : ''
+            ]"
+        >
+
+            {{ props.placeholder }}
+
+            <span :class="props.ui?.group?.button?.container">
+                <input
+                    v-model="model"
+                    type="checkbox"
+                    :class="props.ui?.group?.button?.input"
+                >
+                <span :class="props.ui?.group?.button?.indicator">
+                    <Transition
+                        :enterActiveClass="props.ui?.transition?.enterActiveClass"
+                        :enterToClass="props.ui?.transition?.enterToClass"
+                        :enterFromClass="props.ui?.transition?.enterFromClass"
+                        :leaveActiveClass="props.ui?.transition?.leaveActiveClass"
+                        :leaveToClass="props.ui?.transition?.leaveToClass"
+                        :leaveFromClass="props.ui?.transition?.leaveFromClass"
+                        mode="out-in"
+                    >
+                        <Icon
+                            v-if="_icon"
+                            :key="_icon"
+                            :name="_icon"
+                        />
+                    </Transition>
+                </span>
+            </span>
+        </label>
+
+        <RUtilsDescription />
+        <RUtilsError />
+    </div>
+</template>
+
+<script lang="ts">
+    import type { Element } from "#rform/types";
+    import { defineDefaults } from "#rform/utils";
+    import { useInjection } from "#rform/composables";
+    import type Utils from "#rform/types/components/utils/props";
+    import { computed } from "vue";
+
+    export const defaults = defineDefaults({
+        ui: {
+            container: "flex grow flex-col gap-1",
+            group: {
+                container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
+                ifPlaceholder: "rounded-xl border border-background-100 p-2",
+                button: {
+                    container: "relative flex w-11 flex-row rounded-full bg-background-100 p-0.5 contain-content",
+                    input: "peer pointer-events-none absolute -z-50 opacity-0",
+                    indicator: `
+                        flex size-5 flex-row items-center justify-center rounded-full bg-current/20
+                        p-0.5 transition-all
+                        peer-checked:translate-x-full peer-checked:bg-success
+                    `
+                }
+            },
+            transition: {
+                enterActiveClass: "transition-all duration-500",
+                enterToClass: "",
+                enterFromClass: "opacity-0",
+                leaveActiveClass: "transition-all duration-500",
+                leaveToClass: "opacity-0",
+                leaveFromClass: ""
+            }
+        },
+        default: false
+    });
+
+    export type IconConfig = {
+        loading?: string
+        true?: string
+        false?: string
+    };
+
+    export type Props = Element<typeof defaults>
+        & Utils["Description"]
+        & Utils["Error"]
+        & Utils["Placeholder"]
+        & {
+            icon?: boolean | IconConfig
+        };
+</script>
+
+<script setup lang="ts">
+    const _props = withDefaults(defineProps<Props>(), {
+        icon: undefined,
+        required: undefined,
+        loading: undefined
+    });
+
+    const {
+        model,
+        props
+    } = await useInjection(_props);
+
+    const iconDefaults: Required<IconConfig> = {
+        loading: "loading",
+        true: "check",
+        false: ""
+    };
+
+    const _icon = computed(() => {
+        const config = props.value.icon;
+
+        if (config === false) {
+            return undefined;
+        }
+
+        const names = config && typeof config === "object"
+            ? { ...iconDefaults, ...config }
+            : iconDefaults;
+
+        if (props.value.loading) {
+            return names.loading;
+        }
+
+        return model.value ? names.true : names.false;
+    });
+</script>

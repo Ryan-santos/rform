@@ -1,0 +1,45 @@
+{
+    "name": "rform",
+    "version": "0.0.0",
+    "license": "MIT",
+    "type": "module",
+    "scripts": {
+        "prepack": "nuxt-module-build build",
+        "dev": "npm run dev:prepare && nuxi dev playground",
+        "dev:build": "nuxi build playground",
+        "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+        "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
+        "lint": "oxlint",
+        "test": "vitest run",
+        "test:watch": "vitest watch",
+        "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+    },
+    "peerDependencies": {
+        "zod": "^4.0.0"
+    },
+    "peerDependenciesMeta": {
+        "zod": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@floating-ui/vue": "^2.0.1",
+        "@nuxt/icon": "^2.5.1",
+        "@nuxt/module-builder": "^1.0.3",
+        "@nuxt/test-utils": "^4.2.0",
+        "@types/node": "^26.4.0",
+        "@vitest/coverage-v8": "^4.1.7",
+        "@vue/test-utils": "^2.5.0",
+        "eslint-plugin-better-tailwindcss": "^4.7.0",
+        "happy-dom": "^20.12.0",
+        "maska": "^3.2.0",
+        "nuxt": "^4.4.2",
+        "oxfmt": "^0.65.0",
+        "oxlint": "^1.80.0",
+        "oxlint-tsgolint": "^7.0.2001",
+        "playwright-core": "^1.62.1",
+        "tailwind-merge": "^3.6.0",
+        "vitest": "^4.1.7",
+        "zod": "^4.5.4"
+    }
+}

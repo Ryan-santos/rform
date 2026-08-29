@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(node -e \"const s=require\\(''fs''\\).readFileSync\\(''.claude/settings.local.json'',''utf8''\\); const j=JSON.parse\\(s\\); const cmd=j.hooks.PostToolUse[0].hooks[0].command; console.log\\(''Matcher:'', j.hooks.PostToolUse[0].matcher\\); console.log\\(''Command:'', cmd\\); console.log\\(''JSON: valid''\\)\")"
+    ]
+  },
+  "hooks": {}
+}

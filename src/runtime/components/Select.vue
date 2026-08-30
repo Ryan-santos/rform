@@ -148,7 +148,7 @@
     export type Props<
         Opts extends Options = OptArrayObj,
         Multiple extends boolean = false
-    > = Omit<Element<typeof defaults>, "modelValue" | "onUpdate:modelValue" | "default"> &
+    > = Omit<Element<typeof defaults, "select">, "modelValue" | "onUpdate:modelValue" | "default"> &
         Utils["Description"] &
         Utils["Dropdown"] &
         Utils["Error"] &
@@ -165,7 +165,7 @@
         };
 
     type InternalProps = Omit<
-        Element<typeof defaults>,
+        Element<typeof defaults, "select">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > & {
         options: Options;

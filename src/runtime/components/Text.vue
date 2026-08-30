@@ -14,7 +14,7 @@
                 <RUtilsPlaceholder />
                 <input
                     v-model="model"
-                    v-maska="props.mask"
+                    v-mask="mask"
                     :name="String(props.name)"
                     type="text"
                     :class="props.ui?.group?.field?.input"
@@ -40,10 +40,10 @@
 
 <script lang="ts">
     import type { Element } from "#rform/types";
-    import type { MaskInputOptions } from "maska";
+    import type { Mask } from "#rform/types/presets";
     import { defineDefaults } from "#rform/utils";
     import { useInjection } from "#rform/composables";
-    import { vMaska } from "maska/vue";
+    import { vMask } from "#rform/utils";
     import type Utils from "#rform/types/components/utils/props";
 
     export const defaults = defineDefaults({
@@ -64,14 +64,14 @@
         default: ""
     });
 
-    export type Props = Element<typeof defaults>
+    export type Props = Element<typeof defaults, "text">
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Loading"]
         & Utils["Length"]
         & Utils["Placeholder"]
         & {
-            mask?: MaskInputOptions | string
+            mask?: Mask
         };
 </script>
 
@@ -82,6 +82,7 @@
     });
 
     const {
+        mask,
         model,
         props
     } = await useInjection(_props);

@@ -6,6 +6,32 @@
             class="grid auto-rows-min grid-cols-4 gap-6"
         >
             <RText
+                name="cpf"
+                label="cpf — mask e rule pelo nome do preset"
+                mask="brCpf"
+                rule="brCpf"
+            />
+            <RText
+                name="composto"
+                label="composto — array de presets, um com args nomeados"
+                :rule="['required', { name: 'min', min: 3 }]"
+            />
+            <RText
+                name="inscEst"
+                label="inscEst — preset do usuário, aninhado em br/"
+                :rule="{ name: 'brInscEst', uf: 'SP' }"
+            />
+            <RText
+                name="dinheiro"
+                label="dinheiro — mask do usuário (app/rform/presets/masks)"
+                mask="dinheiro"
+            />
+            <RTextarea
+                name="dinheiroArea"
+                label="dinheiroArea — mesma mask, agora em textarea"
+                mask="dinheiro"
+            />
+            <RText
                 name="text"
                 type="text"
                 label="texto simples"
@@ -19,7 +45,7 @@
                         }
                     }
                 }"
-                :rule="(value) => (value !== '1' ? 'oxe' : undefined)"
+                :rule="({ value }) => (value !== '1' ? 'oxe' : undefined)"
             />
             <RText
                 name="whatsapp"

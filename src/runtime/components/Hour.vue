@@ -25,7 +25,7 @@
                 >
                     <input
                         v-model="typed[0]"
-                        v-maska="mask"
+                        v-mask="mask"
                         :name="String(props.name)"
                         type="text"
                         inputmode="numeric"
@@ -37,7 +37,7 @@
                         <span :class="props.ui?.group?.field?.separator"> até </span>
                         <input
                             v-model="typed[1]"
-                            v-maska="mask"
+                            v-mask="mask"
                             :name="String(props.name)"
                             type="text"
                             inputmode="numeric"
@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts">
-    import { vMaska } from "maska/vue";
+    import { vMask } from "#rform/utils";
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useInjection } from "#rform/composables";
@@ -144,7 +144,7 @@
         default: ""
     });
 
-    export type Props = Element<typeof defaults, TimeValue> &
+    export type Props = Element<typeof defaults, "hour", TimeValue> &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &

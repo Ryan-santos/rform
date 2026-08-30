@@ -46,7 +46,7 @@
                             <input
                                 v-else
                                 v-model="typed[0]"
-                                v-maska="mask"
+                                v-mask="mask"
                                 :name="String(props.name)"
                                 type="text"
                                 :placeholder="placeholderHint"
@@ -57,7 +57,7 @@
                                 <span :class="props.ui?.group?.field?.separator"> até </span>
                                 <input
                                     v-model="typed[1]"
-                                    v-maska="mask"
+                                    v-mask="mask"
                                     :name="String(props.name)"
                                     type="text"
                                     :placeholder="placeholderHint"
@@ -101,7 +101,7 @@
 </template>
 
 <script lang="ts">
-    import { vMaska } from "maska/vue";
+    import { vMask } from "#rform/utils";
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useInjection } from "#rform/composables";
@@ -155,7 +155,7 @@
     });
 
     export type Props<M extends Mode = "single"> = Omit<
-        Element<typeof defaults>,
+        Element<typeof defaults, "date">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > &
         Utils["Description"] &
@@ -173,7 +173,7 @@
         };
 
     type InternalProps = Omit<
-        Element<typeof defaults>,
+        Element<typeof defaults, "date">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > &
         Utils["Description"] &

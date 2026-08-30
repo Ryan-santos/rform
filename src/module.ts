@@ -11,7 +11,9 @@ import {
 } from "nuxt/kit";
 
 import { readdir } from "node:fs/promises";
-import { basename } from "node:path";
+import { basename, join } from "node:path";
+
+import { collectPresets } from "./presets";
 
 import {
     name,
@@ -167,6 +169,24 @@ export default defineNuxtModule({
             ].join("\n")
         });
 
+        /**
+         * Standalone on purpose: `available` in a rule preset is typed against
+         * this, and the presets are themselves read back by `types/presets.d.ts`.
+         * Deriving it from the component Props would close that loop.
+         */
+        addTypeTemplate({
+            filename: `${name}/types/fields.d.ts`,
+            write: true,
+            getContents: () => [
+                "// auto-generated — the field type each component maps to",
+                "export type FieldType =",
+                ...fieldComponents.map(({ name }, index) =>
+                    `    | ${JSON.stringify(name.toLowerCase())}${
+                        index === fieldComponents.length - 1 ? ";" : ""
+                    }`)
+            ].join("\n")
+        });
+
         addTypeTemplate({
             filename: `${name}/types/schema.d.ts`,
             write: true,
@@ -174,22 +194,24 @@ export default defineNuxtModule({
                 const fieldNames = fieldComponents.map(c => c.name);
                 return [
                     `import type Components from "./components";`,
+                    `import type { Rule } from "./presets";`,
+                    `import type { FieldType } from "./fields";`,
                     `import type { ZodType, infer as zInfer } from "zod";`,
                     ``,
-                    `type Base<P> = Omit<P, "modelValue" | "onUpdate:modelValue" | "ui" | "name" | "error" | "loading" | "default" | "rule"> & {`,
-                    `    rule?: ZodType;`,
+                    `type Base<P, C> = Omit<P, "modelValue" | "onUpdate:modelValue" | "ui" | "name" | "error" | "loading" | "default" | "rule"> & {`,
+                    `    rule?: Rule<C>;`,
                     `    default?: unknown;`,
                     `    label?: string;`,
                     `};`,
                     ``,
-                    `export type SlotField = { slot: string; rule?: ZodType };`,
+                    `export type SlotField = { slot: string; rule?: Rule };`,
                     ``,
                     `export type Schema = Record<string, FieldConfig | SlotField>;`,
                     ``,
                     ...fieldNames.map((n) => {
                         const t = n.toLowerCase();
                         const extra = containerChildren[n] ? `; children: ${containerChildren[n]}` : "";
-                        return `export type Field${n} = Base<Components["${n}"]> & { type: "${t}"${extra} };`;
+                        return `export type Field${n} = Base<Components["${n}"], "${t}"> & { type: "${t}"${extra} };`;
                     }),
                     ``,
                     `export type FieldConfig =`,
@@ -208,8 +230,157 @@ export default defineNuxtModule({
                     `    C extends { type: "object"; children: infer S extends Schema } ? InferData<S> :`,
                     `    C extends { rule: infer R extends ZodType } ? zInfer<R> : unknown;`,
                     ``,
-                    `export type FieldType = FieldConfig["type"];`
+                    `export type { FieldType };`
                 ].join("\n");
+            }
+        });
+
+        const presetRoots = [
+            resolve("runtime/presets"),
+            join(nuxt.options.srcDir, name, "presets")
+        ];
+
+        const specifier = (path: string) =>
+            JSON.stringify(path.split("\\").join("/").replace(/\.[tj]s$/, ""));
+
+        const scanPresets = async (root: string, kind: "rules" | "masks") => {
+            const dir = join(root, kind);
+            const files = await readdir(dir, { recursive: true }).catch(() => [] as string[]);
+
+            try {
+                return collectPresets(files).map(preset => ({
+                    name: preset.name,
+                    path: join(dir, preset.file)
+                }));
+            }
+            catch (error) {
+                // Nuxt reports a template failure without its cause, so the
+                // collision details would otherwise never reach the terminal.
+                console.error((error as Error).message, `\n  in ${dir}`);
+                throw error;
+            }
+        };
+
+        /**
+         * Built-ins first, so a user preset with the same name wins.
+         */
+        const presetsOf = async (kind: "rules" | "masks") => {
+            const merged = new Map<string, string>();
+
+            for (const root of presetRoots) {
+                for (const preset of await scanPresets(root, kind)) {
+                    merged.set(preset.name, preset.path);
+                }
+            }
+
+            return [...merged];
+        };
+
+        addTemplate({
+            filename: `${name}/presets.ts`,
+            write: true,
+            getContents: async () => {
+                const kinds = {
+                    rules: await presetsOf("rules"),
+                    masks: await presetsOf("masks")
+                };
+
+                const lines = (kind: "rules" | "masks") => {
+                    const prefix = kind === "rules" ? "_rule" : "_mask";
+
+                    return {
+                        imports: kinds[kind].map(([, path], index) =>
+                            `import ${prefix}${index} from ${specifier(path)};`),
+                        record: kinds[kind].map(([preset], index) =>
+                            `    ${JSON.stringify(preset)}: ${prefix}${index}`).join(",\n")
+                    };
+                };
+
+                const rules = lines("rules");
+                const masks = lines("masks");
+
+                return [
+                    "// auto-generated — preset modules discovered on disk",
+                    ...rules.imports,
+                    ...masks.imports,
+                    "",
+                    "export const rules = {",
+                    rules.record,
+                    "};",
+                    "",
+                    "export const masks = {",
+                    masks.record,
+                    "};",
+                    "",
+                    "export default { rules, masks };"
+                ].join("\n");
+            }
+        });
+
+        addTypeTemplate({
+            filename: `${name}/types/presets.d.ts`,
+            write: true,
+            getContents: async () => {
+                const entries = (list: Array<[string, string]>) =>
+                    list.map(([preset, path]) =>
+                        `    ${JSON.stringify(preset)}: typeof import(${specifier(path)}).default;`);
+
+                return [
+                    `import type { ZodType } from "zod";`,
+                    `import type { MaskInputOptions } from "maska";`,
+                    ``,
+                    `type Rules = {`,
+                    ...entries(await presetsOf("rules")),
+                    `};`,
+                    ``,
+                    `type Masks = {`,
+                    ...entries(await presetsOf("masks")),
+                    `};`,
+                    ``,
+                    `export type RuleName = keyof Rules;`,
+                    `export type MaskName = keyof Masks;`,
+                    ``,
+                    `export type Mask = MaskName | (string & {}) | MaskInputOptions;`,
+                    ``,
+                    `type BaseContext = { value: any; form: any };`,
+                    ``,
+                    `export type RuleFn = (context: BaseContext) => string | void | Promise<string | void>;`,
+                    ``,
+                    `/** Presets without \`available\` serve every field. */`,
+                    `type NamesFor<C> = {`,
+                    `    [K in keyof Rules]: Rules[K] extends { available: readonly (infer A)[] }`,
+                    `        ? (C extends A ? K : never)`,
+                    `        : K;`,
+                    `}[keyof Rules];`,
+                    ``,
+                    `/** What a preset's validation takes on top of \`value\` and \`form\`. */`,
+                    `type Args<K extends keyof Rules> = Rules[K]["validation"] extends (context: infer P) => any`,
+                    `    ? Omit<P, keyof BaseContext>`,
+                    `    : {};`,
+                    ``,
+                    `/** A preset taking arguments can only be referenced as \`{ name, ...args }\`. */`,
+                    `export type RuleRef<C = any> = {`,
+                    `    [K in NamesFor<C>]: {} extends Args<K>`,
+                    `        ? (K | ({ name: K } & Args<K>))`,
+                    `        : ({ name: K } & Args<K>);`,
+                    `}[NamesFor<C>];`,
+                    ``,
+                    `type Single<C> = RuleRef<C> | RuleFn | ZodType;`,
+                    ``,
+                    `export type Rule<C = any> = Single<C> | Array<Single<C>>;`
+                ].join("\n");
+            }
+        });
+
+        nuxt.hook("builder:watch", (event, path) => {
+            if (event !== "add" && event !== "unlink") {
+                return;
+            }
+
+            const absolute = join(nuxt.options.srcDir, path);
+
+            if (presetRoots.some(root => absolute.startsWith(root))) {
+                return nuxt.callHook("builder:generateApp");
             }
         });
 
@@ -252,6 +423,12 @@ export default defineNuxtModule({
             getContents: () =>
                 [
                     utils.map(({ name, path }) => `import ${name} from "${path}"`).join("\n"),
+                    "",
+                    // Named exports too, so `#rform/utils` is the single public
+                    // entry — `defineRule` and friends are imported, not global.
+                    // Extensionless: a `.ts` specifier needs
+                    // `allowImportingTsExtensions`, which a consumer app may not set.
+                    utils.map(({ path }) => `export * from ${specifier(path)}`).join("\n"),
                     "",
                     "export {",
                     `   ${utils.map(({ name }) => name).join(",\n   ")}`,

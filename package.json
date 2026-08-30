@@ -17,11 +17,6 @@
     "peerDependencies": {
         "zod": "^4.0.0"
     },
-    "peerDependenciesMeta": {
-        "zod": {
-            "optional": true
-        }
-    },
     "devDependencies": {
         "@floating-ui/vue": "^2.0.1",
         "@nuxt/icon": "^2.5.1",

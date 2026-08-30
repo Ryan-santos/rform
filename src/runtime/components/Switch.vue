@@ -83,7 +83,7 @@
         false?: string
     };
 
-    export type Props = Element<typeof defaults>
+    export type Props = Element<typeof defaults, "switch">
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Placeholder"]

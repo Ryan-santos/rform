@@ -133,7 +133,7 @@
                 </span>
                 <input
                     v-model="timeInputs[idx]"
-                    v-maska="timeMask"
+                    v-mask="timeMask"
                     type="text"
                     inputmode="numeric"
                     placeholder="hh:mm"
@@ -149,7 +149,7 @@
 
 <script lang="ts">
     import { computed, ref, watch } from "vue";
-    import { vMaska } from "maska/vue";
+    import { vMask } from "#rform/utils";
 
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";

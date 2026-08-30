@@ -29,7 +29,7 @@
     });
 
     export type Props<M extends Mode = "single"> = Omit<
-        Element<typeof defaults>,
+        Element<typeof defaults, "calendar">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > & Utils["Label"]
         & Utils["Error"]
@@ -42,7 +42,7 @@
         };
 
     type InternalProps = Omit<
-        Element<typeof defaults>,
+        Element<typeof defaults, "calendar">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > & Utils["Label"]
         & Utils["Error"]

@@ -14,7 +14,7 @@
                 <RUtilsPlaceholder />
                 <textarea
                     v-model="model"
-                    v-maska="props.mask"
+                    v-mask="mask"
                     :name="String(props.name)"
                     :rows="props.rows"
                     :class="props.ui?.group?.field?.textarea"
@@ -40,10 +40,10 @@
 
 <script lang="ts">
     import type { Element } from "#rform/types";
-    import type { MaskInputOptions } from "maska";
+    import type { Mask } from "#rform/types/presets";
     import { defineDefaults } from "#rform/utils";
     import { useInjection } from "#rform/composables";
-    import { vMaska } from "maska/vue";
+    import { vMask } from "#rform/utils";
     import type Utils from "#rform/types/components/utils/props";
 
     export const defaults = defineDefaults({
@@ -65,14 +65,14 @@
         rows: 3
     });
 
-    export type Props = Element<typeof defaults>
+    export type Props = Element<typeof defaults, "textarea">
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Loading"]
         & Utils["Length"]
         & Utils["Placeholder"]
         & {
-            mask?: MaskInputOptions | string
+            mask?: Mask
             rows?: number
         };
 </script>
@@ -84,6 +84,7 @@
     });
 
     const {
+        mask,
         model,
         props
     } = await useInjection(_props);

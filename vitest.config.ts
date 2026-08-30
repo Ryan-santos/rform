@@ -14,6 +14,7 @@ export default defineConfig({
                 resolve: {
                     alias: {
                         "#rform/composables": `${rformAliasRoot}/composables.ts`,
+                        "#rform/presets": `${rformAliasRoot}/presets.ts`,
                         "#rform/utils": `${rformAliasRoot}/utils.ts`,
                         "#rform/types/components/utils/props": `${rformAliasRoot}/types/components/utils/props.ts`,
                         "#rform/types/components/utils": `${rformAliasRoot}/types/components/utils/index.ts`,

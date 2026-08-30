@@ -1,22 +1,44 @@
 import { ref, type Ref } from "vue";
 import { z, type ZodType, type ZodObject } from "zod";
 import type { Schema, FieldConfig, InferData } from "#rform/types/schema";
+import { rules as presets } from "#rform/presets";
+import resolveRule from "../utils/resolveRule";
+import { isZodType, zodToFn } from "../utils/zod";
 
-function isZodType (value: unknown): value is ZodType {
-    return !!value
-        && typeof value === "object"
-        && "_def" in value
-        && "safeParse" in value
-        && typeof (value as { safeParse: unknown }).safeParse === "function";
+/**
+ * A preset validation may be async, so the aggregated object it produces has to
+ * be read with `safeParseAsync`. Zod-only schemas stay synchronous.
+ */
+function toZod (rule: unknown): ZodType {
+    if (rule === undefined || rule === null) {
+        return z.any();
+    }
+
+    if (isZodType(rule)) {
+        return rule as unknown as ZodType;
+    }
+
+    const validate = resolveRule(rule as never, presets as never);
+
+    if (!validate) {
+        return z.any();
+    }
+
+    return z.any().superRefine(async (value, ctx) => {
+        const error = await validate(value, undefined);
+
+        if (error) {
+            ctx.addIssue({ code: "custom", message: error });
+        }
+    });
 }
 
-function zodToFn (schema: ZodType) {
-    return (value: unknown) => {
-        const result = schema.safeParse(value);
-        if (!result.success) {
-            return result.error.issues[0]?.message;
-        }
-    };
+/**
+ * Only zod schemas need flattening — every other shape is resolved by the field
+ * itself, so it must survive untouched.
+ */
+function normalizeRule (rule: unknown) {
+    return isZodType(rule) ? zodToFn(rule) : rule;
 }
 
 function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
@@ -24,7 +46,7 @@ function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
 
     for (const [key, field] of Object.entries(schema)) {
         if ("slot" in field) {
-            shape[key] = field.rule ?? z.any();
+            shape[key] = toZod(field.rule);
             continue;
         }
 
@@ -37,19 +59,19 @@ function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
             const child = field.children;
 
             if ("slot" in child) {
-                shape[key] = z.array(child.rule ?? z.any());
+                shape[key] = z.array(toZod(child.rule));
             }
             else if (child.type === "object") {
                 shape[key] = z.array(aggregateRules(child.children));
             }
             else {
-                shape[key] = z.array(child.rule ?? z.any());
+                shape[key] = z.array(toZod(child.rule));
             }
 
             continue;
         }
 
-        shape[key] = field.rule ?? z.any();
+        shape[key] = toZod(field.rule);
     }
 
     return z.object(shape);
@@ -61,14 +83,14 @@ function normalizeField (field: FieldOrSlot): FieldOrSlot {
     if ("slot" in field) {
         return {
             ...field,
-            rule: field.rule ? (zodToFn(field.rule) as unknown as ZodType) : undefined
+            rule: normalizeRule(field.rule) as ZodType
         };
     }
 
     if (field.type === "object") {
         return {
             ...field,
-            rule: field.rule ? (zodToFn(field.rule) as unknown as ZodType) : undefined,
+            rule: normalizeRule(field.rule) as ZodType,
             children: normalizeSchema(field.children)
         } as FieldConfig;
     }
@@ -76,14 +98,14 @@ function normalizeField (field: FieldOrSlot): FieldOrSlot {
     if (field.type === "array") {
         return {
             ...field,
-            rule: field.rule ? (zodToFn(field.rule) as unknown as ZodType) : undefined,
+            rule: normalizeRule(field.rule) as ZodType,
             children: normalizeField(field.children) as FieldConfig
         } as FieldConfig;
     }
 
     return {
         ...field,
-        rule: field.rule ? (zodToFn(field.rule) as unknown as ZodType) : undefined
+        rule: normalizeRule(field.rule) as ZodType
     } as FieldConfig;
 }
 

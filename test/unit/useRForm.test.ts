@@ -62,6 +62,41 @@ describe("useRForm", () => {
         expect(bad.success).toBe(false);
     });
 
+    it("leaves a preset rule untouched so the field resolves it", () => {
+        const result = useRForm({
+            doc: { type: "text", rule: "brCpf" }
+        } as never) as unknown as { schema: { doc: { rule: unknown } } };
+
+        expect(result.schema.doc.rule).toBe("brCpf");
+    });
+
+    it("leaves a composed preset array untouched", () => {
+        const result = useRForm({
+            doc: { type: "text", rule: ["required", { name: "min", min: 3 }] }
+        } as never) as unknown as { schema: { doc: { rule: unknown } } };
+
+        expect(result.schema.doc.rule).toEqual(["required", { name: "min", min: 3 }]);
+    });
+
+    it("enforces a preset rule through the aggregated zod object", async () => {
+        const result = useRForm({
+            doc: { type: "text", rule: "brCpf" }
+        } as never);
+
+        expect((await result.rules.safeParseAsync({ doc: "111.111.111-11" })).success).toBe(false);
+        expect((await result.rules.safeParseAsync({ doc: "529.982.247-25" })).success).toBe(true);
+    });
+
+    it("reports the preset message on the aggregated zod object", async () => {
+        const result = useRForm({
+            doc: { type: "text", rule: "brCpf" }
+        } as never);
+
+        const parsed = await result.rules.safeParseAsync({ doc: "111.111.111-11" });
+
+        expect(parsed.error?.issues[0]?.message).toBe("CPF inválido.");
+    });
+
     it("normalizes schema by converting zod rule into a callable validator", () => {
         const result = useRForm({
             name: { type: "text", rule: z.string().min(2) }

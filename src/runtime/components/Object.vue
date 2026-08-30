@@ -22,7 +22,7 @@
         default: {}
     });
 
-    export type Props = Element<typeof defaults>
+    export type Props = Element<typeof defaults, "object">
         & Utils["Label"];
 </script>
 

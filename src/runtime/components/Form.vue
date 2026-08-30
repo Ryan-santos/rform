@@ -30,6 +30,7 @@
     import type { Element } from "#rform/types";
     import type { Schema } from "#rform/types/schema";
     import { useInjection, useProvide } from "#rform/composables";
+    import { defineFormRoot } from "../composables/formRoot";
     import { defineRulesList } from "../composables/rulesList";
     import { defineDefaults } from "#rform/utils";
     import { computed, useSlots } from "vue";
@@ -42,7 +43,7 @@
         schema: {} as Schema
     });
 
-    export type Props<T extends Base = Base> = Element<typeof defaults> & {
+    export type Props<T extends Base = Base> = Element<typeof defaults, "form"> & {
         schema?: Schema;
         onSubmit?: (data: T) => unknown | Promise<unknown>
     };
@@ -64,6 +65,8 @@
         id,
         model
     });
+
+    defineFormRoot(model);
 
     const rulesList = defineRulesList();
 

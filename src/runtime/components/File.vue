@@ -175,7 +175,7 @@
 
     export type Props<
         Multiple extends boolean = false
-    > = Element<typeof defaults, (Multiple extends true ? Array<File> : File) | null>
+    > = Element<typeof defaults, "file", (Multiple extends true ? Array<File> : File) | null>
         & Utils["Label"]
         & Utils["Description"]
         & Utils["Error"]

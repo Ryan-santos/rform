@@ -94,7 +94,7 @@
         step: 1
     });
 
-    export type Props = Element<typeof defaults, null | number>
+    export type Props = Element<typeof defaults, "number", null | number>
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Loading"]

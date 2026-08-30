@@ -1,3 +1,5 @@
+import type { Rule } from "#rform/types/presets";
+
 export interface Base {
     ui: Record<string, unknown> | string
     default: unknown
@@ -15,14 +17,19 @@ export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends Record<unknown, unknown> ? DeepPartial<T[P]> : T[P];
 };
 
+/**
+ * `C` is the field type the component maps to ("text", "color", ...). It filters
+ * which rule presets the `rule` prop accepts, via each preset's `available`.
+ */
 export type Element <
     OBJ extends Base = Base,
+    C = any,
     D = ConvertNeverToUnknown<OBJ["default"]>
 > = {
     name?: string | number
     error?: string
     required?: boolean
-    rule?: ((value: T) => string | Promise<string | void> | void)
+    rule?: Rule<C>
     loading?: boolean
     default?: D
     ui?: DeepPartial<OBJ["ui"]>

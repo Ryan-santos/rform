@@ -162,7 +162,7 @@
         default: "#000000"
     });
 
-    export type Props = Element<typeof defaults> &
+    export type Props = Element<typeof defaults, "color"> &
         Utils["Description"] &
         Utils["Dropdown"] &
         Utils["Error"] &

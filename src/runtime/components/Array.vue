@@ -85,7 +85,7 @@
         default: []
     });
 
-    export type Props = Element<typeof defaults> &
+    export type Props = Element<typeof defaults, "array"> &
         Utils["Label"] & {
             min?: number;
             max?: number;

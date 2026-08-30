@@ -13,8 +13,10 @@ import {
 
 import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
-import { merger } from "#rform/utils";
+import { merger, resolveMask, resolveRule } from "#rform/utils";
+import { masks, rules } from "#rform/presets";
 import { useAppConfig } from "#app";
+import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
 
 type Obj = Record<NonNullable<Element["name"]>, unknown>;
@@ -136,18 +138,26 @@ export default async function <
     });
 
     const rulesList = injectRulesList();
+    const formRoot = injectFormRoot();
+
+    const field = componentName.toLowerCase();
+
+    const mask = computed(() =>
+        resolveMask((props.value as { mask?: Parameters<typeof resolveMask>[0] }).mask, masks));
 
     watch(() => props.value.rule, (rule) => {
         if (!id) {
             return;
         }
 
-        if (rule) {
+        const validate = resolveRule(rule, rules, field);
+
+        if (validate) {
             const fn = async () => {
                 try {
                     localProps.value.loading = true;
 
-                    const error = await rule(model.value);
+                    const error = await validate(model.value, formRoot?.value);
 
                     if (error) {
                         localProps.value.error = error;
@@ -175,6 +185,7 @@ export default async function <
         id,
         upper,
         model,
+        mask,
         props
     };
 };

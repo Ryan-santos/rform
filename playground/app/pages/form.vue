@@ -211,6 +211,22 @@
                 name="texto"
                 placeholder="Texto"
             />
+            <RPin
+                name="codigo"
+                label="código — 6 dígitos, separador a cada 3"
+                :separator="3"
+                autofocus
+                rule="required"
+                class="col-span-2"
+            />
+            <RPin
+                name="resgate"
+                label="resgate — alfanumérico, secreto"
+                type="alphanumeric"
+                :length="4"
+                secret
+                class="col-span-2"
+            />
 
             <RArray
                 v-slot="{ index }"

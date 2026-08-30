@@ -15,8 +15,29 @@ Todo componente em `src/runtime/components/*.vue` segue o mesmo formato:
 ### useInjection (`src/runtime/composables/useInjection.ts`)
 
 - Lê o pai (Form) via `inject(key)`. Quando há pai e `props.name` está definido, `model.value` lê/escreve diretamente em `upper.model.value[name]` — é por isso que mutações em arrays no model do filho refletem no Form.
-- Mescla `defaults` + `appConfig` + `localProps` + `sourceProps` via `merger`.
+- Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger`.
 - Carrega defaults dinamicamente via `import('../components/${componentName}.vue')` no final. O `componentName` é injetado pelo `src/vite.plugin.ts` em tempo de build.
+
+### Defaults do usuário (`app/rform/defaults.ts`)
+
+Arquivo único, opcional, chaveado por nome de componente — é o que sobrepõe o `defaults` que cada componente declara:
+
+```ts
+import { defineFieldDefaults } from "#rform/utils";
+
+export default defineFieldDefaults({
+    Text: { default: "", ui: { container: "gap-2" } },
+    Utils: { Placeholder: { ui: { default: "text-xs" } } }
+});
+```
+
+Entra no `merger` entre o `defaults` do componente e as props do call site, então **prop no campo sempre ganha**. `useInjection` lê `userDefaults[componentName]`; `useUtilProps` lê `userDefaults.Utils?.[componentName]`.
+
+`src/module.ts` gera `#rform/defaults.ts`: reexporta o arquivo do usuário quando ele existe, senão emite `const defaults = {}`. Nos dois casos o template existe, então as composables importam sem guarda. O `builder:watch` cobre o caminho `<srcDir>/rform/defaults` (sem extensão, pra pegar `.ts` e `.js`), pra criar o arquivo depois regenerar o template.
+
+**Isso já morou no `app.config.ts`** (`rform.components.*`, via augment de `nuxt/schema`). Não mora mais — o augment e o template `types/app-config.d.ts` foram removidos, e nada em `src/` importa `#app`.
+
+O nome `defineFieldDefaults` está hardcoded em dois lugares fora do código: o selector de callee do `better-tailwindcss` em `oxlint.config.ts` e o `tailwindCSS.experimental.classRegex` em `.vscode/settings.json`. Renomear o helper sem mexer nos dois faz lint de classe e IntelliSense **pararem calados** dentro do `defaults.ts`. O `path` do matcher é `(^|\.)ui(\.|$)` — ancorado por segmento, então pega `ui.container`, `Text.ui.label.required` e `Utils.Placeholder.ui.default`, e deixa `Text.default` (que não é classe) de fora.
 
 ### Presets (rules e masks)
 

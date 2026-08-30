@@ -15,7 +15,7 @@ import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
 import { merger, resolveMask, resolveRule } from "#rform/utils";
 import { masks, rules } from "#rform/presets";
-import { useAppConfig } from "#app";
+import userDefaults from "#rform/defaults";
 import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
 
@@ -52,7 +52,7 @@ export default async function <
     componentName: keyof Components = "Text"
 ) {
     const defaults = shallowRef<Element>({});
-    const appConfig = useAppConfig().rform?.components?.[componentName];
+    const overrides = userDefaults[componentName];
 
     const localProps = ref<Element>({
         error: undefined
@@ -60,7 +60,7 @@ export default async function <
 
     const props = computed(() => merger(
         defaults.value,
-        appConfig,
+        overrides,
         localProps.value,
         sourceProps
     ));

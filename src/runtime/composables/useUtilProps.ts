@@ -3,7 +3,7 @@ import type { DeepRequired, Element } from "#rform/types";
 import type { ValueProp } from "./useInjection";
 import { computed, inject } from "vue";
 import { keyProp } from "./useInjection";
-import { useAppConfig } from "#app";
+import userDefaults from "#rform/defaults";
 import { merger } from "#rform/utils";
 
 /**
@@ -24,7 +24,7 @@ export default async function <
     componentName: keyof Utils = "Label"
 ) {
     const upper = inject<ValueProp<P>>(keyProp, {} as ValueProp<P>);
-    const appConfig = useAppConfig()?.rform?.components?.Utils?.[componentName] as P;
+    const overrides = userDefaults.Utils?.[componentName] as P;
     const defaults = (await import(`../components/Utils/${componentName}.vue`))?.defaults as P;
 
     const props = computed((): UtilProps<P> => {
@@ -37,7 +37,7 @@ export default async function <
 
         return merger(
             defaults,
-            appConfig,
+            overrides,
             {
                 ...rest,
                 ui: utilUi?.[componentName] as P["ui"]

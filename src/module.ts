@@ -120,32 +120,6 @@ export default defineNuxtModule({
             getContents: () => `export * from "${resolve("type")}"`
         });
 
-        addTypeTemplate({
-            filename: `${name}/types/app-config.d.ts`,
-            write: true,
-            getContents: () =>
-                [
-                    `import type Components from "#${name}/types/components"`,
-                    `import type { DeepPartial } from "${resolve("type")}"`,
-                    "",
-                    "declare module 'nuxt/schema' {",
-                    "   interface AppConfigInput {",
-                    `       ${name}?: {`,
-                    "           components?: DeepPartial<Components>",
-                    "       }",
-                    "   }",
-                    "",
-                    "   interface AppConfig {",
-                    `       ${name}?: {`,
-                    "           components?: DeepPartial<Components>",
-                    "       }",
-                    "   }",
-                    "}",
-                    "",
-                    "export {}"
-                ].join("\n")
-        });
-
         const fieldComponents = components.filter(({ name }) =>
             !["Form", "Dynamic"].includes(name));
 
@@ -242,6 +216,39 @@ export default defineNuxtModule({
 
         const specifier = (path: string) =>
             JSON.stringify(path.split("\\").join("/").replace(/\.[tj]s$/, ""));
+
+        /**
+         * `app/rform/defaults.ts` — what the user overrides on top of each
+         * component's own `defaults`. The template exists either way, so the
+         * composables can import it unconditionally.
+         */
+        const userDefaultsFile = async () => {
+            const dir = join(nuxt.options.srcDir, name);
+            const files = await readdir(dir).catch(() => [] as string[]);
+            const file = files.find(entry => /^defaults\.[tj]s$/.test(entry));
+
+            return file ? join(dir, file) : null;
+        };
+
+        addTemplate({
+            filename: `${name}/defaults.ts`,
+            write: true,
+            getContents: async () => {
+                const file = await userDefaultsFile();
+
+                return [
+                    "// auto-generated — user overrides for each component's defaults",
+                    `import type Components from "#${name}/types/components";`,
+                    `import type { DeepPartial } from ${specifier(resolve("type"))};`,
+                    "",
+                    file
+                        ? `import defaults from ${specifier(file)};`
+                        : "const defaults = {};",
+                    "",
+                    "export default defaults as DeepPartial<Components>;"
+                ].join("\n");
+            }
+        });
 
         const scanPresets = async (root: string, kind: "rules" | "masks") => {
             const dir = join(root, kind);
@@ -379,7 +386,13 @@ export default defineNuxtModule({
 
             const absolute = join(nuxt.options.srcDir, path);
 
-            if (presetRoots.some(root => absolute.startsWith(root))) {
+            const watched = [
+                ...presetRoots,
+                // `defaults` with no extension, so `defaults.ts` and `defaults.js` both hit.
+                join(nuxt.options.srcDir, name, "defaults")
+            ];
+
+            if (watched.some(root => absolute.startsWith(root))) {
                 return nuxt.callHook("builder:generateApp");
             }
         });

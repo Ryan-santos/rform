@@ -39,8 +39,8 @@ export default defineConfig({
                 },
                 {
                     kind: "callee",
-                    path: "^(defineDefaults|defineAppConfig)$",
-                    match: [{ type: "objectValues", path: "ui" }]
+                    path: "^(defineDefaults|defineFieldDefaults)$",
+                    match: [{ type: "objectValues", path: "(^|\\.)ui(\\.|$)" }]
                 }
             ]
         }

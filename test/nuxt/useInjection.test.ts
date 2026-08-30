@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { defineComponent, h, provide, ref } from "vue";
+import type { Element } from "#rform/types";
 import useInjection, { key } from "../../src/runtime/composables/useInjection";
 
 const Harness = defineComponent({
@@ -11,7 +12,7 @@ const Harness = defineComponent({
     },
     async setup (props) {
         const ctx = await useInjection(
-            props.sourceProps as never,
+            props.sourceProps as Element,
             undefined,
             "Text"
         );

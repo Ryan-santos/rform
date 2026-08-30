@@ -297,7 +297,7 @@
             >
                 <template
                     v-for="item in selected"
-                    :key="item.value"
+                    :key="String(item.value)"
                 >
                     <img
                         :src="item.original?.picture"
@@ -334,8 +334,8 @@
                 modelFull
             >
                 <img
-                    v-if="!list && model.user?.picture"
-                    :src="model.user?.picture"
+                    v-if="!list && form.user?.picture"
+                    :src="form.user?.picture"
                     class="-mr-2 block size-5 rounded-full bg-primary"
                 />
                 <img

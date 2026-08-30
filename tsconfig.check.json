@@ -1,0 +1,12 @@
+{
+    "//": "Type-check do módulo. Estende o tsconfig gerado pelo Nuxt, que inclui `../**/*` e por isso engoliria o playground — que é outro app Nuxt, com o próprio .nuxt e os próprios auto-imports. Checar o playground exige `-p playground/.nuxt/tsconfig.app.json`.",
+    "extends": "./.nuxt/tsconfig.app.json",
+    "exclude": [
+        "playground",
+        "node_modules",
+        "dist",
+        ".data",
+        ".output",
+        "server"
+    ]
+}

@@ -77,7 +77,7 @@ export default async function <
                 && typeof upper.model.value === "object"
                 && props.value?.name !== undefined
             ) {
-                upper.model.value[props.value.name] = value;
+                (upper.model.value as Obj)[props.value.name] = value;
             }
 
             return (value as S);

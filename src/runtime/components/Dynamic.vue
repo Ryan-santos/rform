@@ -27,7 +27,7 @@
         <RDynamic :schema="(schema as { children: Schema }).children">
             <template
                 v-for="(_, slotName) in $slots"
-                #[slotName]="scope: Record<string, unknown>"
+                #[slotName]="scope: SlotScope"
             >
                 <slot
                     :name="slotName"
@@ -64,6 +64,7 @@
     import { computed } from "vue";
     import map from "#rform/components-map";
     import type { FieldConfig, Schema, SlotField } from "#rform/types/schema";
+    import type { SlotScope } from "#rform/types";
 
     export type Props = {
         name?: string | number;
@@ -71,6 +72,12 @@
     };
 
     const props = defineProps<Props>();
+
+    /**
+     * Declared, not inferred: RDynamic renders RDynamic, so inferring the slot
+     * scope from usage makes it depend on itself (TS7022).
+     */
+    defineSlots<Record<string, (scope: SlotScope) => unknown>>();
 
     const isSchema = computed(() =>
         !!props.schema

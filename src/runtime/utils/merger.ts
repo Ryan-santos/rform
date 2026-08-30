@@ -1,3 +1,4 @@
+import type { Base } from "#rform/types";
 import mergerUI from "./mergerUI";
 
 export type MergeObjects<Objects extends Array<unknown>>
@@ -35,10 +36,9 @@ export default function merger<
                 && typeof currentValue === "object"
                 && !Array.isArray(currentValue)
             ) {
-                result[key] = (key === "ui" ? mergerUI : merger)(
-                    resultValue as OBJ,
-                    currentValue as OBJ
-                );
+                result[key] = key === "ui"
+                    ? mergerUI(resultValue as Base["ui"], currentValue as Base["ui"])
+                    : merger(resultValue as OBJ, currentValue as OBJ);
 
                 continue;
             }

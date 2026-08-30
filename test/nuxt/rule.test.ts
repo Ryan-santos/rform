@@ -15,8 +15,8 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     const wrapper = await mountSuspended(RForm, {
         props: { modelValue: model } as never,
         slots: {
-            default: (received: { validate: () => Promise<void> }) => {
-                scope = received;
+            default: (received: Record<string, unknown>) => {
+                scope = received as unknown as { validate: () => Promise<void> };
                 return h(RText, { name: "campo", rule } as never);
             }
         }

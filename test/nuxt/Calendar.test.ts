@@ -1,6 +1,7 @@
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
+import type { DOMWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import { RCalendar } from "#components";
 
@@ -10,7 +11,7 @@ const findDayButton = (
 ) => {
     return wrapper
         .findAll("button")
-        .find(b => b.text() === String(day) && !b.attributes("disabled"));
+        .find((b: DOMWrapper<HTMLButtonElement>) => b.text() === String(day) && !b.attributes("disabled"));
 };
 
 describe("RCalendar", () => {

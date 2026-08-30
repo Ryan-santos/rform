@@ -184,6 +184,21 @@
             accept: string
             multiple?: Multiple
         };
+
+    /**
+     * Generic-free mirror of `Props` for `useInjection`, as in Select.vue: the
+     * conditional model type cascades into a union the checker cannot represent.
+     */
+    type InternalProps = Omit<
+        Element<typeof defaults, "file">,
+        "modelValue" | "onUpdate:modelValue" | "default"
+    > & {
+        placeholder?: string;
+        accept: string;
+        multiple?: boolean;
+        default?: unknown;
+        modelValue?: unknown;
+    };
 </script>
 
 <script setup lang="ts" generic="Multiple extends boolean = false">
@@ -192,7 +207,7 @@
     const {
         model,
         props
-    } = await useInjection(_props);
+    } = await useInjection(_props as unknown as InternalProps);
 
     const loading = ref(false);
     const acceptSplit = props.value.accept?.replaceAll(/[.\s]/g, "").split(",") ?? [];

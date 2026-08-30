@@ -3,7 +3,7 @@ import type { Rule } from "#rform/types/presets";
 export interface Base {
     ui: Record<string, unknown> | string
     default: unknown
-};
+}
 
 export type ConvertNeverToUnknown<T>
     = T extends never[] ? unknown[]
@@ -13,9 +13,26 @@ export type ConvertNeverToUnknown<T>
                     [K in keyof T]: ConvertNeverToUnknown<T[K]>
                 } : T;
 
+/**
+ * What a named schema slot receives from RForm / RDynamic. Typed here so the
+ * scope survives the hop through the dynamic `#[slotName]` bindings.
+ */
+export type SlotScope = {
+    fieldName: string | number
+    rule?: Rule
+};
+
 export type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends Record<unknown, unknown> ? DeepPartial<T[P]> : T[P];
 };
+
+/**
+ * The inverse of DeepPartial. What a partial `ui` becomes once merged over a
+ * complete set of defaults: every key is present, at every depth.
+ */
+export type DeepRequired<T> = T extends object
+    ? { [P in keyof T]-?: DeepRequired<NonNullable<T[P]>> }
+    : T;
 
 /**
  * `C` is the field type the component maps to ("text", "color", ...). It filters

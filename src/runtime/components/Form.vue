@@ -10,7 +10,7 @@
         >
             <template
                 v-for="slotName in namedSlotNames"
-                #[slotName]="scope: Record<string, unknown>"
+                #[slotName]="scope: SlotScope"
             >
                 <slot
                     :name="slotName"
@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
+    import type { Element, SlotScope } from "#rform/types";
     import type { Schema } from "#rform/types/schema";
     import { useInjection, useProvide } from "#rform/composables";
     import { defineFormRoot } from "../composables/formRoot";

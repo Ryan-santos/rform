@@ -12,7 +12,7 @@
                     <RArray
                         :name="fieldName"
                         label="Usuários (slot custom)"
-                        :rule
+                        :rule="arrayRule(rule)"
                     >
                         <template v-slot="{ index }">
                             <RText
@@ -104,7 +104,15 @@ data: {{ zodOnly.data.value }}</pre
 
 <script setup lang="ts">
     import { ref } from "vue";
+    import type { Rule } from "#rform/types/presets";
     import { z } from "zod";
+
+    /**
+     * O schema tipa `rule` como `Rule<any>` (todo preset); `RArray` aceita
+     * `Rule<"array">` (só os sem `available`). O slot nomeado não carrega o
+     * field type, então o estreitamento fica explícito aqui.
+     */
+    const arrayRule = (rule: Rule | undefined) => rule as Rule<"array"> | undefined;
 
     const full = (() => {
         const result = useRForm({

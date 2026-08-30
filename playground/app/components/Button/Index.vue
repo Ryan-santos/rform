@@ -141,7 +141,7 @@
         lg: "py-3 px-6 text-xl hover:shadow-[0.3125rem_0.3125rem_0rem]"
     };
 
-    export declare module Button {
+    export declare namespace Button {
         export type Color = keyof typeof colors
         export type Variant = keyof typeof base
         export type Size = keyof typeof sizes

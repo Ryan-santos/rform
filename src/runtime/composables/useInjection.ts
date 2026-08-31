@@ -67,10 +67,25 @@ export default async function <
 
     const upper = inject(key, undefined);
 
-    const model = useModel(props.value, "modelValue", {
+    const cloneDefault = (): unknown => {
+        const def = props.value.default;
+        if (def !== null && typeof def === "object") {
+            return structuredClone(def);
+        }
+        return def;
+    };
+
+    /**
+     * `sourceProps`, not `props.value`: the latter is the snapshot the merger
+     * returned during setup, a plain object useModel cannot track — its
+     * `localValue` would freeze on the initial modelValue and every later
+     * change to the bound object (a reset, an async load) would leave the
+     * field writing into a detached one.
+     */
+    const model = useModel(sourceProps, "modelValue", {
         set (value): S {
             localProps.value.error = undefined;
-            value = opts?.set?.(value) ?? value ?? props.value.default;
+            value = opts?.set?.(value) ?? value ?? cloneDefault();
 
             if (
                 upper?.model?.value
@@ -82,47 +97,67 @@ export default async function <
 
             return (value as S);
         },
+        /**
+         * The fallback clones: `props.value.default` is the very object the
+         * component declared at module scope — `merger` copies objects and
+         * arrays by reference when the key exists in only one source. Handing
+         * it out raw let a child write straight into it (a detached RObject
+         * whose index was just spliced away still reads through here), which
+         * permanently polluted the default for every later instance in the
+         * process. `??` keeps the clone lazy.
+         */
         get (value): G {
             if (
                 upper?.model
                 && props.value?.name !== undefined
             ) {
                 const accessor = upper.model.value as Obj;
-                const get = accessor?.[props.value.name] ?? props.value.default;
+                const get = accessor?.[props.value.name] ?? cloneDefault();
                 return (opts?.get?.(get) ?? get) as G;
             }
 
-            return (opts?.get?.(value ?? props.value.default) ?? value ?? props.value.default) as G;
+            const get = value ?? cloneDefault();
+            return (opts?.get?.(get) ?? get) as G;
         }
     });
 
-    const cloneDefault = (): unknown => {
-        const def = props.value.default;
-        if (def !== null && typeof def === "object") {
-            return structuredClone(def);
+    const currentValue = () => {
+        if (upper?.model && props.value?.name !== undefined) {
+            return (upper.model.value as Obj | undefined)?.[props.value.name];
         }
-        return def;
+        return props.value.modelValue;
+    };
+
+    const seed = () => {
+        if (upper?.model && props.value?.name !== undefined) {
+            const acc = upper.model.value;
+
+            if (!acc || typeof acc !== "object") {
+                return;
+            }
+
+            /**
+             * An index past the end means the array just shrank — a splice from
+             * the remove button, or a reset that put the empty default back.
+             * Seeding there would resurrect the slot: this watcher is
+             * `flush: "sync"`, so it still runs before the v-for unmounts the
+             * item, and `arr[length] = default` grows the array again.
+             */
+            if (Array.isArray(acc) && Number(props.value.name) >= acc.length) {
+                return;
+            }
+
+            (acc as Obj)[props.value.name] = cloneDefault();
+            return;
+        }
+        model.value = cloneDefault();
     };
 
     watch(
-        () => {
-            if (upper?.model && props.value?.name !== undefined) {
-                return (upper.model.value as Obj | undefined)?.[props.value.name];
-            }
-            return props.value.modelValue;
-        },
+        currentValue,
         (current) => {
-            if (current !== undefined) {
-                return;
-            }
-            if (upper?.model && props.value?.name !== undefined) {
-                const acc = upper.model.value;
-                if (acc && typeof acc === "object") {
-                    (acc as Obj)[props.value.name] = cloneDefault();
-                }
-            }
-            else {
-                model.value = cloneDefault();
+            if (current === undefined) {
+                seed();
             }
         },
         { immediate: true, flush: "sync" }
@@ -180,6 +215,16 @@ export default async function <
     });
 
     defaults.value = (await import(`../components/${componentName}.vue`))?.defaults;
+
+    /**
+     * The watch above already ran, but back then `defaults.value` was still
+     * empty — so a default declared by the component (rather than passed at the
+     * call site) seeded as `undefined`. The watch will not catch up on its own:
+     * its source went `undefined -> undefined`, which is not a change.
+     */
+    if (currentValue() === undefined) {
+        seed();
+    }
 
     return {
         id,

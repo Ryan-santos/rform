@@ -1,62 +1,69 @@
 <template>
-    <button
-        class="group relative size-7 overflow-hidden rounded-lg bg-neutral text-white transition-all duration-500 hover:!bg-primary hover:!text-white dark:bg-white dark:text-neutral"
-        @click="toggle"
+    <div
+        data-allow-mismatch
+        role="radiogroup"
+        aria-label="Tema"
+        class="flex w-fit flex-row items-center gap-0.5 rounded-xl bg-background-100 p-1"
     >
-        <span class="absolute left-1/2 top-1/2 z-10 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-3xl border-[0.1875rem] border-neutral bg-current group-hover:!border-primary dark:size-5 dark:border dark:border-current" />
-        <span class="absolute left-1/2 top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-3xl dark:rotate-45 dark:scale-95">
-            <span
-                v-for="key in 4"
-                :key
-                class="relative block h-0.5 w-5 rounded-sm bg-current"
-            />
-        </span>
-        <span class="absolute right-0.5 top-0.5 z-10 size-0 rounded-full bg-neutral group-hover:!bg-primary dark:size-3.5 dark:bg-white" />
-    </button>
+        <button
+            v-for="option in options"
+            :key="option.id"
+            type="button"
+            role="radio"
+            :aria-checked="colorMode.preference === option.id"
+            :aria-label="option.label"
+            :title="option.title"
+            class="
+                flex size-7 cursor-pointer items-center justify-center rounded-lg
+                transition-all duration-300
+            "
+            :class="colorMode.preference === option.id
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-contrast/40 hover:text-contrast'"
+            @click="colorMode.preference = option.id"
+        >
+            <svg
+                viewBox="0 0 24 24"
+                class="size-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path :d="option.path" />
+            </svg>
+        </button>
+    </div>
 </template>
 
 <script setup lang="ts">
     const colorMode = useColorMode();
 
-    const toggle = () => {
-        colorMode.preference = colorMode.preference === "dark" ? "light" : "dark";
-    };
+    /**
+     * `system` é uma opção de verdade, não um estado escondido: o toggle de duas
+     * posições que existia aqui só sabia alternar claro/escuro e, uma vez tocado,
+     * nunca mais devolvia a escolha ao sistema operacional.
+     */
+    const options = [
+        {
+            id: "light",
+            label: "Claro",
+            title: "tema claro",
+            path: "M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8ZM12 2v2M12 20v2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M4.2 19.8l1.4-1.4"
+        },
+        {
+            id: "dark",
+            label: "Escuro",
+            title: "tema escuro",
+            path: "M20.5 14.8A8.5 8.5 0 0 1 9.2 3.5a8.5 8.5 0 1 0 11.3 11.3Z"
+        },
+        {
+            id: "system",
+            label: "Sistema",
+            title: "seguir o sistema",
+            path: "M4 5h16v10H4zM9 20h6M12 15v5"
+        }
+    ];
 </script>
-
-<style scoped>
-    button > :nth-child(1) {
-        transition: width .4s, height .4s, border .4s, background-color .4s !important;
-    }
-
-    button > :nth-child(3) {
-        transition: width .5s, height .6s, background-color .5s !important;
-        transition-delay: .08s;
-    }
-
-    button > :nth-child(2) {
-        transition: rotate .4s, scale .4s !important;
-    }
-
-    button > :nth-child(2) span {
-        transition: background-color .4s !important;
-    }
-
-    button > :nth-child(2) > :nth-child(1) {
-        top: calc(50% - 1px);
-    }
-
-    button > :nth-child(2) > :nth-child(2) {
-        top: calc(50% - 3px);
-        transform: rotate(90deg);
-    }
-
-    button > :nth-child(2) > :nth-child(3) {
-        top: calc(50% - 5px);
-        transform: rotate(45deg);
-    }
-
-    button > :nth-child(2) > :nth-child(4) {
-        top: calc(50% - 7px);
-        transform: rotate(-45deg);
-    }
-</style>

@@ -1,537 +1,336 @@
 <template>
-    <section class="flex min-h-screen flex-row justify-center gap-6 py-12">
-        <RForm
-            v-slot="{ model }"
-            v-model="form"
-            class="grid auto-rows-min grid-cols-4 gap-6"
-        >
-            <RText
-                name="cpf"
-                label="cpf — mask e rule pelo nome do preset"
-                mask="brCpf"
-                rule="brCpf"
-            />
-            <RText
-                name="composto"
-                label="composto — array de presets, um com args nomeados"
-                :rule="['required', { name: 'min', min: 3 }]"
-            />
-            <RText
-                name="inscEst"
-                label="inscEst — preset do usuário, aninhado em br/"
-                :rule="{ name: 'brInscEst', uf: 'SP' }"
-            />
-            <RText
-                name="dinheiro"
-                label="dinheiro — mask do usuário (app/rform/presets/masks)"
-                mask="dinheiro"
-            />
-            <RTextarea
-                name="dinheiroArea"
-                label="dinheiroArea — mesma mask, agora em textarea"
-                mask="dinheiro"
-            />
-            <RText
-                name="text"
-                type="text"
-                label="texto simples"
-                placeholder="placeholder"
-                description="Descrição"
-                required
-                :ui="{
-                    Utils: {
-                        Error: {
-                            container: 'text-pink-400'
-                        }
-                    }
-                }"
-                :rule="({ value }) => (value !== '1' ? 'oxe' : undefined)"
-            />
-            <RText
-                name="whatsapp"
-                placeholder="whatsapp"
-                description="Seu numero de whatsapp"
-                mask="(##) #####-####"
-                required
-                loading
-            >
-                <template #leading>
-                    <Icon name="logos:whatsapp-icon" />
-                </template>
-                <template #trailing>
-                    <Icon name="twemoji:flag-brazil" />
-                </template>
-            </RText>
-            <RText
-                name="length"
-                type="text"
-                length="20"
-                placeholder="com limitador de tamanho"
-            />
-            <RNumber
-                name="delay"
-                placeholder="delay"
-            >
-                <template #trailing> segundos </template>
-            </RNumber>
-            <RNumber
-                name="minutes"
-                label="intervalo"
-                placeholder="delay"
-                :min="20"
-                :max="100"
-                :step="20"
-                :ui="{
-                    group: {
-                        wrapper: {
-                            trailing: 'opacity-50'
-                        }
-                    }
-                }"
-            >
-                <template #trailing> minutos </template>
-            </RNumber>
-            <RText
-                name="default"
-                type="text"
-                length="20"
-                default="teste"
-            />
-            <RText
-                name="default"
-                type="text"
-                loading
-            />
-            <RNumber
-                name="number"
-                placeholder="numero"
-            />
-            <RText
-                name="email"
-                placeholder="E-mail"
-            />
-            <RSwitch
-                name="view"
-                label="toggle"
-            />
-            <RSwitch
-                name="active"
-                placeholder="toggle"
-            />
-            <RColor
-                name="color"
-                placeholder="Destaque"
-            />
-            <RColor
-                name="contrast"
-                placeholder="Contraste"
-            />
-            <RDate
-                name="data"
-                placeholder="Aniversário"
-                default="2003-11-24"
-            />
-            <RDate
-                name="data_renge"
-                placeholder="data de execução"
-                mode="range"
-            />
-            <RDate
-                name="data_multiple"
-                placeholder="datas avulsas"
-                mode="multiple"
-            />
-            <RDate
-                name="data_hora"
-                placeholder="agendamento"
-                time
-            />
-            <RDate
-                name="data_hora_range"
-                placeholder="janela de execução"
-                mode="range"
-                time
-            />
-            <RDate
-                name="data_restrita"
-                placeholder="agendamento (sem fds e feriados)"
-                :disable="{
-                    before: '2026-01-01',
-                    after: '2026-12-31',
-                    dates: ['2026-04-21', '2026-05-01', '2026-09-07']
-                }"
-            />
-            <RDate
-                name="data_range_bloqueado"
-                placeholder="evitar recesso"
-                mode="range"
-                :disable="{
-                    between: ['2026-12-20', '2026-12-31']
-                }"
-            />
-            <RHour
-                name="hora"
-                placeholder="horário"
-            />
-            <RHour
-                name="hora_range"
-                placeholder="janela de atendimento"
-                range
-            />
-            <RCalendar
-                name="agenda"
-                label="Agenda"
-                class="col-span-2"
-            />
-            <RCalendar
-                name="agenda_range"
-                label="Período de férias"
-                mode="range"
-                time
-                class="col-span-2"
-            />
-            <RCalendar
-                name="agenda_multiple"
-                label="Feriados"
-                mode="multiple"
-                class="col-span-2"
-            />
-            <RFile
-                name="avatar_file"
-                label="Avatar"
-                placeholder="Adicionar avatar avatar"
-                accept="png, jpg, gif, mp4"
-            />
-            <RFile
-                name="file_list"
-                multiple
-                accept="png, jpg, gif, mp4"
-            />
-            <RTextarea
-                name="texto"
-                placeholder="Texto"
-            />
-            <RPin
-                name="codigo"
-                label="código — 6 dígitos, separador a cada 3"
-                :separator="3"
-                autofocus
-                rule="required"
-                class="col-span-2"
-            />
-            <RPin
-                name="resgate"
-                label="resgate — alfanumérico, secreto"
-                type="alphanumeric"
-                :length="4"
-                secret
-                class="col-span-2"
-            />
+    <DemoPage
+        title="Form"
+        tag="RForm"
+        :source
+        :form="false"
+        description="O mesmo cadastro de cliente PF montado nos três modos do useRForm. Troque de aba: o formulário na tela é o mesmo, o que muda é de onde vêm a UI, os tipos e a validação."
+    >
+        <DemoModes
+            v-model="mode"
+            :modes="modes"
+        />
 
-            <RArray
-                v-slot="{ index }"
-                name="array"
-                :min="2"
-                :max="4"
+        <Demo
+            v-if="mode === 'schema'"
+            id="modo-schema"
+            script="modo-schema"
+            title="Modo 1 — schema completo (renderiza UI)"
+            description="useRForm(schema) devolve data, rules e schema. O RForm recebe o schema e monta o formulário sozinho — não há uma única tag de campo escrita à mão aqui."
+        >
+            <RForm
+                v-model="schemaData"
+                :schema="schemaFields"
+                :on-submit="submit"
+                class="
+                    grid grid-cols-1 gap-4
+                    md:grid-cols-2
+                "
+            >
+                <DemoActions />
+            </RForm>
+        </Demo>
+
+        <Demo
+            v-if="mode === 'zod'"
+            id="modo-zod"
+            script="modo-zod"
+            title="Modo 2 — só zod (sem UI gerada)"
+            description="useRForm recebe um objeto só de ZodType, então devolve data e rules — e nada de schema. A UI é sua; o rules agregado valida o objeto inteiro no submit."
+        >
+            <RForm
+                v-model="zodData"
+                :on-submit="submit"
+                class="
+                    grid grid-cols-1 gap-4
+                    md:grid-cols-2
+                "
             >
                 <RText
-                    :name="index"
-                    placeholder="E-mail"
+                    name="nome"
+                    label="Nome"
+                    placeholder="nome completo"
+                    required
                 />
-            </RArray>
-
-            <RArray
-                v-slot="{ index }"
-                name="configs"
-                label="configs"
-            >
-                <RObject :name="index">
+                <RText
+                    name="cpf"
+                    label="CPF"
+                    mask="brCpf"
+                    required
+                />
+                <RText
+                    name="email"
+                    label="E-mail"
+                    placeholder="voce@empresa.com"
+                />
+                <RText
+                    name="telefone"
+                    label="Telefone"
+                    mask="brTelefone"
+                />
+                <RObject
+                    name="endereco"
+                    label="Endereço"
+                    class="md:col-span-2"
+                >
                     <RText
-                        name="default"
-                        type="text"
-                        placeholder="teste"
-                        loading
+                        name="cep"
+                        label="CEP"
+                        mask="brCep"
                     />
                     <RText
-                        name="ref"
-                        type="text"
-                        placeholder="teste"
-                        loading
+                        name="rua"
+                        label="Rua"
                     />
                 </RObject>
-            </RArray>
 
-            <RObject
-                name="payload"
-                label="Payload"
-                required
+                <DemoActions submit-text="submit (roda rules.safeParseAsync)" />
+            </RForm>
+        </Demo>
+
+        <Demo
+            v-if="mode === 'ts'"
+            id="modo-ts"
+            script="modo-ts"
+            title="Modo 3 — só TS (sem runtime)"
+            description="useRForm<T>() não recebe nada em runtime: só tipa o data. Sem rules e sem schema — quem valida são os presets declarados em cada campo, e o painel ao lado mostra que safeParse não existe neste modo."
+        >
+            <RForm
+                v-model="tsData"
+                :on-submit="submit"
+                class="
+                    grid grid-cols-1 gap-4
+                    md:grid-cols-2
+                "
             >
                 <RText
-                    name="default"
-                    type="text"
-                    placeholder="teste"
-                    default="toma mil"
-                    loading
+                    name="nome"
+                    label="Nome"
+                    placeholder="nome completo"
+                    required
+                    rule="required"
                 />
                 <RText
-                    name="ref"
-                    type="text"
-                    placeholder="teste"
-                    loading
+                    name="cpf"
+                    label="CPF"
+                    mask="brCpf"
+                    required
+                    rule="brCpf"
                 />
-            </RObject>
-
-            <RSelect
-                name="select"
-                placeholder="selecione"
-                :options="[1, 2, 3]"
-            />
-
-            <RSelect
-                v-slot="{ selected, list }"
-                name="users"
-                placeholder="Funcionários"
-                :options="users"
-                modelFull
-                multiple
-            >
-                <template
-                    v-for="item in selected"
-                    :key="String(item.value)"
+                <RText
+                    name="email"
+                    label="E-mail"
+                    placeholder="voce@empresa.com"
+                    rule="email"
+                />
+                <RText
+                    name="telefone"
+                    label="Telefone"
+                    mask="brTelefone"
+                    rule="brTelefone"
+                />
+                <RObject
+                    name="endereco"
+                    label="Endereço"
+                    class="md:col-span-2"
                 >
-                    <img
-                        :src="item.original?.picture"
-                        class="block size-5 rounded-full bg-primary"
+                    <RText
+                        name="cep"
+                        label="CEP"
+                        mask="brCep"
+                        rule="brCep"
                     />
-                    <p v-if="list">
-                        {{ item.label }}
-                    </p>
-                </template>
-            </RSelect>
+                    <RText
+                        name="rua"
+                        label="Rua"
+                    />
+                </RObject>
 
-            <RSelect
-                v-slot="{ selected }"
-                name="user"
-                placeholder="Funcionário"
-                :options="users"
-                :default="users[1]"
-                modelFull
-            >
-                <img
-                    :src="selected.original.picture"
-                    class="block size-5 rounded-full bg-primary"
-                />
-                <p>
-                    {{ selected.label }}
-                </p>
-            </RSelect>
+                <DemoActions submit-text="submit (roda as rules dos campos)" />
+            </RForm>
+        </Demo>
 
-            <RSelect
-                v-slot="{ selected, list }"
-                name="helper"
-                placeholder="Ajudante"
-                :options="users"
-                modelFull
-            >
-                <img
-                    v-if="!list && form.user?.picture"
-                    :src="form.user?.picture"
-                    class="-mr-2 block size-5 rounded-full bg-primary"
+        <template #output>
+            <div class="flex min-h-0 grow flex-col gap-3">
+                <DemoJson
+                    :value="active.data"
+                    title="data"
+                    class="min-h-0 flex-1"
                 />
-                <img
-                    :src="selected.original.picture"
-                    class="block size-5 rounded-full bg-primary"
+                <DemoJson
+                    :value="active.parse"
+                    :title="active.rules ? 'rules.safeParseAsync(data)' : 'sem rules neste modo'"
+                    class="min-h-0 flex-1"
                 />
-                <p>
-                    {{ selected.label }}
-                </p>
-            </RSelect>
-
-            <RSelect
-                v-slot="{ selected }"
-                name="select2"
-                placeholder="selecione"
-                :options="{
-                    blue: 'azul',
-                    red: 'vermelho'
-                }"
-            >
-                <span
-                    class="block size-2 rounded-full bg-primary"
-                    :style="`background-color: ${selected.value}`"
-                />
-                <p>
-                    {{ selected.label }}
-                </p>
-            </RSelect>
-
-            <div class="col-span-full flex flex-row">
-                <pre data-allow-mismatch>
-                    slot model
-                    {{ model }}
-                </pre>
-                <pre data-allow-mismatch>
-                    V-MODEL
-                    {{ form }}
-                </pre>
             </div>
-
-            <button type="reset">reset</button>
-            <button type="submit">submit</button>
-        </RForm>
-    </section>
+        </template>
+    </DemoPage>
 </template>
 
 <script setup lang="ts">
-    const users = [
+    import { computed, ref } from "vue";
+    import { z } from "zod";
+    import source from "./form.vue?raw";
+
+    const mode = ref("schema");
+
+    const modes = [
         {
-            id: 1,
-            name: "João Silva",
-            picture: "https://randomuser.me/api/portraits/men/1.jpg"
+            id: "schema",
+            label: "1 · schema completo",
+            description: "O schema é o dado: ele descreve os campos, e o RForm os renderiza."
         },
         {
-            id: 2,
-            name: "Maria Souza",
-            picture: "https://randomuser.me/api/portraits/women/2.jpg"
+            id: "zod",
+            label: "2 · só zod",
+            description: "Sem UI gerada. Tipos e validação vêm do zod; o formulário é escrito à mão."
         },
         {
-            id: 3,
-            name: "Pedro Santos",
-            picture: "https://randomuser.me/api/portraits/men/3.jpg"
-        },
-        {
-            id: 4,
-            name: "Ana Oliveira",
-            picture: "https://randomuser.me/api/portraits/women/4.jpg"
-        },
-        {
-            id: 5,
-            name: "Carlos Ferreira",
-            picture: "https://randomuser.me/api/portraits/men/5.jpg"
-        },
-        {
-            id: 6,
-            name: "Maria Souza",
-            picture: "https://randomuser.me/api/portraits/women/6.jpg"
-        },
-        {
-            id: 7,
-            name: "Pedro Santos",
-            picture: "https://randomuser.me/api/portraits/men/7.jpg"
-        },
-        {
-            id: 8,
-            name: "Ana Oliveira",
-            picture: "https://randomuser.me/api/portraits/women/8.jpg"
-        },
-        {
-            id: 9,
-            name: "Carlos Ferreira",
-            picture: "https://randomuser.me/api/portraits/men/9.jpg"
-        },
-        {
-            id: 10,
-            name: "Maria Souza",
-            picture: "https://randomuser.me/api/portraits/women/10.jpg"
-        },
-        {
-            id: 11,
-            name: "Pedro Santos",
-            picture: "https://randomuser.me/api/portraits/men/11.jpg"
-        },
-        {
-            id: 12,
-            name: "Ana Oliveira",
-            picture: "https://randomuser.me/api/portraits/women/12.jpg"
-        },
-        {
-            id: 13,
-            name: "Carlos Ferreira",
-            picture: "https://randomuser.me/api/portraits/men/13.jpg"
+            id: "ts",
+            label: "3 · só TS",
+            description: "Nada em runtime. Só o tipo do data; a validação fica nos presets de cada campo."
         }
     ];
 
-    const form = ref({
-        array: ["11", "22"],
-        user: users[2]
+    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map(uf => ({ id: uf, name: uf }));
+
+    // #region modo-schema
+    const {
+        data: schemaData,
+        rules: schemaRules,
+        schema: schemaFields
+    } = useRForm({
+        nome: {
+            type: "text",
+            label: "Nome",
+            placeholder: "nome completo",
+            rule: z.string().min(2, "mínimo 2 caracteres")
+        },
+        cpf: {
+            type: "text",
+            label: "CPF",
+            mask: "brCpf",
+            rule: "brCpf"
+        },
+        email: {
+            type: "text",
+            label: "E-mail",
+            placeholder: "voce@empresa.com",
+            rule: "email"
+        },
+        telefone: {
+            type: "text",
+            label: "Telefone",
+            mask: "brTelefone",
+            rule: "brTelefone"
+        },
+        nascimento: {
+            type: "date",
+            label: "Nascimento"
+        },
+        endereco: {
+            type: "object",
+            label: "Endereço",
+            children: {
+                cep: {
+                    type: "text",
+                    label: "CEP",
+                    mask: "brCep",
+                    rule: "brCep"
+                },
+                rua: {
+                    type: "text",
+                    label: "Rua"
+                },
+                numero: {
+                    type: "number",
+                    label: "Número"
+                },
+                /**
+                 * Em schema o `options` só aceita array de objetos: o generic
+                 * `Opts` do RSelect cai no default `OptArrayObj` quando o tipo
+                 * vem de `Components["Select"]`. As chaves são as do defaults
+                 * do componente — `id` e `name`.
+                 */
+                uf: {
+                    type: "select",
+                    label: "UF",
+                    placeholder: "selecione",
+                    options: ufs
+                }
+            }
+        },
+        aceite: {
+            type: "switch",
+            placeholder: "Li e aceito os termos",
+            rule: z.literal(true, "É preciso aceitar os termos.")
+        }
+    });
+    // #endregion
+
+    // #region modo-zod
+    const {
+        data: zodData,
+        rules: zodRules
+    } = useRForm({
+        nome: z.string().min(2, "mínimo 2 caracteres"),
+        cpf: z.string().min(14, "CPF incompleto"),
+        email: z.email("e-mail inválido"),
+        telefone: z.string().optional(),
+        endereco: z.object({
+            cep: z.string().min(9, "CEP incompleto"),
+            rua: z.string().min(3, "informe a rua")
+        })
+    });
+    // #endregion
+
+    // #region modo-ts
+    type Cadastro = {
+        nome?: string
+        cpf?: string
+        email?: string
+        telefone?: string
+        endereco?: {
+            cep?: string
+            rua?: string
+        }
+    };
+
+    const { data: tsData } = useRForm<Cadastro>();
+    // #endregion
+
+    const parses = ref<Record<string, unknown>>({});
+
+    const active = computed(() => {
+        const table = {
+            schema: { data: schemaData.value, rules: schemaRules },
+            zod: { data: zodData.value, rules: zodRules },
+            ts: { data: tsData.value, rules: undefined }
+        } as const;
+
+        const current = table[mode.value as keyof typeof table];
+
+        return {
+            data: current.data,
+            rules: current.rules,
+            parse: parses.value[mode.value]
+                ?? (current.rules ? "clique em submit" : "este modo não devolve rules")
+        };
     });
 
-    // // formar o formulário de forma dinâmica
-    // // rules tem que ser regra do zod/v4
-    // // fn que retorna { rules, schema, data } para alimentar o <RForm>
-    // const { rules, schema, data } = useRForm({
-    //     name: {
-    //         type: "text",
-    //         label: "nome",
-    //         rule: z.string()
-    //     },
-    //     years: {
-    //         type: "number",
-    //         label: "Idade",
-    //         min: 18,
-    //         max: 30,
-    //         rule: z.number().min(18).max(30)
-    //     },
-    //     payload: {
-    //         type: "object",
-    //         label: "payload",
-    //         children: {
-    //             var: {
-    //                 type: "text",
-    //                 label: "nome",
-    //                 rule: z.string()
-    //             }
-    //         }
-    //     }
-    // });
+    /**
+     * `safeParseAsync`, not `safeParse`: a rule referenced by preset name becomes
+     * `z.any().superRefine(async …)` in the aggregated object, and a sync parse
+     * would throw on it.
+     */
+    const submit = async () => {
+        const { rules, data } = active.value;
 
-    // // tipar com regras
-    // const { rules, data } = useRForm({
-    //     name: z.string(),
-    //     years: z.number().min(18).max(30),
-    //     payload: z.object({
-    //         var: z.string()
-    //     })
-    // });
-
-    // // tipar com ts
-    // const { data } = useRForm<{
-    //     name: string;
-    //     years: number;
-    //     payload: {
-    //         var: string;
-    //     };
-    // }>();
-
-    // // poder usar slots para personalizar
-    // // esse slot vai receber { name, rule } e tem que usar uma component de rform la, ou com suporte a api da rform
-    // const { rules, schema, data } = useRForm({
-    //     name: {
-    //         type: "text",
-    //         label: "nome",
-    //         rule: z.string()
-    //     },
-    //     years: {
-    //         type: "number",
-    //         label: "Idade",
-    //         min: 18,
-    //         max: 30,
-    //         rule: z.number().min(18).max(30)
-    //     },
-    //     payload: {
-    //         type: "object",
-    //         label: "payload",
-    //         children: {
-    //             var: {
-    //                 type: "text",
-    //                 label: "nome",
-    //                 rule: z.string()
-    //             }
-    //         }
-    //     },
-    //     users: {
-    //         slot: "users",
-    //         rule: z.array()
-    //     }
-    // });
+        parses.value = {
+            ...parses.value,
+            [mode.value]: rules
+                ? await rules.safeParseAsync(data)
+                : "este modo não devolve rules"
+        };
+    };
 </script>

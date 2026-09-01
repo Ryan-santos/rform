@@ -213,3 +213,34 @@
 
     @apply mask-transparent-border;
 }
+
+/**
+ * Bloco de código tem fundo próprio, escuro nos dois temas: é um pedaço de editor
+ * dentro da página, não um parágrafo. Por isso as cores dos tokens são fixas — sem
+ * light-dark() — e o texto do painel nasce claro.
+ */
+@theme static {
+    --color-code: #171B2C;
+    --color-code-head: #12162A;
+    --color-code-line: #2B3355;
+    --color-code-text: #E6E9F5;
+}
+
+/**
+ * A paleta dos tokens vive aqui, e não em classes do Tailwind, porque quem emite
+ * as classes é o highlight.ts — string montada em runtime não passa pelo scanner.
+ */
+@layer base {
+    .tok-tag { color: #7DEBA0; }
+    .tok-attr { color: #8BE9FD; font-style: italic; }
+    .tok-string { color: #F5F0A0; }
+    .tok-keyword { color: #FF7B9C; }
+    .tok-literal { color: #C3A6FF; }
+    .tok-number { color: #C3A6FF; }
+    .tok-key { color: #8BE9FD; }
+    .tok-fn { color: #7DEBA0; }
+    .tok-prop { color: #8BE9FD; }
+    .tok-interp { color: #FFB86C; }
+    .tok-comment { color: #7683B8; font-style: italic; }
+    .tok-punct { color: #FF9EC4; }
+}

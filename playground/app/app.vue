@@ -3,7 +3,7 @@
         <Head>
             <Meta
                 name="color-scheme"
-                :content="`only ${$colorMode.preference}`"
+                :content="`only ${$colorMode.value}`"
             />
         </Head>
 
@@ -13,7 +13,5 @@
         />
 
         <NuxtPage />
-
-        <Theme />
     </NuxtLayout>
 </template>

@@ -46,6 +46,7 @@
 
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
+    import { defineDefaults } from "#rform/utils";
 
     let lockCount = 0;
     const savedBody: {
@@ -148,7 +149,7 @@
         }
     };
 
-    export const defaultUi = {
+    const ui = {
         transition: {
             name: "",
             enterActiveClass: "transition-opacity duration-300",
@@ -161,12 +162,10 @@
         popover: ""
     };
 
-    export type Props = {
-        ui?: DeepPartial<typeof defaultUi>
-    };
+    export const defaults = defineDefaults({ ui });
 
-    export const defaults: Props = {
-        ui: defaultUi
+    export type Props = {
+        ui?: DeepPartial<typeof defaults.ui>
     };
 </script>
 

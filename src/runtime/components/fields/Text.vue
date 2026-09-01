@@ -12,13 +12,13 @@
 
             <div :class="props.ui?.group?.field?.container">
                 <RUtilsPlaceholder />
-                <textarea
+                <input
                     v-model="model"
                     v-mask="mask"
                     :name="String(props.name)"
-                    :rows="props.rows"
-                    :class="props.ui?.group?.field?.textarea"
-                />
+                    type="text"
+                    :class="props.ui?.group?.field?.input"
+                >
             </div>
 
             <RUtilsLength />
@@ -51,21 +51,24 @@
             container: "flex grow flex-col gap-1",
             group: {
                 wrapper: {
-                    container: "relative z-0 flex w-full flex-row items-center rounded-xl bg-background-100 outline-2 outline-transparent transition-all duration-300 has-[:focus]:text-primary has-[:focus]:outline-primary",
+                    container: `
+                        relative z-0 flex w-full flex-row items-center rounded-xl
+                        bg-background-100 outline-2 outline-transparent transition-all duration-300
+                        has-[:focus]:text-primary has-[:focus]:outline-primary
+                    `,
                     leading: "p-3 pr-0 flex",
                     trailing: "p-3 pl-0 flex"
                 },
                 field: {
                     container: "grow",
-                    textarea: "w-full rounded-lg bg-transparent outline-none p-3"
+                    input: "w-full rounded-lg bg-transparent outline-none p-3"
                 }
             }
         },
-        default: "",
-        rows: 3
+        default: ""
     });
 
-    export type Props = Element<typeof defaults, "textarea">
+    export type Props = Element<typeof defaults, "text">
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Loading"]
@@ -73,7 +76,6 @@
         & Utils["Placeholder"]
         & {
             mask?: Mask
-            rows?: number
         };
 </script>
 

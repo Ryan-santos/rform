@@ -17,7 +17,7 @@
         type DisableSpec,
         type Mode,
         type ModelType
-    } from "./Utils/Calendar.vue";
+    } from "../utils/Calendar.vue";
 
     export type { DateValue, DisableSpec, Mode, ModelType };
 

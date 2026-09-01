@@ -16,6 +16,7 @@ export default defineConfig({
                         "#rform/composables": `${rformAliasRoot}/composables.ts`,
                         "#rform/defaults": `${rformAliasRoot}/defaults.ts`,
                         "#rform/presets": `${rformAliasRoot}/presets.ts`,
+                        "#rform/registry": `${rformAliasRoot}/registry.ts`,
                         "#rform/utils": `${rformAliasRoot}/utils.ts`,
                         "#rform/types/components/utils/props": `${rformAliasRoot}/types/components/utils/props.ts`,
                         "#rform/types/components/utils": `${rformAliasRoot}/types/components/utils/index.ts`,
@@ -55,7 +56,7 @@ export default defineConfig({
         coverage: {
             provider: "v8",
             include: ["src/runtime/**"],
-            exclude: ["**/*.d.ts", "src/runtime/components/Utils/**"]
+            exclude: ["**/*.d.ts", "src/runtime/components/utils/**"]
         }
     }
 });

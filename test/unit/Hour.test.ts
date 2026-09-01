@@ -5,7 +5,7 @@ import {
     formatTime,
     pad,
     parseTime
-} from "../../src/runtime/components/Hour.vue";
+} from "../../src/runtime/components/fields/Hour.vue";
 
 describe("pad", () => {
     it("zero-pads a single digit to two chars", () => {

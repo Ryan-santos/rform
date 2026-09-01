@@ -4,7 +4,7 @@ import {
     formatIsoDate,
     formatIsoDateTime,
     parseIncoming
-} from "../../src/runtime/components/Utils/Calendar.vue";
+} from "../../src/runtime/components/utils/Calendar.vue";
 
 describe("formatIsoDate", () => {
     it("formats a Date as YYYY-MM-DD", () => {

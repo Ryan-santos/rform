@@ -149,12 +149,12 @@
 
 <script lang="ts">
     import { computed, ref, watch } from "vue";
-    import { vMask } from "#rform/utils";
+    import { defineDefaults, vMask } from "#rform/utils";
 
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
 
-    import { formatTime, pad, parseTime } from "../Hour.vue";
+    import { formatTime, pad, parseTime } from "../fields/Hour.vue";
 
     export type Mode = "single" | "range" | "multiple";
 
@@ -219,7 +219,7 @@
         return null;
     };
 
-    export const defaultUi = {
+    const ui = {
         container: `
             flex w-full flex-col gap-3 rounded-xl border border-contrast/10
             bg-background-100 p-3 shadow-lg
@@ -295,15 +295,13 @@
         }
     };
 
+    export const defaults = defineDefaults({ ui });
+
     export type Props = {
         mode?: Mode
         time?: boolean
         disable?: DisableSpec
-        ui?: DeepPartial<typeof defaultUi>
-    };
-
-    export const defaults: Props = {
-        ui: defaultUi
+        ui?: DeepPartial<typeof defaults.ui>
     };
 
     const stripTime = (d: Date) =>

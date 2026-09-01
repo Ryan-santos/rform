@@ -1,7 +1,9 @@
-import vitePlugin from "./vite.plugin";
+import { readdir } from "node:fs/promises";
+import { basename, dirname, join, relative } from "node:path";
 
 import {
     defineNuxtModule,
+    addComponent,
     addComponentsDir,
     createResolver,
     addTypeTemplate,
@@ -10,17 +12,32 @@ import {
     addVitePlugin
 } from "nuxt/kit";
 
-import { readdir } from "node:fs/promises";
-import { basename, join } from "node:path";
-
+import { name, version } from "../package.json";
 import { collectPresets } from "./presets";
-
-import {
-    name,
-    version
-} from "../package.json";
+import { collectComponents, type ComponentFile } from "./scan";
+import vitePlugin from "./vite.plugin";
 
 const { resolve } = createResolver(import.meta.url);
+
+/**
+ * A module specifier for a generated template. Backslashes would be escapes in
+ * the emitted source, and a `.ts` suffix needs `allowImportingTsExtensions`,
+ * which a consumer app has no reason to set. `.vue` is kept — it is required.
+ */
+const specifier = (path: string) =>
+    JSON.stringify(
+        path
+            .split("\\")
+            .join("/")
+            .replace(/\.[tj]s$/, "")
+    );
+
+/**
+ * Forward-slashed: this path is both written into generated source, where a
+ * backslash is an escape, and handed to `addComponent`, which — unlike
+ * `addComponentsDir` — does not normalize it before it becomes an import.
+ */
+const filePath = ({ root, file }: ComponentFile) => join(root, file).split("\\").join("/");
 
 export default defineNuxtModule({
     meta: {
@@ -52,31 +69,79 @@ export default defineNuxtModule({
         }
     },
 
-    async setup (_, nuxt) {
+    async setup(_, nuxt) {
         const componentsPath = resolve("runtime/components");
 
-        const componentsProps = async (path: string = "") => (await readdir(resolve(componentsPath, path)))
-            .map((file) => {
-                if (!file.endsWith(".vue")) {
-                    return null;
-                }
+        const roots = {
+            /** Form and Dynamic — neither is a field, so neither is replaceable. */
+            containers: componentsPath,
+            fields: resolve("runtime/components/fields"),
+            utils: resolve("runtime/components/utils"),
+            userFields: join(nuxt.options.srcDir, name, "fields"),
+            userUtils: join(nuxt.options.srcDir, name, "utils")
+        };
 
-                return {
-                    name: basename(file, ".vue"),
-                    importer: `import("${resolve(componentsPath, path, file)}").Props`
-                };
-            })
-            .filter(v => v !== null);
+        /** `null` when the directory is absent — the two user roots are optional. */
+        const listing = Object.fromEntries(
+            await Promise.all(
+                Object.entries(roots).map(
+                    async ([key, path]) => [key, await readdir(path).catch(() => null)] as const
+                )
+            )
+        ) as Record<keyof typeof roots, string[] | null>;
 
-        const components = await componentsProps();
-        const componentsUtils = await componentsProps("Utils");
+        /**
+         * Built-in root first, so a user component of the same name replaces it
+         * — the same precedence the presets already use.
+         */
+        const scan = (...keys: Array<keyof typeof roots>) =>
+            collectComponents(
+                keys.map((key) => ({
+                    root: roots[key],
+                    files: listing[key] ?? [],
+                    user: key.startsWith("user")
+                }))
+            );
+
+        const containers = scan("containers");
+        const fields = scan("fields", "userFields");
+        const utils = scan("utils", "userUtils");
+
+        /** Everything with a `Props` type: what `defineFieldDefaults` is keyed by. */
+        const components = [...containers, ...fields];
+
+        /**
+         * Relative, not absolute — and only here, where a `.vue` file's `Props`
+         * is read back as a type.
+         *
+         * `@vue/compiler-sfc` resolves a relative type import with plain `fs`,
+         * but sends anything else through TypeScript's module resolution, which
+         * does not resolve a bare `.vue` specifier on its own. Staying relative
+         * keeps this hop off that path entirely.
+         */
+        const relativeSpecifier = (template: string, target: string) => {
+            const from = dirname(join(nuxt.options.buildDir, template));
+            const path = relative(from, target).split("\\").join("/");
+
+            return JSON.stringify(path.startsWith(".") ? path : `./${path}`);
+        };
+
+        const importer = (template: string) => (component: ComponentFile) =>
+            `import(${relativeSpecifier(template, filePath(component))}).Props`;
+
+        const componentsTypes = `${name}/types/components/index.ts`;
 
         addTemplate({
-            filename: `${name}/types/components/index.ts`,
+            filename: componentsTypes,
             write: true,
             getContents: () =>
                 [
-                    components.map(({ name, importer }) => `export type ${name} = ${importer}`).join("\n   "),
+                    components
+                        .map(
+                            (component) =>
+                                `export type ${component.name} = ${importer(componentsTypes)(component)}`
+                        )
+                        .join("\n   "),
                     "export type Utils = import('./utils').default",
                     "",
                     "export default interface All {",
@@ -86,15 +151,22 @@ export default defineNuxtModule({
                 ].join("\n")
         });
 
+        const utilsTypes = `${name}/types/components/utils/index.ts`;
+
         addTemplate({
-            filename: `${name}/types/components/utils/index.ts`,
+            filename: utilsTypes,
             write: true,
             getContents: () =>
                 [
-                    componentsUtils.map(({ name, importer }) => `export type ${name} = ${importer}`).join("\n"),
+                    utils
+                        .map(
+                            (component) =>
+                                `export type ${component.name} = ${importer(utilsTypes)(component)}`
+                        )
+                        .join("\n"),
                     "",
                     "export default interface All {",
-                    `   ${componentsUtils.map(({ name }) => `${name}: ${name}`).join("\n    ")}`,
+                    `   ${utils.map(({ name }) => `${name}: ${name}`).join("\n    ")}`,
                     "}"
                 ].join("\n")
         });
@@ -106,10 +178,15 @@ export default defineNuxtModule({
                 [
                     "type Utils = import('./').default",
                     "",
-                    componentsUtils.map(({ name }) => `export type ${name} = Omit<Utils["${name}"], "ui"> & { ui?: { Utils?: { ${name}?: Utils["${name}"]["ui"] } } }`).join("\n   "),
+                    utils
+                        .map(
+                            ({ name }) =>
+                                `export type ${name} = Omit<Utils["${name}"], "ui"> & { ui?: { Utils?: { ${name}?: Utils["${name}"]["ui"] } } }`
+                        )
+                        .join("\n   "),
                     "",
                     "export default interface All {",
-                    `   ${componentsUtils.map(({ name }) => `${name}: ${name}`).join("\n    ")}`,
+                    `   ${utils.map(({ name }) => `${name}: ${name}`).join("\n    ")}`,
                     "}"
                 ].join("\n")
         });
@@ -120,8 +197,41 @@ export default defineNuxtModule({
             getContents: () => `export * from "${resolve("type")}"`
         });
 
-        const fieldComponents = components.filter(({ name }) =>
-            !["Form", "Dynamic"].includes(name));
+        /**
+         * Name -> module, resolved across both roots. `useInjection` reads a
+         * component's own `defaults` through this: a relative dynamic import
+         * inside the composable compiles to a glob rooted at the module, which
+         * a component under `app/rform` would never be part of.
+         *
+         * The entries are thunks, so `Text.vue -> useInjection -> registry ->
+         * Text.vue` never closes at load time.
+         */
+        addTemplate({
+            filename: `${name}/registry.ts`,
+            write: true,
+            getContents: () => {
+                const record = (list: ComponentFile[]) =>
+                    list
+                        .map(
+                            (component) =>
+                                `    ${component.name}: () => import(${specifier(filePath(component))})`
+                        )
+                        .join(",\n");
+
+                return [
+                    "// auto-generated — component name → module, for runtime defaults lookup",
+                    "export const components = {",
+                    record(components),
+                    "};",
+                    "",
+                    "export const utils = {",
+                    record(utils),
+                    "};",
+                    "",
+                    "export default { components, utils };"
+                ].join("\n");
+            }
+        });
 
         const containerChildren: Record<string, string> = {
             Object: "Schema",
@@ -131,41 +241,50 @@ export default defineNuxtModule({
         addTemplate({
             filename: `${name}/components-map.ts`,
             write: true,
-            getContents: () => [
-                "// auto-generated — type → component module",
-                ...fieldComponents.map(({ name }) =>
-                    `import ${name} from ${JSON.stringify(resolve(componentsPath, `${name}.vue`))};`),
-                "",
-                "export default {",
-                ...fieldComponents.map(({ name }) =>
-                    `    ${JSON.stringify(name.toLowerCase())}: ${name},`),
-                "} as const;"
-            ].join("\n")
+            getContents: () =>
+                [
+                    "// auto-generated — type → component module",
+                    ...fields.map(
+                        (component) =>
+                            `import ${component.name} from ${specifier(filePath(component))};`
+                    ),
+                    "",
+                    "export default {",
+                    ...fields.map(
+                        ({ name }) => `    ${JSON.stringify(name.toLowerCase())}: ${name},`
+                    ),
+                    "} as const;"
+                ].join("\n")
         });
 
         /**
          * Standalone on purpose: `available` in a rule preset is typed against
          * this, and the presets are themselves read back by `types/presets.d.ts`.
-         * Deriving it from the component Props would close that loop.
+         * Deriving it from the component Props would close that loop — which is
+         * also why this is a literal union built from file names, and stays that
+         * way now that user components feed it.
          */
         addTypeTemplate({
             filename: `${name}/types/fields.d.ts`,
             write: true,
-            getContents: () => [
-                "// auto-generated — the field type each component maps to",
-                "export type FieldType =",
-                ...fieldComponents.map(({ name }, index) =>
-                    `    | ${JSON.stringify(name.toLowerCase())}${
-                        index === fieldComponents.length - 1 ? ";" : ""
-                    }`)
-            ].join("\n")
+            getContents: () =>
+                [
+                    "// auto-generated — the field type each component maps to",
+                    "export type FieldType =",
+                    ...fields.map(
+                        ({ name }, index) =>
+                            `    | ${JSON.stringify(name.toLowerCase())}${
+                                index === fields.length - 1 ? ";" : ""
+                            }`
+                    )
+                ].join("\n")
         });
 
         addTypeTemplate({
             filename: `${name}/types/schema.d.ts`,
             write: true,
             getContents: () => {
-                const fieldNames = fieldComponents.map(c => c.name);
+                const fieldNames = fields.map((field) => field.name);
                 return [
                     `import type Components from "./components";`,
                     `import type { Rule } from "./presets";`,
@@ -184,13 +303,16 @@ export default defineNuxtModule({
                     ``,
                     ...fieldNames.map((n) => {
                         const t = n.toLowerCase();
-                        const extra = containerChildren[n] ? `; children: ${containerChildren[n]}` : "";
+                        const extra = containerChildren[n]
+                            ? `; children: ${containerChildren[n]}`
+                            : "";
                         return `export type Field${n} = Base<Components["${n}"], "${t}"> & { type: "${t}"${extra} };`;
                     }),
                     ``,
                     `export type FieldConfig =`,
-                    ...fieldNames.map((n, i) =>
-                        `    | Field${n}${i === fieldNames.length - 1 ? ";" : ""}`),
+                    ...fieldNames.map(
+                        (n, i) => `    | Field${n}${i === fieldNames.length - 1 ? ";" : ""}`
+                    ),
                     ``,
                     `export type InferData<S extends Schema> = {`,
                     `    [K in keyof S]:`,
@@ -214,9 +336,6 @@ export default defineNuxtModule({
             join(nuxt.options.srcDir, name, "presets")
         ];
 
-        const specifier = (path: string) =>
-            JSON.stringify(path.split("\\").join("/").replace(/\.[tj]s$/, ""));
-
         /**
          * `app/rform/defaults.ts` — what the user overrides on top of each
          * component's own `defaults`. The template exists either way, so the
@@ -225,7 +344,7 @@ export default defineNuxtModule({
         const userDefaultsFile = async () => {
             const dir = join(nuxt.options.srcDir, name);
             const files = await readdir(dir).catch(() => [] as string[]);
-            const file = files.find(entry => /^defaults\.[tj]s$/.test(entry));
+            const file = files.find((entry) => /^defaults\.[tj]s$/.test(entry));
 
             return file ? join(dir, file) : null;
         };
@@ -241,9 +360,7 @@ export default defineNuxtModule({
                     `import type Components from "#${name}/types/components";`,
                     `import type { DeepPartial } from ${specifier(resolve("type"))};`,
                     "",
-                    file
-                        ? `import defaults from ${specifier(file)};`
-                        : "const defaults = {};",
+                    file ? `import defaults from ${specifier(file)};` : "const defaults = {};",
                     "",
                     "export default defaults as DeepPartial<Components>;"
                 ].join("\n");
@@ -255,12 +372,11 @@ export default defineNuxtModule({
             const files = await readdir(dir, { recursive: true }).catch(() => [] as string[]);
 
             try {
-                return collectPresets(files).map(preset => ({
+                return collectPresets(files).map((preset) => ({
                     name: preset.name,
                     path: join(dir, preset.file)
                 }));
-            }
-            catch (error) {
+            } catch (error) {
                 // Nuxt reports a template failure without its cause, so the
                 // collision details would otherwise never reach the terminal.
                 console.error((error as Error).message, `\n  in ${dir}`);
@@ -296,10 +412,15 @@ export default defineNuxtModule({
                     const prefix = kind === "rules" ? "_rule" : "_mask";
 
                     return {
-                        imports: kinds[kind].map(([, path], index) =>
-                            `import ${prefix}${index} from ${specifier(path)};`),
-                        record: kinds[kind].map(([preset], index) =>
-                            `    ${JSON.stringify(preset)}: ${prefix}${index}`).join(",\n")
+                        imports: kinds[kind].map(
+                            ([, path], index) => `import ${prefix}${index} from ${specifier(path)};`
+                        ),
+                        record: kinds[kind]
+                            .map(
+                                ([preset], index) =>
+                                    `    ${JSON.stringify(preset)}: ${prefix}${index}`
+                            )
+                            .join(",\n")
                     };
                 };
 
@@ -329,8 +450,10 @@ export default defineNuxtModule({
             write: true,
             getContents: async () => {
                 const entries = (list: Array<[string, string]>) =>
-                    list.map(([preset, path]) =>
-                        `    ${JSON.stringify(preset)}: typeof import(${specifier(path)}).default;`);
+                    list.map(
+                        ([preset, path]) =>
+                            `    ${JSON.stringify(preset)}: typeof import(${specifier(path)}).default;`
+                    );
 
                 return [
                     `import type { ZodType } from "zod";`,
@@ -388,22 +511,23 @@ export default defineNuxtModule({
 
             const watched = [
                 ...presetRoots,
+                roots.userFields,
+                roots.userUtils,
                 // `defaults` with no extension, so `defaults.ts` and `defaults.js` both hit.
                 join(nuxt.options.srcDir, name, "defaults")
             ];
 
-            if (watched.some(root => absolute.startsWith(root))) {
+            if (watched.some((root) => absolute.startsWith(root))) {
                 return nuxt.callHook("builder:generateApp");
             }
         });
 
         const composablesPath = resolve("runtime/composables");
 
-        const composables = (await readdir(composablesPath))
-            .map(file => ({
-                name: basename(file, ".ts"),
-                path: resolve(composablesPath, file)
-            }));
+        const composables = (await readdir(composablesPath)).map((file) => ({
+            name: basename(file, ".ts"),
+            path: resolve(composablesPath, file)
+        }));
 
         addTemplate({
             filename: `${name}/composables.ts`,
@@ -424,50 +548,104 @@ export default defineNuxtModule({
 
         const utilsPath = resolve("runtime/utils");
 
-        const utils = (await readdir(utilsPath))
-            .map(file => ({
-                name: basename(file, ".ts"),
-                path: resolve(utilsPath, file)
-            }));
+        const helpers = (await readdir(utilsPath)).map((file) => ({
+            name: basename(file, ".ts"),
+            path: resolve(utilsPath, file)
+        }));
 
         addTemplate({
             filename: `${name}/utils.ts`,
             write: true,
             getContents: () =>
                 [
-                    utils.map(({ name, path }) => `import ${name} from "${path}"`).join("\n"),
+                    helpers.map(({ name, path }) => `import ${name} from "${path}"`).join("\n"),
                     "",
                     // Named exports too, so `#rform/utils` is the single public
                     // entry — `defineRule` and friends are imported, not global.
                     // Extensionless: a `.ts` specifier needs
                     // `allowImportingTsExtensions`, which a consumer app may not set.
-                    utils.map(({ path }) => `export * from ${specifier(path)}`).join("\n"),
+                    helpers.map(({ path }) => `export * from ${specifier(path)}`).join("\n"),
                     "",
                     "export {",
-                    `   ${utils.map(({ name }) => name).join(",\n   ")}`,
+                    `   ${helpers.map(({ name }) => name).join(",\n   ")}`,
                     "}",
                     "",
                     "export default {",
-                    `   ${utils.map(({ name }) => name).join(",\n   ")}`,
+                    `   ${helpers.map(({ name }) => name).join(",\n   ")}`,
                     "}"
                 ].join("\n")
         });
 
-        const alias = {
-            name: `#${name}`,
-            path: `${nuxt.options.buildDir}/${name}`
-        };
-
         nuxt.options.alias ||= {};
-        nuxt.options.alias[`${alias.name}`] = alias.path;
-        nuxt.options.alias[`${alias.name}/*`] = `${alias.path}/*`;
+
+        /**
+         * Registered before `#rform`: Vite matches aliases in insertion order,
+         * so the shorter prefix would otherwise swallow this one into the build
+         * directory. It is what lets a replacement wrap the original —
+         * `import Base from "#rform/builtin/fields/Text.vue"`.
+         */
+        nuxt.options.alias[`#${name}/builtin`] = componentsPath;
+        nuxt.options.alias[`#${name}/builtin/*`] = `${componentsPath}/*`;
+
+        const alias = `${nuxt.options.buildDir}/${name}`;
+
+        nuxt.options.alias[`#${name}`] = alias;
+        nuxt.options.alias[`#${name}/*`] = `${alias}/*`;
+
+        /**
+         * One by one, not as a directory. Nuxt's scanner skips any file under a
+         * path it has already scanned, so registering `components/` would claim
+         * `components/fields` and `components/utils` and leave both empty.
+         */
+        for (const component of containers) {
+            addComponent({
+                name: `R${component.name}`,
+                filePath: filePath(component),
+                preload: true,
+                prefetch: true
+            });
+        }
 
         addComponentsDir({
             prefix: "R",
+            pathPrefix: false,
             preload: true,
             prefetch: true,
-            path: componentsPath
+            path: roots.fields
         });
+
+        addComponentsDir({
+            prefix: "RUtils",
+            pathPrefix: false,
+            preload: true,
+            prefetch: true,
+            path: roots.utils
+        });
+
+        /**
+         * Higher priority than the built-ins, so a same-named user component
+         * wins every `<RText>` / `<RUtilsLabel>` in the app — including the ones
+         * inside the module's own templates.
+         */
+        for (const [key, prefix] of [
+            ["userFields", "R"],
+            ["userUtils", "RUtils"]
+        ] as const) {
+            // Both are optional, and registering an absent directory only earns
+            // a Nuxt warning.
+            if (!listing[key]) {
+                continue;
+            }
+
+            addComponentsDir({
+                prefix,
+                pathPrefix: false,
+                preload: true,
+                prefetch: true,
+                priority: 10,
+                path: roots[key]
+            });
+        }
 
         addImports({
             name: "default",
@@ -475,6 +653,6 @@ export default defineNuxtModule({
             from: resolve("runtime/composables/useRForm")
         });
 
-        addVitePlugin(vitePlugin);
+        addVitePlugin(vitePlugin([roots.containers, roots.userFields, roots.userUtils]));
     }
 });

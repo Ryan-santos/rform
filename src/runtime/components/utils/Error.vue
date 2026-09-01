@@ -15,24 +15,22 @@
 <script lang="ts">
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { classes } from "#rform/utils";
+    import { defineDefaults } from "#rform/utils";
 
-    export const defaultUi = {
-        container: classes("text-danger ml-1 text-sm font-semibold tracking-wide"),
-        icon: {
-            name: "alert",
-            class: "mr-0.5 -mb-0.5 animate-pulse"
+    export const defaults = defineDefaults({
+        error: "",
+        ui: {
+            container: "text-danger ml-1 text-sm font-semibold tracking-wide",
+            icon: {
+                name: "alert",
+                class: "mr-0.5 -mb-0.5 animate-pulse"
+            }
         }
-    };
+    });
 
     export type Props = {
         error?: string
-        ui?: DeepPartial<typeof defaultUi>
-    };
-
-    export const defaults: Props = {
-        error: "",
-        ui: defaultUi
+        ui?: DeepPartial<typeof defaults.ui>
     };
 </script>
 

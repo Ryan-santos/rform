@@ -18,7 +18,8 @@ export const nav: NavGroup[] = [
     {
         title: "Conceitos",
         items: [
-            { label: "ui e Defaults", tag: "defaults", to: "/ui" }
+            { label: "ui e Defaults", tag: "defaults", to: "/ui" },
+            { label: "Campos próprios", tag: "app/rform", to: "/customizados" }
         ]
     },
     {

@@ -12,7 +12,7 @@
         "lint": "oxlint",
         "test": "vitest run",
         "test:watch": "vitest watch",
-        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p playground/.nuxt/tsconfig.app.json --noEmit"
+        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p playground/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json --noEmit"
     },
     "peerDependencies": {
         "zod": "^4.0.0"

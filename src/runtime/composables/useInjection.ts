@@ -15,6 +15,7 @@ import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
 import { merger, resolveMask, resolveRule } from "#rform/utils";
 import { masks, rules } from "#rform/presets";
+import { components as registry } from "#rform/registry";
 import userDefaults from "#rform/defaults";
 import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
@@ -47,10 +48,18 @@ export default async function <
         get?: (value: T["modelValue"]) => G
     },
     /**
-     * Defined by vite
+     * Injected by the vite plugin from the component's own file name.
      */
-    componentName: keyof Components = "Text"
+    componentName?: keyof Components
 ) {
+    // No fallback: defaulting to another component's name renders the field
+    // with the wrong defaults and never says so.
+    if (!componentName || !(componentName in registry)) {
+        throw new Error(
+            `[rform] useInjection could not resolve a component name${componentName ? ` (got "${componentName}")` : ""}. A field has to live in the module's own components directory or in app/rform/fields for the build to inject it.`
+        );
+    }
+
     const defaults = shallowRef<Element>({});
     const overrides = userDefaults[componentName];
 
@@ -214,7 +223,12 @@ export default async function <
         immediate: true
     });
 
-    defaults.value = (await import(`../components/${componentName}.vue`))?.defaults;
+    // Through the generated registry, not a relative dynamic import: the latter
+    // compiles to a glob rooted at this file, which `app/rform/fields` is not in.
+    const load = registry[componentName as keyof typeof registry] as
+        () => Promise<{ defaults?: Element }>;
+
+    defaults.value = (await load())?.defaults ?? {};
 
     /**
      * The watch above already ran, but back then `defaults.value` was still

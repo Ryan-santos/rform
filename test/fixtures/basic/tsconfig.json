@@ -1,0 +1,18 @@
+{
+    "//": "A fixture é um app Nuxt e precisa do próprio tsconfig, como qualquer app consumidor. Sem ele, `ts.findConfigFile` sobe a partir de `rform/fields/*.vue` até o tsconfig da raiz do repo — que aponta para o `.nuxt` do módulo. O `@vue/compiler-sfc` resolveria `#rform/types/...` contra os tipos gerados do módulo, onde os componentes de `app/rform` não existem, e as props que um util de usuário contribui sumiriam caladas: `<RRating hint=\"…\">` viraria atributo de fallthrough em vez de prop.",
+    "files": [],
+    "references": [
+        {
+            "path": "./.nuxt/tsconfig.app.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.server.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.shared.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.node.json"
+        }
+    ]
+}

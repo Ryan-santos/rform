@@ -1,8 +1,13 @@
 import type { Rule } from "#rform/types/presets";
 
+/**
+ * `default` is optional so that `defineDefaults` types a Utils component too —
+ * a Label or an Error has a `ui` but no model of its own, and a second helper
+ * just for them would mean two conventions for the same job.
+ */
 export interface Base {
     ui: Record<string, unknown> | string
-    default: unknown
+    default?: unknown
 }
 
 export type ConvertNeverToUnknown<T>

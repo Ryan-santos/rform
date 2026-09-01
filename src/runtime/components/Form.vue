@@ -43,7 +43,9 @@
         schema: {} as Schema
     });
 
-    export type Props<T extends Base = Base> = Element<typeof defaults, "form"> & {
+    // No field type: Form lives outside `components/fields`, so it has no
+    // member in `FieldType` to narrow `rule` against.
+    export type Props<T extends Base = Base> = Element<typeof defaults> & {
         schema?: Schema;
         onSubmit?: (data: T) => unknown | Promise<unknown>
     };

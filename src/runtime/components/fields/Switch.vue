@@ -56,7 +56,10 @@
                 container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
                 ifPlaceholder: "rounded-xl border border-background-100 p-2",
                 button: {
-                    container: "relative flex w-11 flex-row rounded-full bg-background-100 p-0.5 contain-content",
+                    container: `
+                        relative flex w-11 flex-row rounded-full bg-background-100 p-0.5
+                        contain-content
+                    `,
                     input: "peer pointer-events-none absolute -z-50 opacity-0",
                     indicator: `
                         flex size-5 flex-row items-center justify-center rounded-full bg-current/20

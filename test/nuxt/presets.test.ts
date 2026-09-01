@@ -75,20 +75,33 @@ describe("br namespace", () => {
 });
 
 describe("FieldType", () => {
-    it("lists one member per field component", async () => {
+    it("lists one member per field component, across both roots", async () => {
         const contents = await read("rform/types/fields.d.ts");
         const generated = [...contents.matchAll(/"([^"]+)"/g)]
             .map(match => match[1] ?? "")
             .sort((a, b) => a.localeCompare(b));
 
-        const expected = (await readdir(join(root, "src/runtime/components")))
-            .filter(file => file.endsWith(".vue"))
-            .map(file => file.slice(0, -4))
-            .filter(name => !["Form", "Dynamic"].includes(name))
-            .map(name => name.toLowerCase())
-            .sort((a, b) => a.localeCompare(b));
+        const roots = [
+            join(root, "src/runtime/components/fields"),
+            join(root, "test/fixtures/basic/rform/fields")
+        ];
+
+        // A set: the fixture replaces `Switch`, which is one member, not two.
+        const expected = [...new Set(
+            (await Promise.all(roots.map(dir => readdir(dir))))
+                .flat()
+                .filter(file => file.endsWith(".vue"))
+                .map(file => file.slice(0, -4).toLowerCase())
+        )].sort((a, b) => a.localeCompare(b));
 
         expect(generated).toEqual(expected);
+    });
+
+    it("leaves out Form and Dynamic, which live outside `fields`", async () => {
+        const contents = await read("rform/types/fields.d.ts");
+
+        expect(contents).not.toContain(`"form"`);
+        expect(contents).not.toContain(`"dynamic"`);
     });
 
     it("covers the field types the masked components pass to Element", async () => {

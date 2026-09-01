@@ -21,9 +21,9 @@
 
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { classes } from "#rform/utils";
+    import { defineDefaults } from "#rform/utils";
 
-    export const defaultUi = classes({
+    const ui = {
         default: `
             text-contrast/30 bg-background-100 pointer-events-none block w-fit rounded-sm
             transition-[translate_position] duration-300
@@ -32,16 +32,14 @@
         notFilled: "relative top-3 left-3 -z-10 h-0",
         disable: "font-bold opacity-0",
         required: "text-danger font-bold"
-    });
+    };
+
+    export const defaults = defineDefaults({ ui });
 
     export type Props = {
         placeholder?: string;
         label?: string;
-        ui?: DeepPartial<typeof defaultUi>;
-    };
-
-    export const defaults: Props = {
-        ui: defaultUi
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 

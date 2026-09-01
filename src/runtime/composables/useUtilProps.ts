@@ -4,11 +4,9 @@ import type { ValueProp } from "./useInjection";
 import { computed, inject } from "vue";
 import { keyProp } from "./useInjection";
 import userDefaults from "#rform/defaults";
+import { utils as registry } from "#rform/registry";
 import { merger } from "#rform/utils";
 
-/**
- * @param componentName Defined by vite
- */
 /**
  * What a Utils component actually receives: the parent field's `Element` props,
  * its own props, and a `ui` merged over the complete defaults — so every `ui`
@@ -21,11 +19,26 @@ export type UtilProps<P> = Omit<Element & P, "ui"> & {
 export default async function <
     P extends Record<string, unknown> = Record<string, unknown>
 > (
-    componentName: keyof Utils = "Label"
+    /**
+     * Injected by the vite plugin from the component's own file name.
+     */
+    componentName?: keyof Utils
 ) {
+    // No fallback: defaulting to another component's name renders with the
+    // wrong defaults and never says so.
+    if (!componentName || !(componentName in registry)) {
+        throw new Error(
+            `[rform] useUtilProps could not resolve a component name${componentName ? ` (got "${componentName}")` : ""}. A util has to live in the module's own components/utils directory or in app/rform/utils for the build to inject it.`
+        );
+    }
+
     const upper = inject<ValueProp<P>>(keyProp, {} as ValueProp<P>);
     const overrides = userDefaults.Utils?.[componentName] as P;
-    const defaults = (await import(`../components/Utils/${componentName}.vue`))?.defaults as P;
+
+    const load = registry[componentName as keyof typeof registry] as unknown as
+        () => Promise<{ defaults?: P }>;
+
+    const defaults = (await load())?.defaults as P;
 
     const props = computed((): UtilProps<P> => {
         const {

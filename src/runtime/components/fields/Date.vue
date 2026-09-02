@@ -127,11 +127,11 @@
             group: {
                 wrapper: {
                     container: `
-                        relative z-0 flex w-full flex-row items-center rounded-xl
-                        bg-background-100 outline-2 transition-all duration-300
-                        has-[:focus]:outline-primary has-[:focus]:text-primary
+                        relative z-0 flex w-full flex-row items-center rounded-(--rf-radius-xl)
+                        bg-(--rf-color-background-100) outline-2 transition-all duration-300
+                        has-[:focus]:outline-(--rf-color-primary) has-[:focus]:text-(--rf-color-primary)
                     `,
-                    open: "text-primary outline-primary",
+                    open: "text-(--rf-color-primary) outline-(--rf-color-primary)",
                     closed: "outline-transparent",
                     leading: "flex p-3 pr-0",
                     trailing: "flex p-3 pl-0"
@@ -140,13 +140,13 @@
                     container: "relative grow",
                     inputs: "flex flex-row items-center transition-opacity duration-300",
                     inputsHidden: "opacity-0",
-                    input: "w-full rounded-lg bg-transparent p-3 outline-none",
+                    input: "w-full rounded-(--rf-radius-lg) bg-transparent p-3 outline-none",
                     inputEnd: "text-end",
                     separator: "my-auto w-fit px-1 opacity-50"
                 },
                 trigger: `
                     flex cursor-pointer p-3 transition-colors
-                    hover:text-primary
+                    hover:text-(--rf-color-primary)
                 `
             },
             popover: "z-999 w-72"

@@ -76,6 +76,65 @@ Entra no `merger` entre o `defaults` do componente e as props do call site, ent�
 
 O nome `defineFieldDefaults` está hardcoded em dois lugares fora do código: o selector de callee do `better-tailwindcss` em `oxlint.config.ts` e o `tailwindCSS.experimental.classRegex` em `.vscode/settings.json`. Renomear o helper sem mexer nos dois faz lint de classe e IntelliSense **pararem calados** dentro do `defaults.ts`. O `path` do matcher é `(^|\.)ui(\.|$)` — ancorado por segmento, então pega `ui.container`, `Text.ui.label.required` e `Utils.Placeholder.ui.default`, e deixa `Text.default` (que não é classe) de fora.
 
+### Tema: cores e radius (`src/runtime/style.css`)
+
+Nenhum `ui` do módulo usa token semântico do Tailwind. Toda cor e todo radius passam por variável própria, em forma de arbitrary property:
+
+```ts
+container: "rounded-(--rf-radius-xl) bg-(--rf-color-background-100) has-[:focus]:outline-(--rf-color-primary)"
+```
+
+São 16 variáveis, declaradas em `src/runtime/style.css`: `--rf-color-{background,background-100,background-200,background-300,contrast,primary,primary-fg,danger,danger-fg,success,warn}` e `--rf-radius-{sm,md,lg,xl,2xl}`. Trocar tema é trocar variável — `ui` não se mexe.
+
+O `background-200` é o único declarado sem nenhum `ui` embutido lendo: a escala é oferecida inteira ao app. Por isso ele está na lista `orphans` de `test/unit/theme.test.ts` — que também asserta o contrário, então no dia que um `ui` passar a usá-lo o teste manda tirar dali.
+
+**Isso já foi token do playground.** Os `ui` usavam `bg-background-100`, `text-contrast/50`, `outline-primary`, que só existem no `@theme` de `playground/app/assets/css/main.css`. Instalado em qualquer outro app, todo campo renderizava transparente. A lint não pegava porque `oxlint.config.ts` aponta o `entryPoint` do `better-tailwindcss` para o CSS **do playground**.
+
+#### A linha que o app escreve
+
+```css
+@import "tailwindcss";
+@import "#rform/tailwindcss";
+```
+
+Uma linha só, e ela traz as duas coisas: o `@source` dos componentes (o Tailwind não varre `node_modules`, então sem ele nenhuma classe do módulo é emitida) e um `@import` dos tokens.
+
+**A ordem das duas linhas afeta menos do que parece, mas afeta.** Ordem de layer é ordem de primeira aparição, então `#rform` antes deixa `rform` como a layer mais fraca, e depois como a mais forte. Só que isso só decide quem ganha quando **as duas** declaram a mesma variável. Medido no browser, com override de `--rf-color-primary`:
+
+| forma do override no app | `#rform` antes | `#rform` depois |
+|---|---|---|
+| `@theme { --rf-color-primary }` | pega | **ignora** |
+| `@layer base { :root { --rf-color-primary } }` | pega | **ignora** |
+| `@layer rform { :root { --rf-color-primary } }` | pega | pega |
+| `:root { --rf-color-primary }` (fora de layer) | pega | pega |
+| `@theme { --color-primary }` (encadeia) | pega | pega |
+
+As três de baixo são imunes à ordem, cada uma por um motivo diferente: mesma layer resolve por ordem de declaração (e o app vem depois); declaração fora de layer ganha de toda layer de autor; e `--color-primary` o módulo **nunca** declara, então não há conflito para resolver — é só o `var(--color-primary, …)` do default encontrando um valor.
+
+Ou seja: as duas formas naturais de fato usadas — encadear pelo tema do app, ou declarar `--rf-*` dentro de `@layer rform` — funcionam nas duas ordens. Quem quebra é declarar `--rf-*` **fora** da `@layer rform`, e aí quebra calado. `#rform` antes faz as cinco funcionarem, e por isso é a recomendação; o playground usa depois, com o override em `@layer rform` (`playground/app/assets/css/main.css:99`).
+
+É **template** gerado pelo `module.ts`, não um `.css` do `dist`, e o `@source` sai com caminho **absoluto**. Um `@source` relativo dentro de um arquivo publicado só funcionaria com o pacote instalado em `node_modules` — e o playground carrega o módulo por caminho relativo (`"../src/module"`), sem `rform` nas dependências e sem `node_modules/rform`. Com o template, a mesma linha vale para pacote instalado, link de workspace e caminho relativo.
+
+Tem de ser `@import` do entry do app, nunca `nuxt.options.css`: num arquivo que o Tailwind não trata como parte de um entry, `@source` é ignorado e a at-rule **vaza crua** para o browser. Já foi `nuxt.options.css.unshift(style.css)` + um segundo arquivo só com o `@source`; virou um arquivo só a pedido.
+
+Três nomes que não resolvem, todos testados: `#rform` puro (o alias aponta para um diretório e o resolver de CSS do Vite não pega `index.css` dele), `#rform/tailwindcss` pela regra geral `#rform/*` (sem extensão o Vite não acha o arquivo) e qualquer `@source` relativo. O nome sem extensão funciona por um **alias exato** `#rform/tailwindcss` → `<buildDir>/rform/tailwind.css`, registrado **antes** de `#rform/*`, que senão engole o caminho.
+
+Consequência de ter saído do `nuxt.options.css`: um app **sem Tailwind** não recebe mais token nenhum — nada mais os injeta. Para esse caso o `package.json` exporta `rform/style.css`, que dá para pôr no `css:` na mão.
+
+#### Invariantes do `style.css`
+
+- **`@layer rform`, e a declaração `@layer rform;` antes de qualquer bloco.** Declaração de autor fora de layer ganha de *toda* layer de autor, antes de especificidade entrar na conta — um `:root` solto aqui inverteria o override inteiro, calado, e nas duas ordens de import. A layer nomeada também é o que dá ao app o alvo imune à ordem da tabela acima.
+- **Só tokens.** Os resets do `.RForm` (spinner do `number`, o truque `transition: … 600000s` do autofill, `[data-autocompleted]`) moram no `<style>` do `Form.vue`, não aqui — assim chegam com o componente, inclusive num app que só registra `rform/style.css` no `css:`. Mesma `@layer rform`, mas **achatados**: o `<style>` de SFC passa pelo postcss do app, e o default do Nuxt tem só `autoprefixer` e `cssnano`, não `postcss-nested` (que é o que achata este arquivo, via mkdist). Não é `scoped` porque os `input` moram nos componentes filhos; quem delimita é a classe-gancho.
+- **Nenhuma at-rule do Tailwind.** Agora que o arquivo é `@import`ado do entry, `@theme` e `@apply` ali **seriam** processados — e é o que não se quer: um `@theme` do módulo despejaria variáveis e utilitários no namespace do design system do app (`--color-foo` viraria `bg-foo` lá). Só `@layer`/`@media`/`@supports`.
+
+Os defaults **encadeiam** no tema do app (`--rf-color-primary: var(--color-primary, #005BDF)`), então um app que já tem `primary` no `@theme` adota sozinho — é por isso que o playground não precisou de uma linha de override. Os degraus `-100`/`-200`/`-300` (10%/15%/20%) são derivados com `color-mix` em vez de encadeados: `--color-background-100` de outro app pode significar "tom mais claro" em vez de "10% na direção do contraste". Os três batem, medidos no browser, com o degrau de mesmo nome do playground — nos dois esquemas.
+
+Fica literal de propósito: `*-current/*` (já é `currentColor`), `bg-transparent`, `outline-transparent`, `rounded-{full,none,l-none,r-none}` (estruturais), o `bg-[linear-gradient(…#f00…)]` do matiz em `fields/Color.vue`, e o `border-white` dos marcadores do color picker — branco **por desenho**, para contrastar com uma cor arbitrária. Note a assimetria: `text-white` é drift (virou `-fg`), `border-white` não é.
+
+**`test/unit/theme.test.ts` é a guarda, e cobre o modo de falha novo.** `bg-(--rf-color-primry)` (typo) compila, passa na lint e renderiza `var(--undefined)` → transparente, calado em todo ambiente inclusive nos testes — pior que o `bg-primry` de antes, que ao menos não emitia regra. Os cinco casos: (a) nenhum token semântico cru voltou, (b) o conjunto de `--rf-*` usado nos componentes é **igual** ao declarado, nos dois sentidos, (c) o template tem exatamente um `@source` absoluto apontando para um diretório que de fato contém `fields/`, `utils/` e `Form.vue`, mais o `@import` dos tokens, (d) todo token mora dentro de `@layer rform`, (e) o `style.css` não tem at-rule do Tailwind. O (a) tokeniza o arquivo inteiro por whitespace e tira a pontuação das pontas — sem isso a última classe de cada literal chega como `text-white",` e escapa de todo padrão ancorado em `$`.
+
+`src/runtime/style.css` mora em `src/runtime/` porque o `@nuxt/module-builder` só constrói `src/module` e `src/runtime/` — um `.css` na raiz de `src/` nunca chega ao `dist`. O mkdist passa cssnano nele, então o arquivo publicado sai minificado (`@layer` sobrevive).
+
 ### Presets (rules e masks)
 
 Um arquivo = um preset. O nome vem do caminho relativo em camelCase (`br/insc-est.ts` → `brInscEst`).

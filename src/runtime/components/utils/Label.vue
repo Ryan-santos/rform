@@ -22,7 +22,7 @@
         label: "",
         ui: {
             container: "",
-            required: "font-bold text-danger"
+            required: "font-bold text-(--rf-color-danger)"
         }
     });
 

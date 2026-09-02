@@ -46,7 +46,7 @@
             container: "flex grow flex-col gap-1",
             group: {
                 container: "flex flex-row items-center gap-2",
-                input: "size-12 rounded-xl bg-background-100 text-center outline-none",
+                input: "size-12 rounded-(--rf-radius-xl) bg-(--rf-color-background-100) text-center outline-none",
                 separator: "px-1 text-current/40"
             }
         },

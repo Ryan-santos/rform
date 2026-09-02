@@ -576,6 +576,47 @@ export default defineNuxtModule({
                 ].join("\n")
         });
 
+        /**
+         * A única linha que um app precisa escrever no CSS dele:
+         *
+         *     @import "tailwindcss";
+         *     @import "#rform/tailwindcss";
+         *
+         * Traz as duas coisas: o `@source` dos componentes (o Tailwind não varre
+         * `node_modules`, então sem ele nenhuma classe do módulo é emitida) e os
+         * tokens `--rf-*`.
+         *
+         * A ordem das duas linhas só decide quem ganha quando **as duas** declaram a
+         * mesma variável, porque ordem de layer é ordem de primeira aparição. Medido
+         * no browser, sobrescrevendo `--rf-color-primary`: `@theme { --color-primary }`
+         * (encadeia, o módulo nunca declara essa), `@layer rform { :root }` (mesma
+         * layer, o app vem depois) e `:root` fora de layer (ganha de toda layer)
+         * funcionam nas **duas** ordens. Só declarar `--rf-*` fora da `@layer rform`
+         * — num `@theme` ou num `@layer base` — depende de `#rform` vir antes, e aí
+         * falha calado. Antes faz as cinco formas funcionarem; é a recomendação.
+         *
+         * Tem de ser `@import` do entry do app, não `nuxt.options.css`: num arquivo
+         * que o Tailwind não trata como parte de um entry, `@source` é ignorado e a
+         * at-rule vaza crua para o browser.
+         *
+         * Template em vez de um `.css` do `dist`, porque o caminho sai absoluto e
+         * resolvido: funciona igual com o pacote instalado, com link de workspace ou
+         * com o módulo apontado por caminho relativo (o caso do playground, que não
+         * tem `node_modules/rform`).
+         */
+        addTemplate({
+            filename: `${name}/tailwind.css`,
+            write: true,
+            // `specifier` já devolve entre aspas, e com `/` — em CSS a barra
+            // invertida do Windows seria escape.
+            getContents: () =>
+                [
+                    "/* Sobrescreva `--rf-*` em `@layer rform` (ou o tema do app), nunca em `@theme`. */",
+                    `@source ${specifier(roots.containers)};`,
+                    `@import ${specifier(resolve("runtime/style.css"))};`
+                ].join("\n")
+        });
+
         nuxt.options.alias ||= {};
 
         /**
@@ -588,6 +629,13 @@ export default defineNuxtModule({
         nuxt.options.alias[`#${name}/builtin/*`] = `${componentsPath}/*`;
 
         const alias = `${nuxt.options.buildDir}/${name}`;
+
+        /**
+         * Espelha o `@import "tailwindcss"` do app: sem extensão, o resolver de CSS do
+         * Vite não acha o arquivo, então o apelido é explícito. Antes de `#rform/*`,
+         * que senão engole o caminho e devolve um arquivo que não existe.
+         */
+        nuxt.options.alias[`#${name}/tailwindcss`] = `${alias}/tailwind.css`;
 
         nuxt.options.alias[`#${name}`] = alias;
         nuxt.options.alias[`#${name}/*`] = `${alias}/*`;

@@ -26,7 +26,7 @@
             leaveToClass: "opacity-0",
             leaveFromClass: ""
         },
-        icon: "text-primary m-3 ml-0"
+        icon: "text-(--rf-color-primary) m-3 ml-0"
     };
 
     export const defaults = defineDefaults({ ui });

@@ -17,11 +17,11 @@
     import { defineDefaults } from "#rform/utils";
 
     const ui = {
-        container: "absolute right-2 top-0 w-fit -translate-y-1/2 rounded-sm bg-background-100 text-xs leading-none px-1 py-0.5 font-bold text-contrast transition-all duration-300",
+        container: "absolute right-2 top-0 w-fit -translate-y-1/2 rounded-(--rf-radius-sm) bg-(--rf-color-background-100) text-xs leading-none px-1 py-0.5 font-bold text-(--rf-color-contrast) transition-all duration-300",
         percentages: {
-            60: "text-warn",
-            80: "text-danger",
-            100: "bg-danger text-white"
+            60: "text-(--rf-color-warn)",
+            80: "text-(--rf-color-danger)",
+            100: "bg-(--rf-color-danger) text-(--rf-color-danger-fg)"
         } as Record<number, string>
     };
 

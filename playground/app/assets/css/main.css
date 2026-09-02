@@ -1,13 +1,13 @@
 @import "tailwindcss";
-@source "../../../../src/runtime/components";
+@import "#rform/tailwindcss";
 
 @theme static {
     --font-sans: "Be Vietnam Pro", sans-serif;
 
     --breakpoint-xs: 29rem;
 
-    --color-light: #FFFFFF;
-    --color-dark: #09090B;
+    --color-light: #ffffff;
+    --color-dark: #09090b;
 
     --color-background: light-dark(var(--color-light), var(--color-dark));
     --color-background-50: color-mix(in oklab, var(--color-background), var(--color-contrast) 5%);
@@ -33,7 +33,7 @@
     --color-contrast-800: color-mix(in oklab, var(--color-contrast), var(--color-background) 45%);
     --color-contrast-900: color-mix(in oklab, var(--color-contrast), var(--color-background) 50%);
 
-    --color-primary: #005BDF;
+    --color-primary: #005bdf;
     --color-primary-50: color-mix(in oklab, var(--color-primary), var(--color-background) 5%);
     --color-primary-100: color-mix(in oklab, var(--color-primary), var(--color-background) 10%);
     --color-primary-200: color-mix(in oklab, var(--color-primary), var(--color-background) 15%);
@@ -45,7 +45,7 @@
     --color-primary-800: color-mix(in oklab, var(--color-primary), var(--color-background) 45%);
     --color-primary-900: color-mix(in oklab, var(--color-primary), var(--color-background) 50%);
 
-    --color-secondary: #00CF6C;
+    --color-secondary: #00cf6c;
     --color-secondary-50: color-mix(in oklab, var(--color-secondary), var(--color-background) 5%);
     --color-secondary-100: color-mix(in oklab, var(--color-secondary), var(--color-background) 10%);
     --color-secondary-200: color-mix(in oklab, var(--color-secondary), var(--color-background) 15%);
@@ -178,14 +178,14 @@
     .page-leave-active,
     .layout-enter-active,
     .layout-leave-active {
-        @apply transition-all duration-500 ease-in-out
+        @apply transition-all duration-500 ease-in-out;
     }
 
     .page-enter-from,
     .page-leave-to,
     .layout-enter-from,
     .layout-leave-to {
-        @apply blur-sm opacity-0
+        @apply blur-sm opacity-0;
     }
 }
 
@@ -199,7 +199,13 @@
 @utility mask-transparent-border {
     --size: 1rem;
 
-    mask-image: linear-gradient(var(--deg), transparent 0%, #000 var(--size), #000 calc(100% - var(--size)), transparent 100%);
+    mask-image: linear-gradient(
+        var(--deg),
+        transparent 0%,
+        #000 var(--size),
+        #000 calc(100% - var(--size)),
+        transparent 100%
+    );
 }
 
 @utility mask-transparent-border-y {
@@ -220,10 +226,10 @@
  * light-dark() — e o texto do painel nasce claro.
  */
 @theme static {
-    --color-code: #171B2C;
-    --color-code-head: #12162A;
-    --color-code-line: #2B3355;
-    --color-code-text: #E6E9F5;
+    --color-code: #171b2c;
+    --color-code-head: #12162a;
+    --color-code-line: #2b3355;
+    --color-code-text: #e6e9f5;
 }
 
 /**
@@ -231,16 +237,42 @@
  * as classes é o highlight.ts — string montada em runtime não passa pelo scanner.
  */
 @layer base {
-    .tok-tag { color: #7DEBA0; }
-    .tok-attr { color: #8BE9FD; font-style: italic; }
-    .tok-string { color: #F5F0A0; }
-    .tok-keyword { color: #FF7B9C; }
-    .tok-literal { color: #C3A6FF; }
-    .tok-number { color: #C3A6FF; }
-    .tok-key { color: #8BE9FD; }
-    .tok-fn { color: #7DEBA0; }
-    .tok-prop { color: #8BE9FD; }
-    .tok-interp { color: #FFB86C; }
-    .tok-comment { color: #7683B8; font-style: italic; }
-    .tok-punct { color: #FF9EC4; }
+    .tok-tag {
+        color: #7deba0;
+    }
+    .tok-attr {
+        color: #8be9fd;
+        font-style: italic;
+    }
+    .tok-string {
+        color: #f5f0a0;
+    }
+    .tok-keyword {
+        color: #ff7b9c;
+    }
+    .tok-literal {
+        color: #c3a6ff;
+    }
+    .tok-number {
+        color: #c3a6ff;
+    }
+    .tok-key {
+        color: #8be9fd;
+    }
+    .tok-fn {
+        color: #7deba0;
+    }
+    .tok-prop {
+        color: #8be9fd;
+    }
+    .tok-interp {
+        color: #ffb86c;
+    }
+    .tok-comment {
+        color: #7683b8;
+        font-style: italic;
+    }
+    .tok-punct {
+        color: #ff9ec4;
+    }
 }

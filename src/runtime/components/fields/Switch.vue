@@ -54,17 +54,17 @@
             container: "flex grow flex-col gap-1",
             group: {
                 container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
-                ifPlaceholder: "rounded-xl border border-background-100 p-2",
+                ifPlaceholder: "rounded-(--rf-radius-xl) border border-(--rf-color-background-100) p-2",
                 button: {
                     container: `
-                        relative flex w-11 flex-row rounded-full bg-background-100 p-0.5
+                        relative flex w-11 flex-row rounded-full bg-(--rf-color-background-100) p-0.5
                         contain-content
                     `,
                     input: "peer pointer-events-none absolute -z-50 opacity-0",
                     indicator: `
                         flex size-5 flex-row items-center justify-center rounded-full bg-current/20
                         p-0.5 transition-all
-                        peer-checked:translate-x-full peer-checked:bg-success
+                        peer-checked:translate-x-full peer-checked:bg-(--rf-color-success)
                     `
                 }
             },

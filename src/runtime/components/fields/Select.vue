@@ -5,7 +5,7 @@
         <RUtilsDropdown
             v-model:open="open"
             :middleware="dropdownMiddleware"
-            class="z-999 overflow-auto rounded-lg border border-contrast/10 bg-background-100"
+            class="z-999 overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)"
         >
             <template #default="{ reference }">
                 <div
@@ -58,7 +58,7 @@
             </template>
 
             <template #content>
-                <div class="sticky top-0 z-0 bg-background-300">
+                <div class="sticky top-0 z-0 bg-(--rf-color-background-300)">
                     <Icon
                         name="search"
                         class="absolute top-1/2 left-3 -z-1 -translate-y-1/2 opacity-60"
@@ -70,13 +70,13 @@
                         class="w-full p-3 pl-10 outline-0 placeholder:text-current/30"
                     />
                 </div>
-                <ul class="divide-y divide-contrast/10">
+                <ul class="divide-y divide-(--rf-color-contrast)/10">
                     <li
                         v-for="(option, key) in filteredOptions"
                         :key
-                        class="flex cursor-pointer flex-row items-center gap-1 p-3 transition-all duration-300 hover:bg-primary/20"
+                        class="flex cursor-pointer flex-row items-center gap-1 p-3 transition-all duration-300 hover:bg-(--rf-color-primary)/20"
                         :class="{
-                            'text-white bg-primary!': isOptionSelected(option)
+                            'text-(--rf-color-primary-fg) bg-(--rf-color-primary)!': isOptionSelected(option)
                         }"
                         @click="select(option)"
                     >
@@ -126,9 +126,9 @@
                 wrapper: {
                     container: `
                         relative z-10 flex w-full cursor-pointer flex-row items-center
-                        rounded-xl bg-background-100 outline-2 transition-all duration-300
+                        rounded-(--rf-radius-xl) bg-(--rf-color-background-100) outline-2 transition-all duration-300
                     `,
-                    open: "text-primary outline-primary",
+                    open: "text-(--rf-color-primary) outline-(--rf-color-primary)",
                     closed: "outline-transparent",
                     leading: "flex p-3 pr-0",
                     trailing: "flex p-3 pl-0"

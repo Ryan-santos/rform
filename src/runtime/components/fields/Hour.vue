@@ -124,9 +124,9 @@
             group: {
                 wrapper: {
                     container: `
-                        relative z-0 flex w-full flex-row items-center rounded-xl
-                        bg-background-100 outline-2 outline-transparent transition-all duration-300
-                        has-[:focus]:text-primary has-[:focus]:outline-primary
+                        relative z-0 flex w-full flex-row items-center rounded-(--rf-radius-xl)
+                        bg-(--rf-color-background-100) outline-2 outline-transparent transition-all duration-300
+                        has-[:focus]:text-(--rf-color-primary) has-[:focus]:outline-(--rf-color-primary)
                     `,
                     leading: "flex p-3 pr-0",
                     trailing: "flex p-3 pl-0"
@@ -135,7 +135,7 @@
                     container: "relative grow",
                     inputs: "flex flex-row items-center transition-opacity duration-300",
                     inputsHidden: "opacity-0",
-                    input: "w-full rounded-lg bg-transparent p-3 outline-none",
+                    input: "w-full rounded-(--rf-radius-lg) bg-transparent p-3 outline-none",
                     inputEnd: "text-end",
                     separator: "my-auto w-fit px-1 opacity-50"
                 }

@@ -52,16 +52,16 @@
             group: {
                 wrapper: {
                     container: `
-                        relative z-0 flex w-full flex-row items-center rounded-xl
-                        bg-background-100 outline-2 outline-transparent transition-all duration-300
-                        has-[:focus]:text-primary has-[:focus]:outline-primary
+                        relative z-0 flex w-full flex-row items-center rounded-(--rf-radius-xl)
+                        bg-(--rf-color-background-100) outline-2 outline-transparent transition-all duration-300
+                        has-[:focus]:text-(--rf-color-primary) has-[:focus]:outline-(--rf-color-primary)
                     `,
                     leading: "p-3 pr-0 flex",
                     trailing: "p-3 pl-0 flex"
                 },
                 field: {
                     container: "grow",
-                    input: "w-full rounded-lg bg-transparent outline-none p-3"
+                    input: "w-full rounded-(--rf-radius-lg) bg-transparent outline-none p-3"
                 }
             }
         },

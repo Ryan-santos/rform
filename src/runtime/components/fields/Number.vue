@@ -64,9 +64,9 @@
             group: {
                 wrapper: {
                     container: `
-                        relative z-0 flex w-full flex-row items-center rounded-xl
-                        bg-background-100 outline-2 outline-transparent transition-all duration-300
-                        has-focus:text-primary has-focus:outline-primary
+                        relative z-0 flex w-full flex-row items-center rounded-(--rf-radius-xl)
+                        bg-(--rf-color-background-100) outline-2 outline-transparent transition-all duration-300
+                        has-focus:text-(--rf-color-primary) has-focus:outline-(--rf-color-primary)
                     `,
                     leading: "flex p-3 pr-0",
                     trailing: "flex p-3 pl-0"
@@ -74,14 +74,14 @@
                 field: {
                     container: "flex grow flex-col",
                     input: `
-                        w-full [appearance:textfield] rounded-lg bg-transparent p-3 text-center outline-none
+                        w-full [appearance:textfield] rounded-(--rf-radius-lg) bg-transparent p-3 text-center outline-none
                         [&::-webkit-inner-spin-button]:appearance-none
                         [&::-webkit-outer-spin-button]:appearance-none
                     `
                 },
                 controls: `
                     flex cursor-pointer p-3 transition-colors
-                    hover:text-primary
+                    hover:text-(--rf-color-primary)
                 `
             },
             Utils: {

@@ -46,12 +46,12 @@
                         <Icon
                             name="tabler:file-check"
                             size="1.5rem"
-                            class="text-success"
+                            class="text-(--rf-color-success)"
                         />
                         <span class="flex-1 truncate text-sm">{{ f.name }}</span>
                         <span :class="props.ui?.group?.preview?.size">{{ formatBytes(f.size) }}</span>
                         <button
-                            class="pointer-events-auto rounded-full bg-danger px-1 py-px text-xs text-white"
+                            class="pointer-events-auto rounded-full bg-(--rf-color-danger) px-1 py-px text-xs text-(--rf-color-danger-fg)"
                             @click.prevent="removeFile(i)"
                         >
                             <Icon name="close" />
@@ -73,7 +73,7 @@
                         v-else
                         name="tabler:file-check"
                         size="4rem"
-                        class="text-success"
+                        class="text-(--rf-color-success)"
                     />
                     <span>
                         {{ file?.name || url?.split("/").at(-1) }} <br>
@@ -138,33 +138,33 @@
             group: {
                 dropzone: `
                     relative flex h-full cursor-pointer flex-row items-center justify-center
-                    gap-3 rounded-xl border-2 border-dashed border-contrast/10 bg-background-100 p-2
+                    gap-3 rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-2
                     text-center transition-all duration-500
-                    hover:border-primary hover:text-primary
+                    hover:border-(--rf-color-primary) hover:text-(--rf-color-primary)
                 `,
-                hasFile: "border-success",
+                hasFile: "border-(--rf-color-success)",
                 dragging: "animate-bounce",
                 input: "pointer-events-none absolute top-0 size-0 opacity-0",
                 close: "pointer-events-none absolute top-0 right-0",
-                closeButton: "pointer-events-auto -translate-y-1/2 rounded-full bg-danger px-1 py-px text-white",
+                closeButton: "pointer-events-auto -translate-y-1/2 rounded-full bg-(--rf-color-danger) px-1 py-px text-(--rf-color-danger-fg)",
                 preview: {
                     container: "flex flex-row items-center gap-3 text-start",
-                    image: "size-16 rounded-xl bg-background object-contain object-center",
-                    size: "text-sm text-contrast/50"
+                    image: "size-16 rounded-(--rf-radius-xl) bg-(--rf-color-background) object-contain object-center",
+                    size: "text-sm text-(--rf-color-contrast)/50"
                 },
                 info: {
                     container: "flex flex-col gap-1",
-                    text: "text-sm text-contrast/50",
+                    text: "text-sm text-(--rf-color-contrast)/50",
                     list: "flex flex-row flex-wrap gap-1",
                     badge: `
-                        m-1 inline-flex rounded-md bg-current/10 px-2 py-1 text-xs
+                        m-1 inline-flex rounded-(--rf-radius-md) bg-current/10 px-2 py-1 text-xs
                         leading-none font-bold
                     `
                 },
                 loading: {
                     container: `
                         absolute inset-0 flex size-full flex-col items-center justify-center
-                        rounded-2xl bg-success/50 p-6 backdrop-blur-sm
+                        rounded-(--rf-radius-2xl) bg-(--rf-color-success)/50 p-6 backdrop-blur-sm
                     `
                 }
             }

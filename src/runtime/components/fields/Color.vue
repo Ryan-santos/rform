@@ -113,26 +113,26 @@
                 wrapper: {
                     container: `
                         relative z-0 flex w-full cursor-pointer flex-row items-center
-                        rounded-xl bg-background-100 outline-2 transition-all duration-300
+                        rounded-(--rf-radius-xl) bg-(--rf-color-background-100) outline-2 transition-all duration-300
                     `,
-                    open: "text-primary outline-primary",
+                    open: "text-(--rf-color-primary) outline-(--rf-color-primary)",
                     closed: "outline-transparent",
                     leading: "p-3 pr-0 flex",
                     trailing: "p-3 pl-0 flex"
                 },
                 field: {
                     container: "flex grow flex-row gap-3 p-3",
-                    swatch: "block size-6 rounded-md border border-contrast/20 shadow-inner",
+                    swatch: "block size-6 rounded-(--rf-radius-md) border border-(--rf-color-contrast)/20 shadow-inner",
                     content: "flex grow flex-col",
                     text: "my-auto leading-none font-medium uppercase tracking-wide"
                 }
             },
             picker: {
                 container: `
-                    z-999 flex w-64 flex-col gap-3 rounded-xl border
-                    border-contrast/10 bg-background-100 p-3 shadow-lg
+                    z-999 flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border
+                    border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-3 shadow-lg
                 `,
-                sv: "relative h-40 w-full cursor-crosshair overflow-hidden rounded-lg touch-none",
+                sv: "relative h-40 w-full cursor-crosshair overflow-hidden rounded-(--rf-radius-lg) touch-none",
                 svMarker: `
                     pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2
                     border-white shadow
@@ -146,11 +146,11 @@
                     border-2 border-white shadow
                 `,
                 footer: "flex flex-row items-center gap-2",
-                preview: "size-8 rounded-md border border-contrast/20",
+                preview: "size-8 rounded-(--rf-radius-md) border border-(--rf-color-contrast)/20",
                 input: `
-                    grow rounded-md bg-background-300 px-2 py-1 font-mono text-sm
+                    grow rounded-(--rf-radius-md) bg-(--rf-color-background-300) px-2 py-1 font-mono text-sm
                     uppercase outline-none
-                    focus:outline-2 focus:outline-primary
+                    focus:outline-2 focus:outline-(--rf-color-primary)
                 `
             },
             Utils: {

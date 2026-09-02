@@ -1,0 +1,71 @@
+/**
+ * Os tokens que as classes dos componentes leem. Mora em `src/runtime/` porque o
+ * `@nuxt/module-builder` só constrói `src/module` e `src/runtime/` — um `.css` na
+ * raiz de `src/` nunca chega ao `dist`.
+ *
+ * Nenhuma at-rule do Tailwind aqui. Este arquivo entra por `nuxt.options.css`, e o
+ * `@tailwindcss/vite` descarta o compiler de todo CSS que não usa utility/variant/
+ * `@apply`/`theme()` — `@theme` e `@source` não contam. O arquivo passaria intacto e
+ * a at-rule vazaria crua para o browser. Só `@layer`/`@media`/`@supports` são seguros.
+ */
+
+/**
+ * A layer registra aqui, antes do entry do Tailwind (o módulo faz `unshift` em
+ * `nuxt.options.css`), e ordem de layer é ordem de primeira aparição. Então `rform`
+ * vem antes de `theme, base, components, utilities` e é a de MENOR prioridade — é o
+ * que deixa o app sobrescrever de onde quiser: `@theme`, `@layer base { :root }` ou
+ * `:root` sem layer.
+ *
+ * Um `:root` sem layer aqui faria o oposto: declaração de autor fora de layer ganha
+ * de toda layer de autor, antes de especificidade entrar na conta. O override do app
+ * simplesmente não pegaria — e calado.
+ */
+@layer rform;
+
+@layer rform {
+    :root {
+        /* Só as bases encadeiam no tema do app. */
+        --rf-color-background: var(--color-background, light-dark(#ffffff, #09090b));
+        --rf-color-contrast: var(--color-contrast, light-dark(#09090b, #ffffff));
+
+        /**
+         * Os degraus são derivados, não encadeados: `--color-background-100` de outro
+         * app pode significar "tom mais claro" em vez de "10% na direção do contraste".
+         * Mesma fórmula do playground, então o playground continua pixel-idêntico.
+         */
+        --rf-color-background-100: color-mix(
+            in oklab,
+            var(--rf-color-background),
+            var(--rf-color-contrast) 10%
+        );
+        --rf-color-background-200: color-mix(
+            in oklab,
+            var(--rf-color-background),
+            var(--rf-color-contrast) 15%
+        );
+        --rf-color-background-300: color-mix(
+            in oklab,
+            var(--rf-color-background),
+            var(--rf-color-contrast) 20%
+        );
+
+        --rf-color-primary: var(--color-primary, #005bdf);
+        --rf-color-danger: var(--color-danger, #fb2c36);
+        --rf-color-success: var(--color-success, #00c950);
+        --rf-color-warn: var(--color-warn, #f0b100);
+
+        /**
+         * Par próprio, encadeado junto com a cor de fundo: um `primary` herdado do app
+         * pode ser claro, e um `-fg` branco fixo daria texto branco sobre fundo pálido.
+         */
+        --rf-color-primary-fg: var(--color-primary-fg, #ffffff);
+        --rf-color-danger-fg: var(--color-danger-fg, #ffffff);
+
+        /* O Tailwind sempre define `--radius-*`; o fallback é para app sem Tailwind. */
+        --rf-radius-sm: var(--radius-sm, 0.25rem);
+        --rf-radius-md: var(--radius-md, 0.375rem);
+        --rf-radius-lg: var(--radius-lg, 0.5rem);
+        --rf-radius-xl: var(--radius-xl, 0.75rem);
+        --rf-radius-2xl: var(--radius-2xl, 1rem);
+    }
+}

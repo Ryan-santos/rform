@@ -20,7 +20,7 @@
     export const defaults = defineDefaults({
         error: "",
         ui: {
-            container: "text-danger ml-1 text-sm font-semibold tracking-wide",
+            container: "text-(--rf-color-danger) ml-1 text-sm font-semibold tracking-wide",
             icon: {
                 name: "alert",
                 class: "mr-0.5 -mb-0.5 animate-pulse"

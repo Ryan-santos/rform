@@ -65,20 +65,20 @@
                     leaveToClass: "opacity-0"
                 },
                 container: `
-                    relative flex flex-col gap-6 rounded-xl border border-current/10
+                    relative flex flex-col gap-6 rounded-(--rf-radius-xl) border border-current/10
                     p-4
                 `,
                 item: {
                     container: "flex flex-row items-center gap-2",
                     remove: `
-                        cursor-pointer text-contrast/20 transition-all duration-300
-                        hover:text-danger
+                        cursor-pointer text-(--rf-color-contrast)/20 transition-all duration-300
+                        hover:text-(--rf-color-danger)
                     `
                 },
                 add: `
-                    w-full rounded-xl border-2 border-dashed border-contrast/20 px-2 py-1
-                    text-contrast/20 transition-all duration-300
-                    hover:border-primary hover:text-primary
+                    w-full rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-contrast)/20 px-2 py-1
+                    text-(--rf-color-contrast)/20 transition-all duration-300
+                    hover:border-(--rf-color-primary) hover:text-(--rf-color-primary)
                 `
             }
         },

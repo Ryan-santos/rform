@@ -3,6 +3,18 @@
     "version": "0.0.0",
     "license": "MIT",
     "type": "module",
+    "main": "./dist/module.mjs",
+    "types": "./dist/types.d.mts",
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/types.d.mts",
+            "import": "./dist/module.mjs"
+        },
+        "./style.css": "./dist/runtime/style.css"
+    },
     "scripts": {
         "prepack": "nuxt-module-build build",
         "dev": "npm run dev:prepare && nuxi dev playground",

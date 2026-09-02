@@ -221,24 +221,24 @@
 
     const ui = {
         container: `
-            flex w-full flex-col gap-3 rounded-xl border border-contrast/10
-            bg-background-100 p-3 shadow-lg
+            flex w-full flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-contrast)/10
+            bg-(--rf-color-background-100) p-3 shadow-lg
         `,
         header: {
             container: "flex flex-row items-center justify-between gap-1",
             nav: `
-                flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md
+                flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-(--rf-radius-md)
                 transition-colors
-                hover:bg-primary/10 hover:text-primary
+                hover:bg-(--rf-color-primary)/10 hover:text-(--rf-color-primary)
             `,
             title: {
                 container: "flex flex-row items-center gap-1",
                 button: {
                     container: `
-                        cursor-pointer rounded-md px-2 py-1 font-semibold capitalize transition-colors
-                        hover:bg-primary/10 hover:text-primary
+                        cursor-pointer rounded-(--rf-radius-md) px-2 py-1 font-semibold capitalize transition-colors
+                        hover:bg-(--rf-color-primary)/10 hover:text-(--rf-color-primary)
                     `,
-                    active: "bg-primary/10 text-primary"
+                    active: "bg-(--rf-color-primary)/10 text-(--rf-color-primary)"
                 }
             }
         },
@@ -253,16 +253,16 @@
         grid: "grid grid-cols-7 justify-items-center gap-y-1",
         day: {
             container: `
-                flex size-9 cursor-pointer items-center justify-center rounded-md text-sm
+                flex size-9 cursor-pointer items-center justify-center rounded-(--rf-radius-md) text-sm
                 transition-colors
-                hover:bg-primary/20
+                hover:bg-(--rf-color-primary)/20
             `,
             outside: "opacity-30",
-            today: "outline outline-1 outline-primary/50",
-            inRange: "rounded-none bg-primary/15",
-            start: "rounded-r-none bg-primary! text-white",
-            end: "rounded-l-none bg-primary! text-white",
-            selected: "bg-primary! text-white",
+            today: "outline outline-1 outline-(--rf-color-primary)/50",
+            inRange: "rounded-none bg-(--rf-color-primary)/15",
+            start: "rounded-r-none bg-(--rf-color-primary)! text-(--rf-color-primary-fg)",
+            end: "rounded-l-none bg-(--rf-color-primary)! text-(--rf-color-primary-fg)",
+            selected: "bg-(--rf-color-primary)! text-(--rf-color-primary-fg)",
             disabled: `
                 cursor-not-allowed opacity-30 line-through
                 hover:bg-transparent!
@@ -271,26 +271,26 @@
         months: {
             grid: "grid grid-cols-3 gap-1",
             cell: `
-                flex h-12 cursor-pointer items-center justify-center rounded-md text-sm capitalize
+                flex h-12 cursor-pointer items-center justify-center rounded-(--rf-radius-md) text-sm capitalize
                 transition-colors
-                hover:bg-primary/20
+                hover:bg-(--rf-color-primary)/20
             `
         },
         years: {
             grid: "grid grid-cols-3 gap-1",
             cell: `
-                flex h-12 cursor-pointer items-center justify-center rounded-md text-sm
+                flex h-12 cursor-pointer items-center justify-center rounded-(--rf-radius-md) text-sm
                 transition-colors
-                hover:bg-primary/20
+                hover:bg-(--rf-color-primary)/20
             `
         },
         time: {
-            container: "flex flex-row gap-3 border-t border-contrast/10 pt-3",
+            container: "flex flex-row gap-3 border-t border-(--rf-color-contrast)/10 pt-3",
             block: "flex grow flex-row items-center justify-between gap-2",
             label: "text-xs opacity-60",
             input: `
-                w-20 rounded-md bg-background-300 p-2 text-center font-mono outline-none
-                focus:outline-2 focus:outline-primary
+                w-20 rounded-(--rf-radius-md) bg-(--rf-color-background-300) p-2 text-center font-mono outline-none
+                focus:outline-2 focus:outline-(--rf-color-primary)
             `
         }
     };

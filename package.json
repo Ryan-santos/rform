@@ -3,6 +3,7 @@
     "version": "0.0.0",
     "license": "MIT",
     "type": "module",
+    "packageManager": "pnpm@11.25.0",
     "main": "./dist/module.mjs",
     "types": "./dist/types.d.mts",
     "files": [
@@ -17,14 +18,18 @@
     },
     "scripts": {
         "prepack": "nuxt-module-build build",
-        "dev": "npm run dev:prepare && nuxi dev playground",
+        "dev": "pnpm run dev:prepare && nuxi dev playground",
         "dev:build": "nuxi build playground",
         "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
-        "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
+        "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && pnpm publish && git push --follow-tags",
         "lint": "oxlint",
         "test": "vitest run",
         "test:watch": "vitest watch",
-        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p playground/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json --noEmit"
+        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p playground/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json --noEmit",
+        "bench": "vitest bench --config vitest.bench.config.ts --project micro --run",
+        "bench:mount": "vitest run --config vitest.bench.config.ts --project mount",
+        "bench:bundle": "bash test/bench/tools/bundle.sh",
+        "bench:ssr": "bash test/bench/tools/ssr.sh"
     },
     "peerDependencies": {
         "zod": "^4.0.0"
@@ -35,6 +40,7 @@
         "@nuxt/module-builder": "^1.0.3",
         "@nuxt/test-utils": "^4.2.0",
         "@types/node": "^26.4.0",
+        "@vitejs/plugin-vue": "^6.0.8",
         "@vitest/coverage-v8": "^4.1.7",
         "@vue/test-utils": "^2.5.0",
         "eslint-plugin-better-tailwindcss": "^4.7.0",
@@ -47,7 +53,9 @@
         "playwright-core": "^1.62.1",
         "tailwind-merge": "^3.6.0",
         "typescript": "^5.9.3",
+        "vite": "^8.2.2",
         "vitest": "^4.1.7",
+        "vue": "^3.5.42",
         "vue-tsc": "^3.3.11",
         "zod": "^4.5.4"
     }

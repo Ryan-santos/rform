@@ -18,14 +18,16 @@ You are responsible for the test suite of the `rform` Nuxt module. You **run**, 
 
 ## Commands
 
-- Run everything: `npm test`
-- Watch mode: `npm run test:watch`
-- Run a single file: `npx vitest run test/unit/merger.test.ts`
-- Run by project: `npx vitest run --project unit` (or `nuxt`, `e2e`)
-- With coverage: `npm test -- --coverage` (output in `coverage/`)
-- Type-check tests: `npm run test:types`
+- Run everything: `pnpm test`
+- Watch mode: `pnpm test:watch`
+- Run a single file: `pnpm exec vitest run test/unit/merger.test.ts`
+- Run by project: `pnpm exec vitest run --project unit` (or `nuxt`, `e2e`)
+- With coverage: `pnpm test --coverage` (output in `coverage/`)
+- Type-check tests: `pnpm test:types`
 
-If `.nuxt/rform/*` is missing (first run, or after changing the module setup), run `npm run dev:prepare` once — the `nuxt` project needs the alias map to resolve `#rform`.
+The package manager is **pnpm**, with a workspace (`pnpm-workspace.yaml`) whose members are the root and `playground`. There is one `pnpm-lock.yaml`, at the root. Run `pnpm install` from the root — running it inside `playground/` silently installs nothing.
+
+If `.nuxt/rform/*` is missing (first run, or after changing the module setup), run `pnpm dev:prepare` once — the `nuxt` project needs the alias map to resolve `#rform`.
 
 ## How to run
 
@@ -36,7 +38,7 @@ If `.nuxt/rform/*` is missing (first run, or after changing the module setup), r
    - `src/runtime/composables/useInjection.ts` (or any file touching Vue inject/provide) → `test/nuxt/useInjection.test.ts`
    - `src/runtime/components/*.vue` → `test/nuxt/<ComponentName>.test.ts`
    - `src/module.ts`, `src/vite.plugin.ts`, fixture changes → `test/e2e/basic.test.ts`
-3. Run the smallest scoped subset that proves the change is correct (`npx vitest run <files>`). Only run `npm test` (full suite) at the end if multiple areas were touched.
+3. Run the smallest scoped subset that proves the change is correct (`pnpm exec vitest run <files>`). Only run `pnpm test` (full suite) at the end if multiple areas were touched.
 4. Report which tests ran, pass/fail count, and the line of any failing assertion.
 
 ## How to create
@@ -53,14 +55,14 @@ If `.nuxt/rform/*` is missing (first run, or after changing the module setup), r
 
 ## How to validate
 
-- After creating or editing a test file, run **just that file**: `npx vitest run <path>`. If it does not run, fix the test, not the source — unless the test reveals a real bug.
+- After creating or editing a test file, run **just that file**: `pnpm exec vitest run <path>`. If it does not run, fix the test, not the source — unless the test reveals a real bug.
 - When a test fails, classify before "fixing":
   - **Regression**: source change broke working behavior — fix the source.
   - **Stale test**: behavior intentionally changed — update the test and explain why in the test description.
   - **Flaky setup**: timing/missing await — fix the test.
 - Never delete or `.skip` a failing test without explaining the reason in your report.
-- After writing or editing a test, run `npx oxlint --fix <path>` on it. Report any lint errors that survive `--fix`.
-- For non-trivial additions, also run the full project the new test belongs to (`npx vitest run --project nuxt`) to confirm no cross-test pollution.
+- After writing or editing a test, run `pnpm exec oxlint --fix <path>` on it. Report any lint errors that survive `--fix`.
+- For non-trivial additions, also run the full project the new test belongs to (`pnpm exec vitest run --project nuxt`) to confirm no cross-test pollution.
 
 ## Report shape
 

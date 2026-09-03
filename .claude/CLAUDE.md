@@ -260,10 +260,39 @@ vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json # a fixture (campos/utils
 
 ## Comandos úteis
 
-- `cd playground && npm run dev` — sobe o playground (porta 3000) com o módulo em watch.
-- `npx oxlint <arquivo>` — lint (config em `oxlint.config.ts`, plugin tailwind ativo).
-- `npm run test:types` — type-check dos três apps (precisa dos três `.nuxt` populados).
-- `npx nuxi prepare test/fixtures/basic` — regenera os tipos da fixture depois de mexer no `module.ts` ou em `test/fixtures/basic/rform/`.
+O gerenciador de pacotes é o **pnpm** (`pnpm-lock.yaml`, só na raiz). O runtime continua sendo o Node — `pnpm run` só orquestra; vitest, vue-tsc, nuxi e unbuild rodam em Node como sempre.
+
+- `pnpm install` — instala **os dois** projetos de uma vez (ver workspace abaixo).
+- `pnpm --filter rform-playground dev` (ou `cd playground && pnpm dev`) — sobe o playground na porta 3000 com o módulo em watch.
+- `pnpm exec oxlint <arquivo>` — lint (config em `oxlint.config.ts`, plugin tailwind ativo).
+- `pnpm test:types` — type-check dos três apps (precisa dos três `.nuxt` populados).
+- `pnpm exec nuxi prepare test/fixtures/basic` — regenera os tipos da fixture depois de mexer no `module.ts` ou em `test/fixtures/basic/rform/`.
+
+### O `pnpm-workspace.yaml` não é opcional
+
+No pnpm 11 o campo `pnpm` do `package.json` **não é mais lido** (ele avisa e ignora), e `pnpm-workspace.yaml` é a casa de toda configuração. Só que criar esse arquivo torna o repo um workspace root — e aí `pnpm install` dentro de `playground/` para de instalar o playground: ele resolve para a raiz e responde "Already up to date" sem criar `playground/node_modules`, em 30ms e com exit 0. **Falha em silêncio.**
+
+Por isso o `playground` está em `packages:`. Um `pnpm install` na raiz cobre os dois, há um lockfile só, e o `postinstall` (`nuxi prepare`) do playground roda junto.
+
+`allowBuilds` no mesmo arquivo é o outro requisito, e a entrada é **obrigatória mesmo dizendo `false`**: o pnpm bloqueia build script de dependência por padrão e, num install do zero, **sai com código 1** (`ERR_PNPM_IGNORED_BUILDS`) até haver uma decisão explícita — apagar a entrada faz ele reescrever o arquivo com `esbuild: set this to true or false`. (Com `node_modules` já populado ele nem checa, então o erro só aparece em clone novo ou CI.) Escrever `onlyBuiltDependencies` não resolve no 11.
+
+Aqui está `false`: o binário do esbuild chega pronto pelo optional dep de plataforma (`@esbuild/win32-x64` e irmãos, que estão no lockfile), e o postinstall dele não faz falta. Medido com `node_modules` apagado: install exit 0, suíte 29/297, e o `nuxi build` do playground completo (client + SSR + Nitro).
+
+### As três deps que o pnpm revelou
+
+`@vitejs/plugin-vue` (no `vitest.config.ts`), `vue` e `vite` (em `src/`) eram importados **sem estar no `package.json`**. npm e bun achavam por hoisting acidental; o layout estrito do pnpm não acha. Sim, o Nuxt traz os três — mas traz para *dentro* de `.pnpm/nuxt@…/node_modules`, e nada disso é alcançável da raiz do repo.
+
+Removê-los para conferir dá o tamanho do estrago: 3 arquivos de teste caem com `Cannot find package 'vue' imported from src/runtime/components/utils/Calendar.vue` (254 testes em vez de 297) e o `vue-tsc` despeja ~60 erros `Cannot find module 'vue'`/`'vite'`. Estão em `devDependencies`, não em `peerDependencies`, porque quem consome o módulo recebe tudo via Nuxt e mexer ali mudaria o contrato do pacote publicado.
+
+Isso era bug latente, não invenção do pnpm: um `npm ci` com hoisting diferente quebraria igual.
+
+**`nitropack` não entra na lista.** Ele aparece se você fizer `grep nitropack src/ test/`, mas todas as ocorrências estão em `.nuxt` **gerado** da fixture — o `src/` não importa nitropack em lugar nenhum, e os tsconfig gerados já mapeiam o caminho em `paths`. Grep para achar phantom dep precisa excluir `.nuxt/`, senão você declara dependência que ninguém usa.
+
+### `pnpm publish` checa o git
+
+Publica no npm normalmente (`📦 rform@0.0.0 → https://registry.npmjs.org/`), mas antes roda checagens que npm e bun não têm: **árvore limpa** (`ERR_PNPM_GIT_UNCLEAN`) e **branch** (default `main`/`master` — este repo desenvolve em `develop`). Na cadeia do `release` o `changelogen --release` commita e taggeia antes, então a árvore chega limpa; a branch é que pode barrar. `--no-git-checks` desliga, ou `publishBranch` no `pnpm-workspace.yaml` ajusta.
+
+O `prepack` roda **duas vezes** no `release`: uma explícita na cadeia, outra pelo lifecycle do `pnpm publish`. É desperdício de segundos, não erro — e o segundo serve de guarda de que o `dist` bate com o fonte.
 
 ## Playground
 

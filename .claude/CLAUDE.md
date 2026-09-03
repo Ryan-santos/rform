@@ -124,7 +124,7 @@ Consequência de ter saído do `nuxt.options.css`: um app **sem Tailwind** não 
 #### Invariantes do `style.css`
 
 - **`@layer rform`, e a declaração `@layer rform;` antes de qualquer bloco.** Declaração de autor fora de layer ganha de *toda* layer de autor, antes de especificidade entrar na conta — um `:root` solto aqui inverteria o override inteiro, calado, e nas duas ordens de import. A layer nomeada também é o que dá ao app o alvo imune à ordem da tabela acima.
-- **Só tokens.** Os resets do `.RForm` (spinner do `number`, o truque `transition: … 600000s` do autofill, `[data-autocompleted]`) moram no `<style>` do `Form.vue`, não aqui — assim chegam com o componente, inclusive num app que só registra `rform/style.css` no `css:`. Mesma `@layer rform`, mas **achatados**: o `<style>` de SFC passa pelo postcss do app, e o default do Nuxt tem só `autoprefixer` e `cssnano`, não `postcss-nested` (que é o que achata este arquivo, via mkdist). Não é `scoped` porque os `input` moram nos componentes filhos; quem delimita é a classe-gancho.
+- **Tokens e resets, todos ancorados em `.RField`.** Os quatro resets que nenhum `ui` expressa (spinner do `number`, o truque `transition: … 600000s` do autofill, `[data-autocompleted]`, o hide do placeholder sob `:-webkit-autofill`) moram aqui, no fim do arquivo. **Já moraram no `<style>` do `Form.vue`, ancorados em `.RForm`** — e ali perdiam todo campo usado sem `RForm` em volta, calado, porque nem a classe existia no DOM nem o `<style>` do SFC chegava a ser injetado. Um `<style>` de SFC também não passa pelo `postcss-nested` (o default do Nuxt tem só `autoprefixer` e `cssnano`), então tinha de ser escrito achatado; aqui o mkdist achata.
 - **Nenhuma at-rule do Tailwind.** Agora que o arquivo é `@import`ado do entry, `@theme` e `@apply` ali **seriam** processados — e é o que não se quer: um `@theme` do módulo despejaria variáveis e utilitários no namespace do design system do app (`--color-foo` viraria `bg-foo` lá). Só `@layer`/`@media`/`@supports`.
 
 Os defaults **encadeiam** no tema do app (`--rf-color-primary: var(--color-primary, #005BDF)`), então um app que já tem `primary` no `@theme` adota sozinho — é por isso que o playground não precisou de uma linha de override. Os degraus `-100`/`-200`/`-300` (10%/15%/20%) são derivados com `color-mix` em vez de encadeados: `--color-background-100` de outro app pode significar "tom mais claro" em vez de "10% na direção do contraste". Os três batem, medidos no browser, com o degrau de mesmo nome do playground — nos dois esquemas.
@@ -198,6 +198,22 @@ O template de `utils.ts` emite `import X from "<path>"` (default, virando `expor
 
 Os specifiers do `export *` passam por `specifier()` e saem **sem extensão**. Com `.ts` no caminho, o TS precisa de `allowImportingTsExtensions` e um app consumidor normalmente não liga — o sintoma é `TS2614: Module '#rform/utils' has no exported member 'defineRule'`, como se o barrel não exportasse nada nomeado.
 
+### O preview do autofill é invisível para o JS
+
+Passar o mouse sobre uma sugestão do preenchedor do browser pinta o valor no `input` **sem** disparar `input`/`change` — o `model` continua vazio, então o `RUtilsPlaceholder` fica em `notFilled` (atrás do campo, `-z-10`) e os dois textos se sobrepõem. Não há evento para escutar; quem enxerga esse estado é só o CSS, via `:-webkit-autofill` (que casa preview **e** valor comitado — Chrome, Safari e Firefox 86+; `:-internal-autofill-previewed`, que separaria os dois, é restrito à UA stylesheet e não parseia em folha de autor).
+
+Daí o par: o `Placeholder.vue` emite `data-floating` quando virou label flutuante, e o `style.css` faz `.RField :has(:-webkit-autofill) > .RUtilsPlaceholder:not([data-floating]) { opacity: 0 }`. O `>` é o que limita ao placeholder cujo pai contém o input — sem ele o `:has()` casaria todo ancestral dentro do campo. O `:not([data-floating])` preserva o caso sem `label`, em que depois do autofill comitado é o próprio placeholder que rotula o valor lá em cima.
+
+**Ancorar em `.RForm` não serve, e é o motivo de as classes-gancho existirem.** O autofill não depende de `<form>`: o Chrome agrupa campos soltos ("unowned form fields") por heurística de DOM desde a v91, e `useInjection` faz `inject(key, undefined)` — campo sem `RForm` pai é caso suportado.
+
+Nenhuma utility do Tailwind declara `opacity: 1` no estado base, então a regra vence independentemente da ordem de layer — não precisa de `!important` como o `[data-autocompleted]`.
+
+### `transition-[a_b]` com duas propriedades é silenciosamente `all`
+
+`transition-[translate_position]` vira `transition-property: translate position` — sem vírgula, é sintaxe inválida, a declaração é descartada e a propriedade volta ao inicial `all`. Com o `duration-300` ao lado, **tudo** passa a animar, `opacity` incluída: o `disable` (`opacity-0`) do placeholder ganhava um fade de 300ms ao sumir e voltar. Vírgula é o separador (`transition-[translate,top,left]`); `_` só serve para espaço *dentro* de um valor.
+
+Compila, passa na lint e não emite aviso nenhum. Para conferir o que o Tailwind de fato emitiu: `compile("@tailwind utilities;", { base }).build([classe])` da API de `tailwindcss`.
+
 ### `v-mask` é nosso, não o `v-maska`
 
 Os cinco componentes com máscara — `Text`, `Textarea`, `Date`, `Hour` e `Utils/Calendar` — usam `vMask` (`src/runtime/utils/vMask.ts`), não a diretiva do maska. Nenhum lugar do `src/` importa `maska/vue`. Motivo: `maska/vue` faz
@@ -237,6 +253,26 @@ Com `enforce: "pre"` o plugin vê o SFC cru; sem ele, o id `.vue` já foi compil
 
 A consequência é que a regex passa a ver TypeScript cru: `useUtilProps<Props>()`, com o genérico entre o nome e o `(`. As regexes aceitam e **preservam** a lista de tipos.
 
+### As classes-gancho (`RField` / `RUtil`) entram pelo `ui`
+
+Todo campo e todo util — embutido **e** do usuário — carrega duas classes na raiz:
+
+| raiz | genérica | específica |
+|---|---|---|
+| `fields/`, `app/rform/fields` | `RField` | `R<Nome>` — `RField RText` |
+| `utils/`, `app/rform/utils` | `RUtil` | `RUtils<Nome>` — `RUtil RUtilsPlaceholder` |
+
+A específica espelha a tag que o app escreve (`<RText>` → `.RText`), porque os prefixos são os mesmos que o `addComponentsDir` registra. É isso que dá ao `style.css` um alvo, sem que campo nenhum precise repetir a classe e **sem depender de `RForm` no ancestral**.
+
+Quem escreve é `hookUi` (`src/runtime/utils/hookUi.ts`), chamado por `useInjection` e por `useUtilProps` **depois** do `merger`, sobre a **entrada mais alta** do `ui`: `container` num campo, `default` no `Placeholder`, o próprio `ui` onde ele é string. Não é o primeiro par qualquer — é a primeira entrada que guarda classes em vez de um grupo aninhado, porque o `RUtilsLoading` abre num `<Transition>` cujo `ui.transition` são nomes de transição, não classe. Componente sem nenhuma entrada de classe (`RUtilsDropdown` é `<slot>` + `<Transition>`) fica sem gancho, e não tem reset a perder.
+
+**Depois do merge, e não dentro do `defaults`.** `ui` é sobrescrevível por contrato e o `mergerUI` lê `null` como "zera esta chave": um gancho declarado nos defaults iria embora junto com um `ui: { container: null }`, e um `container` apenas reescrito ficaria à mercê do que o `twMerge` decide descartar num namespace que não é do Tailwind — medido, `{container:"RField flex grow"} + {container:"RFieldset grid"}` dá `"RField grow RFieldset grid"`. Prependendo depois, nenhum dos dois toca no gancho. Ordem de chave sobrevive ao merge: o `merger` semeia o resultado a partir do `defaults` do componente e o `mergerUI` copia com spread.
+
+O par nome→classe é **gerado**, em `#rform/registry` (`hooks.fields` / `hooks.utils`), ao lado do registry de módulos — é ali que o `module.ts` ainda distingue as três listas. Containers ficam de fora, então `Form` (que escreve o próprio `RForm`) e `Dynamic` não recebem gancho **sem** a composable precisar de uma lista de exclusão.
+
+**Isso já morou no `src/vite.plugin.ts`**, que parseava o SFC com `vue/compiler-sfc` e injetava um `class` estático na raiz do `<template>`. Funcionava, inclusive com `ui.container` zerado — o Vue compila o `class` estático e o `:class` como canais independentes de um `normalizeClass`. Mas custava um parse de SFC por arquivo e punha um `import` de `vue/compiler-sfc` no bundle rollup do `dist/module.mjs`: import fora de `dependencies`/`peerDependencies` vira "Potential implicit dependencies", e com o `failOnWarn` do `@nuxt/module-builder` isso é **exit 1 no `prepack`** — resolvível só com um `build.config.ts` declarando `externals`. O plugin voltou a fazer só a injeção de nome, e o `build.config.ts` deixou de existir.
+
+`test/unit/hookUi.test.ts` cobre a função pura (o `container: null`, o `ui` só de grupos, o não-mutar o objeto recebido) e `test/nuxt/hookClasses.test.ts` monta os componentes: campo embutido, util, campo do usuário, `ui.container` zerado e reescrito, campo sem `RForm` em volta, e o `Form` que continua sem `RField`.
 ### Um app consumidor precisa do próprio `tsconfig.json`
 
 `ts.findConfigFile` sobe a partir do arquivo. Um app Nuxt sem tsconfig na raiz acaba achando o tsconfig de um projeto acima — e o `@vue/compiler-sfc` resolve `#rform/types/...` contra os tipos gerados **daquele** projeto. O sintoma é mudo e específico: as props que um util contribui simplesmente não são declaradas, e `<RRating hint="…">` cai como atributo de fallthrough em vez de prop, sem erro de compilação. Foi por isso que `test/fixtures/basic/tsconfig.json` teve que existir.

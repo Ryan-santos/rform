@@ -1,20 +1,21 @@
 /**
- * Os tokens que as classes dos componentes leem. Mora em `src/runtime/` porque o
- * `@nuxt/module-builder` só constrói `src/module` e `src/runtime/` — um `.css` na
- * raiz de `src/` nunca chega ao `dist`.
+ * Os tokens que as classes dos componentes leem, mais os resets que nenhum `ui`
+ * consegue expressar. Mora em `src/runtime/` porque o `@nuxt/module-builder` só
+ * constrói `src/module` e `src/runtime/` — um `.css` na raiz de `src/` nunca chega
+ * ao `dist`.
  *
- * Nenhuma at-rule do Tailwind aqui. Este arquivo entra por `nuxt.options.css`, e o
- * `@tailwindcss/vite` descarta o compiler de todo CSS que não usa utility/variant/
- * `@apply`/`theme()` — `@theme` e `@source` não contam. O arquivo passaria intacto e
- * a at-rule vazaria crua para o browser. Só `@layer`/`@media`/`@supports` são seguros.
+ * Nenhuma at-rule do Tailwind aqui. O arquivo é `@import`ado do entry do app (via
+ * `#rform/tailwindcss`), então `@theme` e `@apply` **seriam** processados — e é o que
+ * não se quer: um `@theme` do módulo despejaria variáveis e utilitários no namespace
+ * do design system do app (`--color-foo` viraria `bg-foo` lá). Só
+ * `@layer`/`@media`/`@supports`.
  */
 
 /**
- * A layer registra aqui, antes do entry do Tailwind (o módulo faz `unshift` em
- * `nuxt.options.css`), e ordem de layer é ordem de primeira aparição. Então `rform`
- * vem antes de `theme, base, components, utilities` e é a de MENOR prioridade — é o
- * que deixa o app sobrescrever de onde quiser: `@theme`, `@layer base { :root }` ou
- * `:root` sem layer.
+ * A layer é declarada antes de qualquer bloco, para registrar cedo. Estando os tokens
+ * numa layer *nomeada*, o app tem dois alvos imunes à ordem dos dois `@import`:
+ * repetir `@layer rform { :root { … } }` (mesma layer, e o bloco do app vem depois,
+ * então ganha por ordem de declaração) ou declarar fora de layer.
  *
  * Um `:root` sem layer aqui faria o oposto: declaração de autor fora de layer ganha
  * de toda layer de autor, antes de especificidade entrar na conta. O override do app
@@ -67,5 +68,61 @@
         --rf-radius-lg: var(--radius-lg, 0.5rem);
         --rf-radius-xl: var(--radius-xl, 0.75rem);
         --rf-radius-2xl: var(--radius-2xl, 1rem);
+    }
+}
+
+/**
+ * Os resets. Ancorados em `.RField`, a classe que as composables prependem à entrada
+ * mais alta do `ui` de todo campo — embutido e do usuário — para que nenhum deles
+ * precise repetir isto, e para que valham também num campo usado **sem** `RForm` em
+ * volta:
+ * `useInjection` lê o pai com `inject(key, undefined)`, então campo solto é caso
+ * suportado, e o autofill do browser não depende de `<form>` (o Chrome agrupa campos
+ * soltos por heurística de DOM desde a v91).
+ *
+ * Isto morava no `<style>` do `Form.vue`, ancorado em `.RForm` — e nessa forma perdia
+ * exatamente o campo solto, calado, porque nem a classe existia no DOM nem o `<style>`
+ * do SFC chegava a ser injetado.
+ */
+@layer rform {
+    .RField {
+        input[type="number"],
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            appearance: none;
+        }
+
+        /**
+         * O autofill do Chrome pinta um fundo próprio que nenhuma declaração de autor
+         * remove. O truque é atrasar a transição da cor para um prazo que nunca chega,
+         * congelando o valor anterior.
+         */
+        input:-webkit-autofill,
+        input:-webkit-autofill:focus {
+            transition:
+                background-color 600000s 0s,
+                color 600000s 0s;
+        }
+
+        input[data-autocompleted] {
+            background-color: transparent !important;
+        }
+
+        /**
+         * Preview do autofill: passar o mouse sobre uma sugestão pinta o valor no
+         * campo sem disparar `input`, então o `model` continua vazio, o
+         * `RUtilsPlaceholder` segue em `notFilled` (atrás do campo, `-z-10`) e os dois
+         * textos se sobrepõem. Não há evento para escutar; quem enxerga esse estado é
+         * só o CSS, via `:-webkit-autofill` — que casa preview **e** valor comitado.
+         *
+         * O `>` limita ao placeholder cujo pai contém o input autofilled; sem ele o
+         * `:has()` casaria todo ancestral dentro do campo. O `:not([data-floating])`
+         * preserva o caso sem `label`, em que o placeholder virou label flutuante: aí
+         * ele está acima do campo, não atrás, e depois do autofill comitado é
+         * justamente ele que rotula o valor.
+         */
+        :has(:-webkit-autofill) > .RUtilsPlaceholder:not([data-floating]) {
+            opacity: 0;
+        }
     }
 }

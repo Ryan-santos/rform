@@ -4,8 +4,8 @@ import type { ValueProp } from "./useInjection";
 import { computed, inject, type ComputedRef } from "vue";
 import { keyProp } from "./useInjection";
 import userDefaults from "#rform/defaults";
-import { utils as registry } from "#rform/registry";
-import { merger } from "#rform/utils";
+import { utils as registry, hooks } from "#rform/registry";
+import { hookUi, merger } from "#rform/utils";
 
 /**
  * What a Utils component actually receives: the parent field's `Element` props,
@@ -45,14 +45,19 @@ const build = <P extends Record<string, unknown>> (
 
         const utilUi = typeof ui === "object" ? (ui?.Utils as Utils) : undefined;
 
-        return merger(
+        const merged = merger(
             defaults,
             overrides,
             {
                 ...rest,
                 ui: utilUi?.[componentName] as P["ui"]
             }
-        ) as unknown as UtilProps<P>;
+        );
+
+        return {
+            ...merged,
+            ui: hookUi(merged.ui as UtilProps<P>["ui"], hooks.utils[componentName])
+        } as unknown as UtilProps<P>;
     });
 
     return {

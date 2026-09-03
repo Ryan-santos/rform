@@ -91,38 +91,3 @@
         await props.value.onSubmit?.(model.value as T);
     };
 </script>
-
-<style>
-    /**
-     * Não é `scoped`: os `input` moram nos componentes filhos, e um seletor com
-     * `data-v-*` não os alcança sem `:deep()`. Quem delimita é a classe-gancho
-     * `RForm`, emitida acima fora de `props.ui` para o usuário não removê-la ao
-     * sobrescrever `ui`.
-     *
-     * Na `@layer rform` junto com os tokens, então o app continua podendo
-     * sobrescrever.
-     *
-     * Sem nesting de propósito. O `<style>` de SFC passa pelo postcss do app, e o
-     * default do Nuxt tem só `autoprefixer` e `cssnano` — não `postcss-nested`
-     * (que é o que achata o `src/runtime/style.css`, via mkdist). Aninhado, o
-     * seletor chegaria cru ao browser.
-     */
-    @layer rform {
-        .RForm input[type="number"],
-        .RForm input::-webkit-outer-spin-button,
-        .RForm input::-webkit-inner-spin-button {
-            appearance: none;
-        }
-
-        .RForm input:-webkit-autofill,
-        .RForm input:-webkit-autofill:focus {
-            transition:
-                background-color 600000s 0s,
-                color 600000s 0s;
-        }
-
-        .RForm input[data-autocompleted] {
-            background-color: transparent !important;
-        }
-    }
-</style>

@@ -11,40 +11,37 @@ import {
     type ModelRef
 } from "vue";
 
+import userDefaults from "#rform/defaults";
+import { components as registry, hooks } from "#rform/registry";
 import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
-import { merger, resolveMask, resolveRule } from "#rform/utils";
-import { components as registry } from "#rform/registry";
-import userDefaults from "#rform/defaults";
+import { hookUi, merger, resolveMask, resolveRule } from "#rform/utils";
+
 import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
 
 type Obj = Record<NonNullable<Element["name"]>, unknown>;
 
 export type Value = {
-    id: string | null
-    model: ModelRef<Array<unknown> | Obj | undefined>
+    id: string | null;
+    model: ModelRef<Array<unknown> | Obj | undefined>;
 };
 
 export const key = Symbol() as InjectionKey<Value>;
 
-export type ValueProp <T extends object = object> = {
-    id: string | null
-    props: ComputedRef<Element & T>
-    model: ModelRef<unknown>
+export type ValueProp<T extends object = object> = {
+    id: string | null;
+    props: ComputedRef<Element & T>;
+    model: ModelRef<unknown>;
 };
 
 export const keyProp = Symbol() as InjectionKey<ValueProp>;
 
-export default async function <
-    T extends Element,
-    S = T["modelValue"],
-    G = T["modelValue"]
-> (
+export default async function <T extends Element, S = T["modelValue"], G = T["modelValue"]>(
     sourceProps: T,
     opts?: {
-        set?: (value: T["modelValue"]) => S
-        get?: (value: T["modelValue"]) => G
+        set?: (value: T["modelValue"]) => S;
+        get?: (value: T["modelValue"]) => G;
     },
     /**
      * Injected by the vite plugin from the component's own file name.
@@ -66,12 +63,20 @@ export default async function <
         error: undefined
     });
 
-    const props = computed(() => merger(
-        defaults.value,
-        overrides,
-        localProps.value,
-        sourceProps
-    ));
+    /**
+     * Absent for `Form` and `Dynamic`, the two components here that are not
+     * fields — the generated map only lists what came out of a `fields`
+     * directory.
+     */
+    const hook = (hooks.fields as Record<string, string | undefined>)[componentName];
+
+    const props = computed(() => {
+        const merged = merger(defaults.value, overrides, localProps.value, sourceProps);
+
+        merged.ui = hookUi(merged.ui, hook) as typeof merged.ui;
+
+        return merged;
+    });
 
     const upper = inject(key, undefined);
 
@@ -91,19 +96,19 @@ export default async function <
      * field writing into a detached one.
      */
     const model = useModel(sourceProps, "modelValue", {
-        set (value): S {
+        set(value): S {
             localProps.value.error = undefined;
             value = opts?.set?.(value) ?? value ?? cloneDefault();
 
             if (
-                upper?.model?.value
-                && typeof upper.model.value === "object"
-                && props.value?.name !== undefined
+                upper?.model?.value &&
+                typeof upper.model.value === "object" &&
+                props.value?.name !== undefined
             ) {
                 (upper.model.value as Obj)[props.value.name] = value;
             }
 
-            return (value as S);
+            return value as S;
         },
         /**
          * The fallback clones: `props.value.default` is the very object the
@@ -114,11 +119,8 @@ export default async function <
          * permanently polluted the default for every later instance in the
          * process. `??` keeps the clone lazy.
          */
-        get (value): G {
-            if (
-                upper?.model
-                && props.value?.name !== undefined
-            ) {
+        get(value): G {
+            if (upper?.model && props.value?.name !== undefined) {
                 const accessor = upper.model.value as Obj;
                 const get = accessor?.[props.value.name] ?? cloneDefault();
                 return (opts?.get?.(get) ?? get) as G;
@@ -205,7 +207,7 @@ export default async function <
     };
 
     const declaresPreset = () => {
-        const current = props.value as { mask?: unknown, rule?: unknown };
+        const current = props.value as { mask?: unknown; rule?: unknown };
         return current.mask !== undefined || current.rule !== undefined;
     };
 
@@ -217,48 +219,52 @@ export default async function <
         resolveMask(
             (props.value as { mask?: Parameters<typeof resolveMask>[0] }).mask,
             presets.value?.masks ?? {}
-        ));
+        )
+    );
 
-    watch(() => props.value.rule, async (rule) => {
-        if (!id) {
-            return;
-        }
+    watch(
+        () => props.value.rule,
+        async (rule) => {
+            if (!id) {
+                return;
+            }
 
-        const loaded = rule === undefined ? presets.value : await loadPresets();
+            const loaded = rule === undefined ? presets.value : await loadPresets();
 
-        const validate = resolveRule(rule, loaded?.rules ?? {}, field);
+            const validate = resolveRule(rule, loaded?.rules ?? {}, field);
 
-        if (validate) {
-            const fn = async () => {
-                try {
-                    localProps.value.loading = true;
+            if (validate) {
+                const fn = async () => {
+                    try {
+                        localProps.value.loading = true;
 
-                    const error = await validate(model.value, formRoot?.value);
+                        const error = await validate(model.value, formRoot?.value);
 
-                    if (error) {
-                        localProps.value.error = error;
-                        throw new Error(error);
+                        if (error) {
+                            localProps.value.error = error;
+                            throw new Error(error);
+                        }
+                    } finally {
+                        localProps.value.loading = undefined;
                     }
-                }
-                finally {
-                    localProps.value.loading = undefined;
-                }
-            };
+                };
 
-            rulesList?.value?.set(id, fn);
+                rulesList?.value?.set(id, fn);
+            } else {
+                localProps.value.error = undefined;
+                rulesList?.value?.delete(id);
+            }
+        },
+        {
+            immediate: true
         }
-        else {
-            localProps.value.error = undefined;
-            rulesList?.value?.delete(id);
-        }
-    }, {
-        immediate: true
-    });
+    );
 
     // Through the generated registry, not a relative dynamic import: the latter
     // compiles to a glob rooted at this file, which `app/rform/fields` is not in.
-    const load = registry[componentName as keyof typeof registry] as
-        () => Promise<{ defaults?: Element }>;
+    const load = registry[componentName as keyof typeof registry] as () => Promise<{
+        defaults?: Element;
+    }>;
 
     defaults.value = (await load())?.defaults ?? {};
 
@@ -279,4 +285,4 @@ export default async function <
         mask,
         props
     };
-};
+}

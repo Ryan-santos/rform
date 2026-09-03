@@ -224,6 +224,24 @@ export default defineNuxtModule({
                         )
                         .join(",\n");
 
+                /**
+                 * The hook class every field and util carries. The composables
+                 * prepend it to the top-most `ui` entry, and `style.css` selects
+                 * on it. Generated here rather than derived in the composable
+                 * because this is the last place the three lists are still told
+                 * apart: containers get none — `Form` writes its own `RForm` and
+                 * `Dynamic` renders no element of its own — and the prefixes are
+                 * the same ones `addComponentsDir` registers below, so the class
+                 * mirrors the tag the app writes (`<RText>` → `.RText`).
+                 */
+                const hooks = (list: ComponentFile[], generic: string, prefix: string) =>
+                    list
+                        .map(
+                            ({ name }) =>
+                                `        ${name}: ${JSON.stringify(`${generic} ${prefix}${name}`)}`
+                        )
+                        .join(",\n");
+
                 return [
                     "// auto-generated — component name → module, for runtime defaults lookup",
                     "export const components = {",
@@ -234,7 +252,17 @@ export default defineNuxtModule({
                     record(utils),
                     "};",
                     "",
-                    "export default { components, utils };"
+                    "// the class each one carries, for the resets in style.css",
+                    "export const hooks = {",
+                    "    fields: {",
+                    hooks(fields, "RField", "R"),
+                    "    },",
+                    "    utils: {",
+                    hooks(utils, "RUtil", "RUtils"),
+                    "    }",
+                    "};",
+                    "",
+                    "export default { components, utils, hooks };"
                 ].join("\n");
             }
         });

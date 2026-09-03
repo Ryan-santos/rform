@@ -68,9 +68,28 @@ export default (roots: string[]): Plugin => {
                         }
                     }
                 )
+                /**
+                 * The name goes *after* whatever was passed, not instead of it:
+                 * the first argument is the component's own `defaults`, and
+                 * dropping it sent the composable back to the registry for an
+                 * object the caller already had — asynchronously.
+                 */
                 .replace(
                     new RegExp(`\\buseUtilProps${GENERIC}${ARGS}`, "g"),
-                    (_match, generic = "") => `useUtilProps${generic}("${fileName}")`
+                    (match, generic = "", params) => {
+                        const paramCount = params.trim()
+                            ? (params.match(/,(?![^()]*\))/g) || []).length + 1
+                            : 0;
+
+                        switch (paramCount) {
+                            case 0:
+                                return `useUtilProps${generic}(undefined, "${fileName}")`;
+                            case 1:
+                                return `useUtilProps${generic}(${params}, "${fileName}")`;
+                            default:
+                                return match;
+                        }
+                    }
                 );
 
             if (replaceCode !== code) {

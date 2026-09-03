@@ -10,14 +10,20 @@ import {
     addTemplate,
     addImports,
     addVitePlugin
-} from "nuxt/kit";
+} from "@nuxt/kit";
 
 import { name, version } from "../package.json";
 import { collectPresets } from "./presets";
 import { collectComponents, type ComponentFile } from "./scan";
 import vitePlugin from "./vite.plugin";
 
-const { resolve } = createResolver(import.meta.url);
+/**
+ * Bound, not destructured: `@nuxt/kit` types `resolve` as a method, so pulling
+ * it off the object trips `unbound-method`. It closes over the base url and
+ * never touches `this`, but binding says so without a lint exception.
+ */
+const resolver = createResolver(import.meta.url);
+const resolve = resolver.resolve.bind(resolver);
 
 /**
  * A module specifier for a generated template. Backslashes would be escapes in

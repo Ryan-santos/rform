@@ -333,7 +333,7 @@
 </script>
 
 <script setup lang="ts">
-    const { props, upper } = await useUtilProps<Props>();
+    const { props, upper } = useUtilProps<Props>(defaults);
 
     const mode = computed<Mode>(() => props.value.mode ?? "single");
 

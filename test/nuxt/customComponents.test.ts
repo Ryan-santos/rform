@@ -155,9 +155,14 @@ describe("an unresolvable component name", () => {
             .rejects.toThrow(/got "Nope"/);
     });
 
-    it("fails loudly in useUtilProps instead of borrowing Label's defaults", async () => {
-        await expect(useUtilProps()).rejects.toThrow(/could not resolve a component name/);
+    /**
+     * Synchronously, not as a rejection: the name is injected at build time, so
+     * a missing one is a build fault and there is nothing to await before
+     * saying so.
+     */
+    it("fails loudly in useUtilProps instead of borrowing Label's defaults", () => {
+        expect(() => useUtilProps()).toThrow(/could not resolve a component name/);
 
-        await expect(useUtilProps("Nope" as never)).rejects.toThrow(/got "Nope"/);
+        expect(() => useUtilProps(undefined, "Nope" as never)).toThrow(/got "Nope"/);
     });
 });

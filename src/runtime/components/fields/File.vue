@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <label
             :class="[
@@ -120,8 +120,8 @@
             </Transition>
         </label>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 
@@ -192,7 +192,10 @@
     type InternalProps = Omit<
         Element<typeof defaults, "file">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & {
+    > & Utils["Label"]
+        & Utils["Description"]
+        & Utils["Error"]
+        & {
         placeholder?: string;
         accept: string;
         multiple?: boolean;

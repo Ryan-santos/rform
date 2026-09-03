@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <label
             :class="[
@@ -37,8 +37,8 @@
             </span>
         </label>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 

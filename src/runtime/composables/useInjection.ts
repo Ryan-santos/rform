@@ -14,7 +14,6 @@ import {
 import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
 import { merger, resolveMask, resolveRule } from "#rform/utils";
-import { masks, rules } from "#rform/presets";
 import { components as registry } from "#rform/registry";
 import userDefaults from "#rform/defaults";
 import { injectFormRoot } from "./formRoot";
@@ -186,15 +185,48 @@ export default async function <
 
     const field = componentName.toLowerCase();
 
-    const mask = computed(() =>
-        resolveMask((props.value as { mask?: Parameters<typeof resolveMask>[0] }).mask, masks));
+    /**
+     * `#rform/presets` imports every preset statically, and every rule preset
+     * imports zod — so a static import here put zod on the critical path of any
+     * page with a field, validated or not. Loading it only for a field that
+     * actually declares `rule` or `mask` keeps it off that path entirely.
+     *
+     * The initial load is awaited inside `setup`, where the registry is already
+     * being awaited, so a masked field still binds its mask on first render.
+     * A `rule` that shows up later resolves through `loadPresets` in the
+     * watcher, one microtask behind — which validation, being async, does not
+     * notice.
+     */
+    const presets = shallowRef<typeof import("#rform/presets") | undefined>();
 
-    watch(() => props.value.rule, (rule) => {
+    const loadPresets = async () => {
+        presets.value ??= await import("#rform/presets");
+        return presets.value;
+    };
+
+    const declaresPreset = () => {
+        const current = props.value as { mask?: unknown, rule?: unknown };
+        return current.mask !== undefined || current.rule !== undefined;
+    };
+
+    if (declaresPreset()) {
+        await loadPresets();
+    }
+
+    const mask = computed(() =>
+        resolveMask(
+            (props.value as { mask?: Parameters<typeof resolveMask>[0] }).mask,
+            presets.value?.masks ?? {}
+        ));
+
+    watch(() => props.value.rule, async (rule) => {
         if (!id) {
             return;
         }
 
-        const validate = resolveRule(rule, rules, field);
+        const loaded = rule === undefined ? presets.value : await loadPresets();
+
+        const validate = resolveRule(rule, loaded?.rules ?? {}, field);
 
         if (validate) {
             const fn = async () => {

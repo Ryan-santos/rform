@@ -1,8 +1,8 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
         <RUtilsCalendar />
-        <RUtilsError />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 

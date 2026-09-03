@@ -48,7 +48,7 @@
         focused?: boolean;
     }>();
 
-    const { props, upper } = await useUtilProps<Props>();
+    const { props, upper } = useUtilProps<Props>(defaults);
 
     const modelFilled = computed(() => {
         return !!String(upper.model.value ?? "").length;

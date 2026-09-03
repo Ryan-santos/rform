@@ -25,5 +25,5 @@
 <script setup lang="ts">
     const {
         props
-    } = await useUtilProps<Props>();
+    } = useUtilProps<Props>(defaults);
 </script>

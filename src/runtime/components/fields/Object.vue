@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group">
             <slot />

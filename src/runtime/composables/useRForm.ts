@@ -1,7 +1,6 @@
 import { ref, type Ref } from "vue";
 import { z, type ZodType, type ZodObject } from "zod";
 import type { Schema, FieldConfig, InferData } from "#rform/types/schema";
-import { rules as presets } from "#rform/presets";
 import resolveRule from "../utils/resolveRule";
 import { isZodType, zodToFn } from "../utils/zod";
 
@@ -18,13 +17,24 @@ function toZod (rule: unknown): ZodType {
         return rule as unknown as ZodType;
     }
 
-    const validate = resolveRule(rule as never, presets as never);
-
-    if (!validate) {
-        return z.any();
-    }
-
+    /**
+     * The preset table is fetched inside the refinement, not at import time.
+     * Statically, this module was the last edge from `#rform/composables` to
+     * `#rform/presets`, and the preset files call `defineRule(...)` at module
+     * scope — a side effect Rollup cannot prove away — so every page that
+     * imported *any* composable from the barrel shipped all nine rule presets
+     * and, with them, zod. The refinement is already async; resolving there
+     * costs an import that is a no-op once the chunk has loaded.
+     */
     return z.any().superRefine(async (value, ctx) => {
+        const { rules: presets } = await import("#rform/presets");
+
+        const validate = resolveRule(rule as never, presets as never);
+
+        if (!validate) {
+            return;
+        }
+
         const error = await validate(value, undefined);
 
         if (error) {

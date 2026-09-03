@@ -3,7 +3,7 @@
         :class="props.ui?.container"
         data-allow-mismatch
     >
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <RUtilsDropdown
             v-model:open="open"
@@ -31,7 +31,7 @@
                             :style="`background-color: ${model || 'transparent'}`"
                         />
                         <div :class="props.ui?.group?.field?.content">
-                            <RUtilsPlaceholder />
+                            <RUtilsPlaceholder v-if="props.placeholder" />
                             <span
                                 :class="props.ui?.group?.field?.text"
                                 data-allow-mismatch
@@ -48,7 +48,7 @@
                         <slot name="trailing" />
                     </div>
 
-                    <RUtilsLoading />
+                    <RUtilsLoading v-if="props.loading !== undefined" />
                 </div>
             </template>
 
@@ -93,8 +93,8 @@
             </template>
         </RUtilsDropdown>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 

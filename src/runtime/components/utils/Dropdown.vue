@@ -18,7 +18,10 @@
             :class="props.ui?.popover"
             @click.stop
         >
-            <slot name="content" />
+            <slot
+                v-if="everOpened"
+                name="content"
+            />
         </div>
     </Transition>
 </template>
@@ -188,7 +191,26 @@
 
     const open = defineModel<boolean>("open", { default: false });
 
-    const { props } = await useUtilProps<Props>();
+    const { props } = useUtilProps<Props>(defaults);
+
+    /**
+     * The popover element itself stays in the tree — `useFloating` needs the
+     * ref, and the `Transition` needs something to animate — but its contents
+     * wait for the first open. A closed `RDate` was rendering a whole month:
+     * 47 buttons and 13 KB of markup, on the server too, for a panel nobody had
+     * asked for. Latching instead of tracking `open` keeps reopening free.
+     */
+    const everOpened = ref(false);
+
+    watch(
+        open,
+        (isOpen) => {
+            if (isOpen) {
+                everOpened.value = true;
+            }
+        },
+        { immediate: true }
+    );
 
     const referenceEl = ref<HTMLElement | null>(null);
 

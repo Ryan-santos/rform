@@ -37,7 +37,7 @@
     const {
         props,
         upper
-    } = await useUtilProps<Props>();
+    } = useUtilProps<Props>(defaults);
 
     const max = computed(() => {
         return typeof props.value.length === "string"

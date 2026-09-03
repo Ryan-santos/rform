@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group?.container">
             <template
@@ -29,8 +29,8 @@
             </template>
         </div>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 
@@ -56,6 +56,7 @@
     });
 
     export type Props = Element<typeof defaults, "pin">
+        & Utils["Label"]
         & Utils["Description"]
         & Utils["Error"]
         & Utils["Loading"]

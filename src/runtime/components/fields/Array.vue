@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <TransitionGroup
             v-bind="props.ui?.list?.transitionGroup"
@@ -9,20 +9,17 @@
             :class="props.ui?.list?.container"
         >
             <li
-                v-for="(item, index) in model"
-                :key="index"
+                v-for="index in length"
+                :key="index - 1"
                 :class="props.ui?.list?.item?.container"
             >
-                <slot
-                    :item
-                    :index
-                />
+                <Row :index="index - 1" />
                 <Icon
                     v-if="canRemove"
                     name="remove"
                     size="1.2rem"
                     :class="props.ui?.list?.item?.remove"
-                    @click="model?.splice(index, 1)"
+                    @click="model?.splice(index - 1, 1)"
                 />
             </li>
             <li
@@ -43,7 +40,7 @@
 </template>
 
 <script lang="ts">
-    import { computed } from "vue";
+    import { computed, defineComponent, useSlots } from "vue";
 
     import { useInjection, useProvide } from "#rform/composables";
     import type { Element } from "#rform/types";
@@ -104,6 +101,33 @@
     useProvide({ id, model });
 
     const length = computed(() => model.value?.length ?? 0);
+
+    /**
+     * One render effect per row, so `item` is read inside the row that owns it.
+     *
+     * `v-for="(item, index) in model"` read every element in *this* component's
+     * render, which made one keystroke — a write to `array[i]` — invalidate the
+     * whole list and repatch every sibling: 0,6 ms at 10 rows and 4,1 ms at 100,
+     * growing with the list where a flat form stayed flat. Iterating `length`
+     * and passing `item` through a getter is not enough on its own, because
+     * `v-bind` on a `<slot>` normalises the object and reads the getter anyway.
+     * A component boundary is what actually scopes the dependency.
+     */
+    const slots = useSlots();
+
+    const Row = defineComponent({
+        name: "RArrayRow",
+        props: {
+            index: {
+                type: Number,
+                required: true
+            }
+        },
+        setup: (rowProps) => () => slots.default?.({
+            index: rowProps.index,
+            item: (model.value as unknown[] | undefined)?.[rowProps.index]
+        })
+    });
 
     const canRemove = computed(() => {
         return props.value?.min ? length.value > props.value.min : true;

@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group?.wrapper?.container">
             <div
@@ -16,7 +16,7 @@
                 @focusin="onFocusIn"
                 @focusout="onFocusOut"
             >
-                <RUtilsPlaceholder :focused="focused" />
+                <RUtilsPlaceholder v-if="props.placeholder" :focused="focused" />
                 <div
                     :class="[
                         props.ui?.group?.field?.inputs,
@@ -59,11 +59,11 @@
                 <slot name="trailing" />
             </div>
 
-            <RUtilsLoading />
+            <RUtilsLoading v-if="props.loading !== undefined" />
         </div>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 

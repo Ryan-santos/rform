@@ -1,6 +1,6 @@
 <template>
     <div :class="props.ui?.container">
-        <RUtilsLabel />
+        <RUtilsLabel v-if="props.label" />
 
         <RUtilsDropdown
             v-model:open="open"
@@ -24,7 +24,7 @@
                     </div>
 
                     <div :class="props.ui?.group?.field?.container">
-                        <RUtilsPlaceholder />
+                        <RUtilsPlaceholder v-if="props.placeholder" />
                         <div :class="props.ui?.group?.field?.selected">
                             <slot
                                 v-if="hasSelection && selected"
@@ -53,7 +53,7 @@
                         :class="props.ui?.group?.icon"
                     />
 
-                    <RUtilsLoading />
+                    <RUtilsLoading v-if="props.loading !== undefined" />
                 </div>
             </template>
 
@@ -93,8 +93,8 @@
             </template>
         </RUtilsDropdown>
 
-        <RUtilsDescription />
-        <RUtilsError />
+        <RUtilsDescription v-if="props.description" />
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 
@@ -149,6 +149,7 @@
         Opts extends Options = OptArrayObj,
         Multiple extends boolean = false
     > = Omit<Element<typeof defaults, "select">, "modelValue" | "onUpdate:modelValue" | "default"> &
+        Utils["Label"] &
         Utils["Description"] &
         Utils["Dropdown"] &
         Utils["Error"] &
@@ -167,7 +168,12 @@
     type InternalProps = Omit<
         Element<typeof defaults, "select">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & {
+    > & Utils["Label"]
+        & Utils["Description"]
+        & Utils["Error"]
+        & Utils["Loading"]
+        & Utils["Placeholder"]
+        & {
         options: Options;
         keyValue?: string;
         keyLabel?: string;

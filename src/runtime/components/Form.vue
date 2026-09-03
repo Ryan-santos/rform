@@ -4,7 +4,7 @@
         @submit.prevent="submit"
         @reset.prevent="model = undefined"
     >
-        <RDynamic
+        <LazyRDynamic
             v-if="hasSchema"
             :schema="(props.schema as Schema)"
         >
@@ -17,7 +17,7 @@
                     v-bind="scope || {}"
                 />
             </template>
-        </RDynamic>
+        </LazyRDynamic>
         <slot
             :model
             :submit

@@ -89,7 +89,9 @@ describe("user defaults (app/rform/defaults.ts)", () => {
 
 const Util = defineComponent({
     async setup () {
-        const { props } = await useUtilProps("Placeholder");
+        // No `defaults` argument: the registry path, which a util written
+        // before the synchronous form still takes.
+        const { props } = await useUtilProps(undefined, "Placeholder");
 
         return () =>
             h("pre", { "data-testid": "util" }, JSON.stringify({

@@ -99,13 +99,12 @@
 </template>
 
 <script lang="ts">
-    import { size } from "@floating-ui/vue";
     import { computed, ref } from "vue";
 
     import { useInjection } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, dropdownFit } from "#rform/utils";
 
     export type Primitive = string | number | boolean;
     export type OptArray = Array<Primitive>;
@@ -364,14 +363,5 @@
 
     const open = ref(false);
 
-    const dropdownMiddleware = [
-        size({
-            apply({ availableHeight, elements, rects }) {
-                Object.assign(elements.floating.style, {
-                    width: `${Math.max(0, rects.reference.width)}px`,
-                    maxHeight: `${Math.max(0, availableHeight) - 10}px`
-                });
-            }
-        })
-    ];
+    const dropdownMiddleware = [dropdownFit()];
 </script>

@@ -29,9 +29,6 @@
 <script lang="ts">
     import {
         autoUpdate,
-        flip,
-        offset as offsetMiddleware,
-        shift,
         useFloating,
         type Middleware,
         type Placement,
@@ -49,7 +46,7 @@
 
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, dropdownMiddleware } from "#rform/utils";
 
     let lockCount = 0;
     const savedBody: {
@@ -231,12 +228,9 @@
             strategy: computed(() => strategy),
             placement: computed(() => placement),
             whileElementsMounted: autoUpdate,
-            middleware: computed(() => [
-                offsetMiddleware(offsetProp),
-                flip(),
-                shift(),
-                ...(middleware ?? [])
-            ])
+            middleware: computed(() => {
+                return dropdownMiddleware({ offset: offsetProp, middleware });
+            })
         }
     );
 

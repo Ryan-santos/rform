@@ -214,6 +214,18 @@ Nenhuma utility do Tailwind declara `opacity: 1` no estado base, então a regra 
 
 Compila, passa na lint e não emite aviso nenhum. Para conferir o que o Tailwind de fato emitiu: `compile("@tailwind utilities;", { base }).build([classe])` da API de `tailwindcss`.
 
+### `size()` do floating-ui sempre ganha do `flip()`
+
+O `RUtilsDropdown` posiciona com `offset → flip → shift → middleware do campo`, e o campo que passa middleware é o `Select`, com um `size()` que casa a largura da referência e limita a altura ao espaço disponível. Os dois disputam o mesmo elemento, e **o `size` ganha**: ele devolve `reset: { rects: true }` sempre que o `apply` mudou as dimensões, e o `computePosition` reinicia a cadeia (`i = -1`) com rects novos. Na volta, o `flip` mede um painel **já** achatado no que cabe embaixo — sem overflow, sem flip.
+
+E o achatamento já está lá antes de abrir: o `autoUpdate` continua recalculando com o painel fechado (`v-show` deixa ele na árvore, 0×0), então o primeiro `open` acontece com um `maxHeight` medido para o espaço de baixo. Medido no harness sintético do teste, com o campo a 100px do fim da viewport: `bottom-start` com **35px** de altura, aberto ou fechado, para sempre.
+
+Quem destrava é o piso do `dropdownFit` (`src/runtime/utils/dropdownMiddleware.ts`): `max(DROPDOWN_MIN_HEIGHT, availableHeight - 10)`. Recusando encolher abaixo de 160px, sobra overflow para o `flip` enxergar — aí ele vira para cima e o `size` da passada seguinte recalcula com o espaço de lá. O piso pode transbordar a viewport no único caso em que nenhum dos dois lados tem 160px; é o preço, e é deliberado.
+
+Ordem: `size` **depois** do `flip`, que é o que a doc recomenda para o `fallbackStrategy` default (`bestFit`) — o outro par documentado é `size` antes com `initialPlacement`, e aí um campo espremido dos dois lados voltaria para baixo em vez de escolher o lado maior.
+
+Nada disso aparece em teste de componente: jsdom e happy-dom não têm layout, todo rect é 0. `test/unit/dropdownMiddleware.test.ts` roda o `computePosition` de verdade sobre uma plataforma sintética (viewport fixa como clipping rect, altura do painel = conteúdo limitado pelo `maxHeight` que o `apply` escreveu) e computa **duas** vezes, fechado e aberto, porque o bug só existe no segundo.
+
 ### `v-mask` é nosso, não o `v-maska`
 
 Os cinco componentes com máscara — `Text`, `Textarea`, `Date`, `Hour` e `Utils/Calendar` — usam `vMask` (`src/runtime/utils/vMask.ts`), não a diretiva do maska. Nenhum lugar do `src/` importa `maska/vue`. Motivo: `maska/vue` faz

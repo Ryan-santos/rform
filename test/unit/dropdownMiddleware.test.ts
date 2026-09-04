@@ -22,9 +22,28 @@ import dropdownMiddleware, { dropdownFit } from "../../src/runtime/utils/dropdow
 
 const VIEWPORT = { x: 0, y: 0, width: 1000, height: 800 };
 
+/**
+ * `--width` só chega no CSS por `setProperty`, então a declaração sintética
+ * precisa da mesma porta — e a largura renderizada sai dela, como no browser,
+ * onde quem lê a variável é o `w-(--width)` do `ui`.
+ */
+type Style = Record<string, string> & {
+    setProperty: (name: string, value: string) => void
+};
+
 type Panel = {
     natural: { width: number, height: number }
-    style: Record<string, string>
+    style: Style
+};
+
+const declaration = (): Style => {
+    const style = {
+        setProperty(name: string, value: string) {
+            style[name] = value;
+        }
+    } as Style;
+
+    return style;
 };
 
 const parse = (value: string | undefined) => {
@@ -37,7 +56,7 @@ const platform = {
         floating: { x: 0, y: 0, ...(await platform.getDimensions(floating as Panel)) }
     }),
     getDimensions: async (panel: Panel) => ({
-        width: Math.min(panel.natural.width, parse(panel.style.width)),
+        width: Math.min(panel.natural.width, parse(panel.style["--width"])),
         height: Math.min(panel.natural.height, parse(panel.style.maxHeight))
     }),
     getClippingRect: async () => VIEWPORT,
@@ -55,7 +74,7 @@ const field = (top: number) => ({ x: 100, y: top, width: 300, height: 50 });
 
 const panel = (height: number): Panel => ({
     natural: { width: 300, height },
-    style: {}
+    style: declaration()
 });
 
 const place = (
@@ -112,9 +131,11 @@ describe("dropdownMiddleware", () => {
         expect(maxHeight).toBe(335);
     });
 
-    it("matches the reference width", async () => {
+    it("hands the reference width over as --width, not as an inline width", async () => {
         const { style } = await open(field(100), 600);
 
-        expect(style.width).toBe("300px");
+        expect(style["--width"]).toBe("300px");
+        // Um `width` inline ganharia de qualquer `w-*` do `ui`, calado.
+        expect(style.width).toBeUndefined();
     });
 });

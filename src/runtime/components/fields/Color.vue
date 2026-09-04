@@ -5,10 +5,7 @@
     >
         <RUtilsLabel v-if="props.label" />
 
-        <RUtilsDropdown
-            v-model:open="open"
-            :class="props.ui?.picker?.container"
-        >
+        <RUtilsDropdown v-model:open="open">
             <template #default="{ reference }">
                 <div
                     :ref="reference"
@@ -128,10 +125,6 @@
                 }
             },
             picker: {
-                container: `
-                    z-999 flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border
-                    border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-3 shadow-lg
-                `,
                 sv: "relative h-40 w-full cursor-crosshair overflow-hidden rounded-(--rf-radius-lg) touch-none",
                 svMarker: `
                     pointer-events-none absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2
@@ -156,6 +149,12 @@
             Utils: {
                 Placeholder: {
                     notFilled: "top-0 left-0"
+                },
+                Dropdown: {
+                    popover: `
+                        flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border
+                        border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-3 shadow-lg
+                    `
                 }
             }
         },

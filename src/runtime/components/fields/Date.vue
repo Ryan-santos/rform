@@ -2,10 +2,7 @@
     <div :class="props.ui?.container">
         <RUtilsLabel v-if="props.label" />
 
-        <RUtilsDropdown
-            v-model:open="open"
-            :class="props.ui?.popover"
-        >
+        <RUtilsDropdown v-model:open="open">
             <template #default="{ reference }">
                 <div
                     :ref="reference"
@@ -149,7 +146,11 @@
                     hover:text-(--rf-color-primary)
                 `
             },
-            popover: "z-999 w-72"
+            Utils: {
+                Dropdown: {
+                    popover: "w-72"
+                }
+            }
         },
         default: ""
     });

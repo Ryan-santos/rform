@@ -30,14 +30,28 @@ export type DropdownMiddlewareOptions = {
 /**
  * Sizes the panel against its field: the reference's width, and the height that
  * is free on the side `flip()` settled on.
+ *
+ * The width leaves as a custom property instead of as `width`, because an
+ * inline `width` beats every class there is: a `ui.Utils.Dropdown.popover` of
+ * `w-80` had no way of winning, and lost without a word. The panel reads the
+ * measurement back through the `w-(--width)` the field keeps in its own `ui`,
+ * so overriding the width is overriding a class — `twMerge` drops
+ * `w-(--width)` for whatever the app wrote, and the measurement stops being
+ * read at all.
+ *
+ * `setProperty` is the only way in: a custom property assigned onto a
+ * `CSSStyleDeclaration` lands as a plain JS property on the object and never
+ * reaches CSS — the same silent failure, one layer down.
  */
 export const dropdownFit = (minHeight: number = DROPDOWN_MIN_HEIGHT): Middleware =>
     size({
         apply({ availableHeight, elements, rects }) {
-            Object.assign(elements.floating.style, {
-                width: `${Math.max(0, rects.reference.width)}px`,
-                maxHeight: `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`
-            });
+            elements.floating.style.setProperty(
+                "--width",
+                `${Math.max(0, rects.reference.width)}px`
+            );
+            elements.floating.style.maxHeight
+                = `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`;
         }
     });
 

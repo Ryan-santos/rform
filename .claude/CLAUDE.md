@@ -226,6 +226,26 @@ Ordem: `size` **depois** do `flip`, que é o que a doc recomenda para o `fallbac
 
 Nada disso aparece em teste de componente: jsdom e happy-dom não têm layout, todo rect é 0. `test/unit/dropdownMiddleware.test.ts` roda o `computePosition` de verdade sobre uma plataforma sintética (viewport fixa como clipping rect, altura do painel = conteúdo limitado pelo `maxHeight` que o `apply` escreveu) e computa **duas** vezes, fechado e aberto, porque o bug só existe no segundo.
 
+#### O painel é do Dropdown: `z-999`, `--width` e um endereço só
+
+O `apply` do `dropdownFit` escreve a largura da referência como `--width` no painel, por `setProperty` — custom property atribuída num `CSSStyleDeclaration` vira propriedade JS comum e nunca chega ao CSS. Quem lê é o `w-(--width)` do **default do `RUtilsDropdown`**, ao lado do `z-999` que os três campos repetiam.
+
+O motivo de a largura ser classe e não `width` inline é precedência: inline ganha de qualquer classe, então um `ui: { Utils: { Dropdown: { popover: "w-80" } } }` não tinha como vencer e perdia calado (é o caso do `playground/app/components/Locale.vue`). Como classe, o override é o `twMerge` de sempre: `w-80` substitui `w-(--width)`, e a medida do `size` deixa de ser lida — o `reset: { rects: true }` continua acontecendo, porque a largura renderizada muda do mesmo jeito.
+
+**Toda aparência de painel mora em `ui.Utils.Dropdown.popover`, nunca num `class` no template do campo**, e é isso que faz os três campos conviverem:
+
+| campo | `popover` | resultado do `twMerge` |
+|---|---|---|
+| `Select` | `overflow-auto rounded-… border… bg…` | `z-999 w-(--width) overflow-auto …` |
+| `Date` | `w-72` | `z-999 w-72` |
+| `Color` | `flex w-64 flex-col …` | `z-999 flex w-64 flex-col …` |
+
+`Date` e `Color` não passam `dropdownFit`, então não têm `--width` declarado — e `w-(--width)` sem a variável renderiza `width: auto`. Se a largura deles continuasse num `class` do template, as duas classes cairiam no mesmo elemento **sem passar pelo merge**, e quem ganha aí é a ordem da folha de estilo, não a ordem do atributo: o painel abriria com a largura errada, compilando e sem aviso. Foi por isso que o `popover` do `RDate` e o `picker.container` do `RColor` mudaram de endereço.
+
+A variável é `--width` e não `--rf-width` de propósito: ela é medida por elemento, não é token de tema, e `test/unit/theme.test.ts` exige que todo `--rf-*` lido num componente esteja declarado no `style.css` — o que um valor inline nunca estará.
+
+As guardas: `test/unit/dropdownMiddleware.test.ts` mede a largura do painel a partir de `style["--width"]` e asserta que `style.width` fica `undefined` (o inline não pode voltar); `test/nuxt/dropdownPopover.test.ts` monta os três campos e confere o `z-999` em todos, o `w-(--width)` só onde há medida, a troca por `w-72`/`w-64` onde não há, e o override por `ui`.
+
 ### `v-mask` é nosso, não o `v-maska`
 
 Os cinco componentes com máscara — `Text`, `Textarea`, `Date`, `Hour` e `Utils/Calendar` — usam `vMask` (`src/runtime/utils/vMask.ts`), não a diretiva do maska. Nenhum lugar do `src/` importa `maska/vue`. Motivo: `maska/vue` faz

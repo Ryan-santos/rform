@@ -5,7 +5,6 @@
         <RUtilsDropdown
             v-model:open="open"
             :middleware="dropdownMiddleware"
-            class="z-999 overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)"
         >
             <template #default="{ reference }">
                 <div
@@ -137,6 +136,14 @@
                     selected: "flex min-h-12 grow flex-row items-center gap-2 p-3"
                 },
                 icon: "m-3 ml-0"
+            },
+            Utils: {
+                Dropdown: {
+                    popover: `
+                        overflow-auto rounded-(--rf-radius-lg) border
+                        border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)
+                    `
+                }
             }
         },
         default: null,

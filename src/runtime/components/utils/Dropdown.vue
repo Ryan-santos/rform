@@ -50,16 +50,16 @@
 
     let lockCount = 0;
     const savedBody: {
-        overflow: string
-        paddingRight: string
-        paddingLeft: string
-        position: string
-        top: string
-        left: string
-        width: string
-        scrollX: number
-        scrollY: number
-        isIOS: boolean
+        overflow: string;
+        paddingRight: string;
+        paddingLeft: string;
+        position: string;
+        top: string;
+        left: string;
+        width: string;
+        scrollX: number;
+        scrollY: number;
+        isIOS: boolean;
     } = {
         overflow: "",
         paddingRight: "",
@@ -78,8 +78,8 @@
             return false;
         }
         return (
-            /iP(hone|ad|od)/.test(navigator.platform)
-            || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform))
+            /iP(hone|ad|od)/.test(navigator.platform) ||
+            (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform))
         );
     };
 
@@ -120,8 +120,7 @@
         if (scrollbarWidth > 0) {
             if (isRTL) {
                 body.style.paddingLeft = `${scrollbarWidth}px`;
-            }
-            else {
+            } else {
                 body.style.paddingRight = `${scrollbarWidth}px`;
             }
         }
@@ -159,13 +158,13 @@
             leaveToClass: "opacity-0",
             leaveFromClass: ""
         },
-        popover: ""
+        popover: "z-999 w-(--width)"
     };
 
     export const defaults = defineDefaults({ ui });
 
     export type Props = {
-        ui?: DeepPartial<typeof defaults.ui>
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 
@@ -179,11 +178,11 @@
         offset: offsetProp = 5,
         lockScroll = true
     } = defineProps<{
-        middleware?: Middleware[]
-        strategy?: Strategy
-        placement?: Placement
-        offset?: number
-        lockScroll?: boolean
+        middleware?: Middleware[];
+        strategy?: Strategy;
+        placement?: Placement;
+        offset?: number;
+        lockScroll?: boolean;
     }>();
 
     const open = defineModel<boolean>("open", { default: false });
@@ -221,25 +220,18 @@
 
     const floating = useTemplateRef<HTMLElement>("floating");
 
-    const { floatingStyles } = useFloating(
-        referenceEl,
-        floating,
-        {
-            strategy: computed(() => strategy),
-            placement: computed(() => placement),
-            whileElementsMounted: autoUpdate,
-            middleware: computed(() => {
-                return dropdownMiddleware({ offset: offsetProp, middleware });
-            })
-        }
-    );
+    const { floatingStyles } = useFloating(referenceEl, floating, {
+        strategy: computed(() => strategy),
+        placement: computed(() => placement),
+        whileElementsMounted: autoUpdate,
+        middleware: computed(() => {
+            return dropdownMiddleware({ offset: offsetProp, middleware });
+        })
+    });
 
     const handleClick = (event: MouseEvent) => {
         const target = event.target as Node;
-        if (
-            !referenceEl.value?.contains(target)
-            && !floating.value?.contains(target)
-        ) {
+        if (!referenceEl.value?.contains(target) && !floating.value?.contains(target)) {
             open.value = false;
         }
     };
@@ -252,8 +244,7 @@
             if (shouldLock && !locked) {
                 lockBodyScroll();
                 locked = true;
-            }
-            else if (!shouldLock && locked) {
+            } else if (!shouldLock && locked) {
                 unlockBodyScroll();
                 locked = false;
             }

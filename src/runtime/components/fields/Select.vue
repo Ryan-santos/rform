@@ -30,10 +30,16 @@
                                 :selected="fieldSlot()"
                                 :list="false"
                             >
-                                <p v-if="Array.isArray(selected)">
+                                <p
+                                    v-if="Array.isArray(selected)"
+                                    :class="props.ui?.group?.field?.text"
+                                >
                                     {{ selected.map((item) => item.label).join(", ") }}
                                 </p>
-                                <p v-else>
+                                <p
+                                    v-else
+                                    :class="props.ui?.group?.field?.text"
+                                >
                                     {{ selected.label }}
                                 </p>
                             </slot>
@@ -57,33 +63,33 @@
             </template>
 
             <template #content>
-                <div class="sticky top-0 z-0 bg-(--rf-color-background-300)">
+                <div :class="props.ui?.list?.search?.container">
                     <Icon
                         name="search"
-                        class="absolute top-1/2 left-3 -z-1 -translate-y-1/2 opacity-60"
+                        :class="props.ui?.list?.search?.icon"
                     />
                     <input
                         v-model="search"
                         type="search"
                         placeholder="Pesquisar"
-                        class="w-full p-3 pl-10 outline-0 placeholder:text-current/30"
+                        :class="props.ui?.list?.search?.input"
                     />
                 </div>
-                <ul class="divide-y divide-(--rf-color-contrast)/10">
+                <ul :class="props.ui?.list?.container">
                     <li
                         v-for="(option, key) in filteredOptions"
                         :key
-                        class="flex cursor-pointer flex-row items-center gap-1 p-3 transition-all duration-300 hover:bg-(--rf-color-primary)/20"
-                        :class="{
-                            'text-(--rf-color-primary-fg) bg-(--rf-color-primary)!': isOptionSelected(option)
-                        }"
+                        :class="[
+                            props.ui?.list?.option?.container,
+                            isOptionSelected(option) ? props.ui?.list?.option?.selected : undefined
+                        ]"
                         @click="select(option)"
                     >
                         <slot
                             :selected="rowSlot(option)"
                             :list="true"
                         >
-                            <p>
+                            <p :class="props.ui?.list?.option?.text">
                                 {{ option.label }}
                             </p>
                         </slot>
@@ -119,7 +125,7 @@
 
     export const defaults = defineDefaults({
         ui: {
-            container: "flex grow flex-col gap-1",
+            container: "flex w-full flex-col gap-1",
             group: {
                 wrapper: {
                     container: `
@@ -132,10 +138,27 @@
                     trailing: "flex p-3 pl-0"
                 },
                 field: {
-                    container: "flex grow flex-col",
-                    selected: "flex min-h-12 grow flex-row items-center gap-2 p-3"
+                    container: "flex min-w-0 grow flex-col",
+                    selected: "flex min-h-12 w-full grow flex-row items-center gap-2 p-3",
+                    text: "truncate"
                 },
                 icon: "m-3 ml-0"
+            },
+            list: {
+                search: {
+                    container: "sticky top-0 z-0 bg-(--rf-color-background-300)",
+                    icon: "absolute top-1/2 left-3 -z-1 -translate-y-1/2 opacity-60",
+                    input: "w-full p-3 pl-10 outline-0 placeholder:text-current/30"
+                },
+                container: "divide-y divide-(--rf-color-contrast)/10",
+                option: {
+                    container: `
+                        flex w-full cursor-pointer flex-row items-center gap-1 p-3
+                        transition-all duration-300 hover:bg-(--rf-color-primary)/20
+                    `,
+                    selected: "text-(--rf-color-primary-fg) bg-(--rf-color-primary)!",
+                    text: "truncate"
+                }
             },
             Utils: {
                 Dropdown: {
@@ -151,10 +174,10 @@
         keyLabel: "name"
     });
 
-    export type Props<
-        Opts extends Options = OptArrayObj,
-        Multiple extends boolean = false
-    > = Omit<Element<typeof defaults, "select">, "modelValue" | "onUpdate:modelValue" | "default"> &
+    export type Props<Opts extends Options = OptArrayObj, Multiple extends boolean = false> = Omit<
+        Element<typeof defaults, "select">,
+        "modelValue" | "onUpdate:modelValue" | "default"
+    > &
         Utils["Label"] &
         Utils["Description"] &
         Utils["Dropdown"] &
@@ -174,20 +197,20 @@
     type InternalProps = Omit<
         Element<typeof defaults, "select">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & Utils["Label"]
-        & Utils["Description"]
-        & Utils["Error"]
-        & Utils["Loading"]
-        & Utils["Placeholder"]
-        & {
-        options: Options;
-        keyValue?: string;
-        keyLabel?: string;
-        modelFull?: boolean;
-        multiple?: boolean;
-        default?: unknown;
-        modelValue?: unknown;
-    };
+    > &
+        Utils["Label"] &
+        Utils["Description"] &
+        Utils["Error"] &
+        Utils["Loading"] &
+        Utils["Placeholder"] & {
+            options: Options;
+            keyValue?: string;
+            keyLabel?: string;
+            modelFull?: boolean;
+            multiple?: boolean;
+            default?: unknown;
+            modelValue?: unknown;
+        };
 </script>
 
 <script setup lang="ts" generic="Opts extends Options, Multiple extends boolean = false">
@@ -283,7 +306,9 @@
         }
 
         return _options.value.filter(({ label }) => {
-            return String(label ?? "").toLowerCase().includes(term);
+            return String(label ?? "")
+                .toLowerCase()
+                .includes(term);
         });
     });
 

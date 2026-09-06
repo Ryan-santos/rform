@@ -3,7 +3,7 @@
         v-model="data"
         :schema
         :on-submit="submit"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <DemoActions />
     </RForm>
@@ -85,4 +85,7 @@
     const submit = async () => {
         parse.value = await rules.safeParseAsync(data.value);
     };
+
+    // O painel de model do `<Demo>` lê daqui: este exemplo monta o próprio `RForm`.
+    defineExpose({ data });
 </script>

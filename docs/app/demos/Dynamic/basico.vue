@@ -1,7 +1,7 @@
 <template>
     <RForm
         v-model="data"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <RDynamic :schema />
     </RForm>
@@ -52,4 +52,7 @@
             }
         }
     });
+
+    // O painel de model do `<Demo>` lê daqui: este exemplo monta o próprio `RForm`.
+    defineExpose({ data });
 </script>

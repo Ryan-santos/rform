@@ -1,5 +1,6 @@
 <template>
     <DemoCode
+        data-allow-mismatch
         :code="json"
         lang="json"
         :label="title ?? $t('ui.model')"

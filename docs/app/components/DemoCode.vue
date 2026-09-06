@@ -4,9 +4,7 @@
             class="flex flex-none flex-row items-center justify-between gap-2 border-b border-code-line bg-code-head px-3 py-2"
         >
             <div class="flex min-w-0 flex-row items-baseline gap-2">
-                <span
-                    class="size-2 flex-none rounded-full bg-gradient-to-br from-primary to-secondary"
-                />
+                <span class="size-2 flex-none rounded-full bg-code-text/25" />
                 <h3 class="truncate text-xs font-bold tracking-widest text-code-text/70 uppercase">
                     {{ label ?? $t("ui.code") }}
                 </h3>
@@ -19,7 +17,7 @@
 
             <button
                 type="button"
-                class="flex-none rounded-md px-2 py-1 text-xs text-code-text/40 transition-colors hover:text-secondary"
+                class="flex-none rounded-md px-2 py-1 text-xs text-code-text/40 transition-colors hover:text-code-text"
                 @click="copy"
             >
                 {{ copied ? $t("ui.copied") : $t("ui.copy") }}

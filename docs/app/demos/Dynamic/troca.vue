@@ -16,7 +16,7 @@
 
     <RForm
         v-model="data"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <RDynamic :schema="active.schema" />
     </RForm>
@@ -52,4 +52,7 @@
             active.value.data.value = value as never;
         }
     });
+
+    // O painel de model do `<Demo>` lê daqui: este exemplo monta o próprio `RForm`.
+    defineExpose({ data });
 </script>

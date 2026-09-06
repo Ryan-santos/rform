@@ -93,7 +93,7 @@
     --color-danger-800: color-mix(in oklab, var(--color-danger), var(--color-background) 45%);
     --color-danger-900: color-mix(in oklab, var(--color-danger), var(--color-background) 50%);
 
-    --default-transition-duration: 0.5s;
+    --default-transition-duration: 0.2s;
 }
 
 @layer base {
@@ -175,17 +175,13 @@
     }
 
     .page-enter-active,
-    .page-leave-active,
-    .layout-enter-active,
-    .layout-leave-active {
-        @apply transition-all duration-500 ease-in-out;
+    .page-leave-active {
+        @apply transition-opacity duration-150 ease-out;
     }
 
     .page-enter-from,
-    .page-leave-to,
-    .layout-enter-from,
-    .layout-leave-to {
-        @apply blur-sm opacity-0;
+    .page-leave-to {
+        @apply opacity-0;
     }
 }
 
@@ -283,23 +279,23 @@
  */
 @layer components {
     .prose {
-        @apply flex flex-col gap-5 text-contrast/80;
+        @apply flex flex-col gap-5 text-contrast/75;
     }
 
     .prose > h2 {
-        @apply mt-6 scroll-mt-24 border-b border-contrast/10 pb-2 text-2xl font-bold tracking-tight;
+        @apply mt-8 scroll-mt-20 text-2xl font-bold tracking-tight text-contrast;
     }
 
     .prose > h3 {
-        @apply mt-4 scroll-mt-24 text-xl font-semibold tracking-tight;
+        @apply mt-5 scroll-mt-20 text-lg font-semibold tracking-tight text-contrast;
     }
 
     .prose > h4 {
-        @apply mt-2 scroll-mt-24 text-lg font-semibold;
+        @apply mt-3 scroll-mt-20 text-base font-semibold text-contrast;
     }
 
     .prose > p {
-        @apply max-w-prose leading-relaxed;
+        @apply max-w-prose leading-7;
     }
 
     .prose a {
@@ -321,6 +317,23 @@
 
     .prose :not(pre) > code {
         @apply rounded-md bg-primary/10 px-1.5 py-0.5 font-mono text-[0.85em] text-primary;
+    }
+
+    /**
+     * O bloco de código da prosa, com a mesma cara do painel de código dos demos:
+     * fundo escuro nos dois temas, porque é um pedaço de editor dentro da página.
+     */
+    .prose pre.shiki {
+        @apply overflow-x-auto rounded-xl border border-code-line bg-code p-4 font-mono text-xs leading-relaxed text-code-text/80;
+    }
+
+    /**
+     * O @nuxtjs/mdc emite `--shiki-default`/`--shiki-dark` por token e **não**
+     * emite a regra que os aplica — sem esta linha o bloco inteiro sai sem cor
+     * nenhuma. Lemos sempre o escuro: o fundo é escuro nos dois temas.
+     */
+    .prose pre.shiki span {
+        color: var(--shiki-dark);
     }
 
     .prose > blockquote {

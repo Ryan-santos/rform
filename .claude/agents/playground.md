@@ -28,34 +28,38 @@ dele que os dois exercitam.
 
 ## Como um cenário se parece
 
-Uma página em `app/pages/<nome>.vue`, com um ou mais `<Card>`:
+Uma página em `app/pages/<nome>.vue`, com um ou mais `<Scenario>`:
 
 ```vue
 <template>
-    <Card
-        title="O que este cenário prova"
-        description="Uma linha de contexto, não um parágrafo."
+    <Scenario
+        title="null apaga"
+        :value="data"
     >
-        <RForm v-model="data">
+        <RForm
+            v-model="data"
+            class="flex flex-col gap-4"
+        >
             <RText
                 name="nome"
                 label="Nome"
             />
         </RForm>
-    </Card>
-
-    <Card title="model">
-        <Json :value="data" />
-    </Card>
+    </Scenario>
 </template>
 ```
 
-`Card`, `Json` e `Theme` existem em `basic`, `standalone` e `ui`. O `i18n` tem o
-próprio conjunto, mais antigo (`Demo`, `DemoPage`, `DemoUi`), herdado de quando
-ele era também a documentação.
+`Scenario` é o par formulário↔model: grid de duas colunas a partir de `lg`, com o
+`Json` `lg:sticky` à direita. **Não remonte esse grid na mão.** Ele, o `Card` (a
+caixa) e o `Json` (a saída) existem iguais nos quatro apps.
 
-A navegação dos três playgrounds novos é **derivada da tabela de rotas** — uma
-página nova aparece sozinha, não há lista a atualizar.
+**`title` é de 1 a 3 palavras, nunca uma frase**, e não existe `description`.
+Nenhum parágrafo explicativo, nenhuma lista de bullets dizendo o que a página
+prova: isso é o `docs/`, e repetido aqui só apodrece. Comentário `//` no
+`<script>` continua bem-vindo — é rascunho de dev, não texto de leitor.
+
+A navegação é **derivada da tabela de rotas** — uma página nova aparece sozinha,
+não há lista a atualizar.
 
 No `basic`, toda label é chave: ele tem `@nuxtjs/i18n` com JSON real, então
 `TrInput` estreita e literal solto é erro de `vue-tsc`. As chaves vão em
@@ -90,7 +94,9 @@ gerados por app, e cada um tem o próprio `#rform`.
   raiz.
 - **Playground é rascunho.** Se um cenário virou explicação — com prosa, seções e
   código comentado —, ele quer ser uma página de docs, não uma página de
-  playground.
+  playground. Já aconteceu de verdade: o `i18n` carregou uma documentação inteira
+  (`DemoPage`, `DemoUi`, highlighter próprio, treze páginas de vitrine) até o
+  `docs/` existir, e foram ~4.500 linhas apagadas de uma vez.
 - **Cenário reproduz condição de app real.** Uma vitrine de props já existe no
   docs, gerada do fonte; repeti-la aqui é trabalho que apodrece.
 

@@ -649,7 +649,9 @@ vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json # a fixture (campos/utils
 O gerenciador de pacotes é o **pnpm** (`pnpm-lock.yaml`, só na raiz). O runtime continua sendo o Node — `pnpm run` só orquestra; vitest, vue-tsc, nuxi e unbuild rodam em Node como sempre.
 
 - `pnpm install` — instala **os seis** projetos de uma vez (ver workspace abaixo).
-- `pnpm docs` — sobe o site de documentação na porta 3000.
+- `pnpm run docs` — sobe o site de documentação na porta 3000. O `run` **não é
+  opcional**: `docs` é comando embutido do pnpm (abre a home de um pacote), então
+  `pnpm docs` morre com `ERR_PNPM_MISSING_PACKAGE_NAME` sem nunca olhar os scripts.
 - `pnpm play` / `play:basic` / `play:standalone` / `play:ui` — os quatro playgrounds, nas portas 3030 a 3033.
 - `pnpm exec oxlint <arquivo>` — lint (config em `oxlint.config.ts`, plugin tailwind ativo).
 - `pnpm test:types` — type-check dos sete apps (precisa dos sete `.nuxt` populados).
@@ -700,10 +702,40 @@ Quatro apps Nuxt de rascunho, um por eixo. Nenhum deles é documentação — is
 o primeiro é o único lugar que exercita o motor próprio; o segundo ficaria ilegível,
 porque com i18n toda label vira chave e chave é ruído quando o assunto é classe.
 
-`playgrounds/i18n` é o que era o `playground/`, com o histórico preservado. Ele
-mantém o sistema de demo antigo (`DemoPage`/`Demo`, recorte por regex do fonte da
-página) — o `docs/` substituiu isso por arquivos `.vue` de verdade, e o playground
-não foi migrado porque ali o recorte ainda serve como rascunho.
+### O mínimo para reproduzir
+
+Playground é **rascunho**, e a régua é essa: uma página é o formulário que
+reproduz o cenário e o model ao lado. Sem parágrafo explicativo, sem `description`,
+sem lista de bullets dizendo o que a página prova — isso é o `docs/`, e repetido
+aqui só apodrece. Título de bloco tem 1 a 3 palavras (`"null apaga"`,
+`"popover"`), nunca uma frase. Comentário `//` no `<script>` continua bem-vindo:
+é rascunho de dev, não texto de leitor.
+
+O chassi é o mesmo nos quatro: `Card` (caixa com título curto opcional), `Json` (a
+saída) e `Scenario`, que é o par dos dois — grid de duas colunas a partir de
+`lg`, formulário à esquerda, model `lg:sticky` à direita. Nenhuma página remonta
+esse grid na mão. O layout é uma linha só: nome do app, as rotas derivadas de
+`useRouter().getRoutes()` e os toggles.
+
+```vue
+<Scenario
+    title="null apaga"
+    :value="data"
+>
+    <RForm v-model="data"> … </RForm>
+</Scenario>
+```
+
+`playgrounds/i18n` é o que era o `playground/`, com o histórico preservado — e
+**carregou a documentação antiga junto até virar quatro playgrounds**: `DemoPage`,
+`Demo`, `DemoCode`, `DemoUi`, o recorte por regex do fonte da página, um
+highlighter próprio e treze páginas `campos/*.vue` de vitrine. Eram ~4.500 linhas
+que o `docs/` já cobre com demos vivos e referência gerada do fonte; foram
+apagadas. Sobraram cinco páginas: `index` (troca de idioma), `form` (o smoke test),
+`traducao`, `customizados` e `dynamic`.
+
+Junto com `DemoUi` foi-se o `playgrounds/i18n/app/utils/ui.ts` — a árvore de
+camadas mora no `docs/`, que é onde ela se lê.
 
 `playgrounds/i18n/app/pages/form.vue` é o smoke test visual de todos os
 componentes. Cenários do `RSelect` cobrem: array primitivo, multi+modelFull,
@@ -746,6 +778,41 @@ A ordem da sidebar sai dos prefixos numéricos dos arquivos, via
 `queryCollectionNavigation()`; o título de cada seção vem do `.navigation.yml` do
 diretório, um por idioma.
 
+### O chassi: barra do topo, navegação, índice
+
+Três colunas, no formato que uma doc de framework tem: `Header.vue` fixo no topo
+(marca, busca, GitHub, tema, idioma), `Sidebar.vue` grudada à esquerda,
+`Toc.vue` à direita a partir de `xl` e `PageNav.vue` (anterior/próxima) no pé.
+A busca e o menu do mobile moram em `useState`, porque quem os escreve é o
+cabeçalho e quem os lê é a barra lateral, do outro lado do layout.
+
+**A navegação é buscada num lugar só, e isso é obrigatório.** `useDocsNav()`
+(`app/composables/nav.ts`) embrulha o `useAsyncData` da chave `nav-<locale>`. O
+Nuxt compara chamadas de mesma chave pelo **fonte do handler** (`hashFunction`, em
+`app/utils/hash`), e três arquivos com o mesmo `useAsyncData` escrito à mão davam
+`NUXT_E3004 · different handler` a cada render.
+
+**A página tem raiz única de propósito.** O `<NuxtPage>` embrulha a página num
+`<Transition>`, e transição não anima fragmento — o `article` e o `aside` do índice
+moram dentro de uma `div`.
+
+O item ativo do índice sai de um `IntersectionObserver` sobre os próprios títulos,
+com `rootMargin` recortando a faixa de leitura. Scrollspy por evento de scroll
+refaz layout a cada quadro para responder a mesma pergunta.
+
+### O bloco de código da prosa precisa de CSS nosso
+
+O `@nuxtjs/mdc` realça com shiki em **dois temas** e emite, por token,
+`--shiki-default` e `--shiki-dark` — mas **não emite a regra que aplica essas
+variáveis a `color`**. Sem uma linha do app, todo bloco cercado da prosa renderiza
+sem cor nenhuma, e nada avisa. É o que `.prose pre.shiki span { color:
+var(--shiki-dark) }` resolve, em `main.css`.
+
+Lê-se sempre o **escuro**, nos dois temas, porque o `pre` recebe o mesmo
+`bg-code`/`border-code-line` do `DemoCode`: bloco de código é um pedaço de editor
+dentro da página, e ter metade da página com fundo claro e a outra metade escura
+era metade do que havia de feio ali.
+
 ### `TrInput` estreita lá dentro, e isso é a feature
 
 O docs declara `langDir` com JSON real, então **todo literal solto numa prop de
@@ -770,8 +837,16 @@ ganho sobre o recorte por regex do playground.
 quando o arquivo não tem `<script setup>` — o caso comum. Com script, mostra o
 arquivo inteiro.
 
-O `RForm` e o painel de model são do `<Demo>`, não do arquivo de demo;
-`:form="false"` desliga os dois.
+**Todo bloco com campo mostra o model ao lado.** O `RForm` e o painel são do
+`<Demo>`, não do arquivo de demo — e `:form="false"` desliga só o `RForm`, para o
+demo que monta o próprio (os três modos do `useRForm`, o `RDynamic`). Nesse caso o
+painel lê o `defineExpose({ data })` do demo por `useTemplateRef`: é uma linha no
+fim do `<script setup>`, e é o preço de o exemplo ser o dono do formulário.
+
+O par formulário↔model é **container query**, não breakpoint de viewport: o
+`<Demo>` é um `@container` e vira duas colunas em `@2xl`. Quem decide é a largura
+que sobra depois da barra lateral e do índice, que o `md:` do viewport não
+enxerga — é por isso que os demos escrevem `@md:grid-cols-2` e não `md:grid-cols-2`.
 
 **Um demo novo exige reiniciar o dev server.** O `import.meta.glob` é resolvido na
 transformação, e um arquivo criado com o servidor no ar não entra nele — o sintoma
@@ -805,17 +880,23 @@ props que precisam de explicação, e é opcional por prop.
 O checker lista todo emit também como prop `onXxx`; o `api.ts` os move para
 `events`, senão `onUpdate:modelValue` apareceria como prop escrevível.
 
+O `api.json` está no `.prettierignore` da raiz — que é um dos arquivos de ignore
+que o oxfmt lê por padrão, junto com o `.gitignore`. Sem isso o formatador
+reescreve o arquivo e o `pnpm --filter rform-docs api` seguinte o desfaz, num
+vaivém que só aparece no `git status`.
+
 ### A árvore de camadas lê o `defaults` do módulo
 
 `docs/app/utils/ui.ts` (portado do playground) lê `defaults.ui` por
 `import.meta.glob` e parseia o template pra saber onde cada `RUtils` entra. Nenhum
 build step.
 
-**Ele estava quebrado no playground desde o refactor para `fields/`/`utils/`**: a
+**Ele esteve quebrado no playground desde o refactor para `fields/`/`utils/`**: a
 busca era por `components/<Nome>.vue` e `components/Utils/<Nome>.vue`, caminhos que
 não existem mais. A árvore vinha vazia, calada. Hoje há um `field()` que tenta
 `fields/<Nome>.vue` e cai em `<Nome>.vue` — o segundo é o `Form` e o `Dynamic`, que
-não são campos mas têm `ui` a mostrar.
+não são campos mas têm `ui` a mostrar. O arquivo do playground foi apagado junto
+com o `DemoUi`; a árvore existe num lugar só.
 
 ### As guardas
 

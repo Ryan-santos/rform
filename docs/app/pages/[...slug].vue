@@ -1,41 +1,57 @@
 <template>
-    <article class="flex min-w-0 grow flex-col gap-10 px-6 py-12 lg:px-10">
-        <header class="flex flex-col gap-2 border-b border-contrast/10 pb-6">
-            <div class="flex flex-row flex-wrap items-baseline gap-3">
-                <h1
-                    class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-3xl font-bold tracking-tight text-transparent"
+    <div class="flex min-w-0 grow flex-row items-start">
+        <article class="flex min-w-0 grow flex-col gap-8 py-10 lg:px-8 xl:px-10">
+            <header class="flex flex-col gap-3">
+                <p
+                    v-if="section"
+                    class="text-xs font-bold tracking-widest text-primary uppercase"
                 >
-                    {{ page?.title }}
-                </h1>
-                <code
-                    v-if="page?.tag"
-                    class="rounded-md bg-primary/10 px-2 py-1 font-mono text-sm font-medium text-primary"
+                    {{ section }}
+                </p>
+
+                <div class="flex flex-row flex-wrap items-baseline gap-3">
+                    <h1 class="text-3xl font-bold tracking-tight">
+                        {{ page?.title }}
+                    </h1>
+
+                    <code
+                        v-if="page?.tag"
+                        class="rounded-md bg-primary/10 px-2 py-1 font-mono text-sm font-medium text-primary"
+                    >
+                        {{ page.tag }}
+                    </code>
+                </div>
+
+                <p
+                    v-if="page?.description"
+                    class="max-w-prose text-lg text-contrast/55"
                 >
-                    {{ page.tag }}
-                </code>
-            </div>
+                    {{ page.description }}
+                </p>
+            </header>
+
+            <ContentRenderer
+                v-if="page"
+                :value="page"
+                class="prose"
+            />
 
             <p
-                v-if="page?.description"
-                class="max-w-prose text-contrast/60"
+                v-else
+                class="text-contrast/50"
             >
-                {{ page.description }}
+                {{ $t("nav.notFound") }}
             </p>
-        </header>
 
-        <ContentRenderer
-            v-if="page"
-            :value="page"
-            class="prose"
-        />
+            <PageNav />
+        </article>
 
-        <p
-            v-else
-            class="text-contrast/50"
-        >
-            {{ $t("nav.notFound") }}
-        </p>
-    </article>
+        <aside class="hidden w-56 flex-none xl:block">
+            <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
+                <Toc :links="page?.body?.toc?.links" />
+            </div>
+        </aside>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -44,14 +60,13 @@
      * referência quando a tradução ainda não existe — uma página faltando em `en`
      * mostra o texto em `pt`, e não um 404.
      */
-    import { collectionOf } from "~/utils/content";
+    import { collectionOf, currentPath, flattenNav, type NavItem } from "~/utils/content";
 
     const route = useRoute();
 
     const { locale } = useI18n();
 
-    // A rota chega prefixada (`/pt/fields/text`); o caminho do conteúdo, não.
-    const path = computed(() => route.path.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/");
+    const path = computed(() => currentPath(route.path));
 
     const { data: page } = await useAsyncData(
         () => `page-${locale.value}-${path.value}`,
@@ -61,6 +76,17 @@
             return own ?? (await queryCollection("content_pt").path(path.value).first());
         },
         { watch: [locale, path] }
+    );
+
+    const { data: tree } = await useDocsNav();
+
+    // O nome da seção a que a página pertence — o mesmo título que a barra lateral
+    // mostra acima do grupo.
+    const section = computed(
+        () =>
+            ((tree.value ?? []) as NavItem[]).find((group) =>
+                flattenNav(group.children).some((item) => item.path === path.value)
+            )?.title
     );
 
     useHead(() => ({

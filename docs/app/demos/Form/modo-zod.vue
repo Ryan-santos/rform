@@ -2,7 +2,7 @@
     <RForm
         v-model="data"
         :on-submit="submit"
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <RText
             name="nome"
@@ -23,7 +23,7 @@
         <RObject
             name="endereco"
             label="demo.object.endereco"
-            class="md:col-span-2"
+            class="@md:col-span-2"
         >
             <RText
                 name="cep"
@@ -64,4 +64,7 @@
     const submit = async () => {
         parse.value = await rules.safeParseAsync(data.value);
     };
+
+    // O painel de model do `<Demo>` lê daqui: este exemplo monta o próprio `RForm`.
+    defineExpose({ data });
 </script>

@@ -66,6 +66,10 @@ seguinte vira filho dele. O sintoma é a página terminar cedo, sem erro nenhum.
 Props do `::demo`: `src` (obrigatório), `title`, `ui` (classes do wrapper vivo) e
 `:form="false"` para um demo que monta o próprio `RForm`.
 
+**Todo bloco com campo mostra o model ao lado — isso não é opcional.** Com o
+`RForm` do `<Demo>`, sai de graça. Com `:form="false"`, o demo precisa terminar o
+`<script setup>` com `defineExpose({ data })`, que é de onde o painel lê.
+
 **Link entre páginas leva o prefixo do idioma** — `/pt/concepts/traducao` no
 arquivo `pt`, `/en/...` no `en`. O `localePath` não alcança link de markdown.
 
@@ -77,6 +81,10 @@ se quer. Com script, mostra o arquivo inteiro; use script só quando a lógica f
 metade do exemplo.
 
 O `RForm` e o painel de model são do `<Demo>`, não do arquivo.
+
+Layout responsivo do demo é **container query**: escreva `@md:grid-cols-2`, não
+`md:grid-cols-2`. Quem manda na largura é o espaço que sobra depois da barra
+lateral e do índice, e o breakpoint de viewport não enxerga isso.
 
 ## Depois de mexer
 
@@ -90,8 +98,10 @@ pnpm exec vue-tsc -p docs/.nuxt/tsconfig.app.json --noEmit
 arquivo a arquivo, e que todo `::demo{src}` aponta para um arquivo que existe (e
 que todo demo é citado por alguém).
 
-Para ver na tela: `pnpm docs` sobe em `:3000`. **Um demo novo exige reiniciar o
-dev server** — o `import.meta.glob` de `app/demos` é resolvido na transformação, e
+Para ver na tela: `pnpm run docs` sobe em `:3000`. O `run` não é opcional: `docs`
+é comando embutido do pnpm, e `pnpm docs` morre com
+`ERR_PNPM_MISSING_PACKAGE_NAME` sem olhar os scripts. **Um demo novo exige
+reiniciar o dev server** — o `import.meta.glob` de `app/demos` é resolvido na transformação, e
 um arquivo criado com o servidor no ar não entra nele.
 
 ## Quando `src/` muda

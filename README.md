@@ -78,7 +78,7 @@ O site fica em [`docs/`](docs/), em pt-BR e en, com demos vivos:
 ```bash
 pnpm install
 pnpm dev:prepare
-pnpm docs          # :3000
+pnpm run docs      # :3000 — o `run` não é opcional: `docs` é comando do pnpm
 ```
 
 ## Playgrounds

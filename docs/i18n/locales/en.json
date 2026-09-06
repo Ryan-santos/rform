@@ -2,12 +2,12 @@
     "nav": {
         "docs": "documentation",
         "menu": "menu",
-        "close": "close",
         "filter": "filter…",
         "empty": "nothing matching “{filter}”.",
-        "theme": "theme",
-        "language": "language",
-        "notFound": "Page not found."
+        "notFound": "Page not found.",
+        "onThisPage": "on this page",
+        "previous": "previous",
+        "next": "next"
     },
     "ui": {
         "code": "code",

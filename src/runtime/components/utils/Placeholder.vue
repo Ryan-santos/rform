@@ -56,7 +56,15 @@
     const { props, upper, tr } = useUtil<Props>(defaults);
 
     const modelFilled = computed(() => {
-        return !!String(upper.model.value ?? "").length;
+        const value = upper.model.value;
+
+        // `String(["", ""])` é `","`: sem olhar item a item, um range vazio conta
+        // como preenchido e o placeholder sobe num campo que não tem nada.
+        if (Array.isArray(value)) {
+            return value.some((item) => !!String(item ?? "").length);
+        }
+
+        return !!String(value ?? "").length;
     });
 
     const floating = computed(() => {
@@ -71,7 +79,9 @@
         return modelFilled.value || !!componentProps.focused;
     });
 
+    // Quem não pode flutuar tem de sumir: com `label` o placeholder fica parado sobre
+    // o input, e no foco disputaria o mesmo espaço com o hint nativo do Date/Hour.
     const floatingDisable = computed(() => {
-        return modelFilled.value && !floating.value;
+        return !floating.value && (modelFilled.value || !!componentProps.focused);
     });
 </script>

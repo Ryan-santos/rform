@@ -30,4 +30,13 @@ describe("RObject", () => {
 
         expect(sharedModel.alpha).toBe("typed");
     });
+
+    it("renderiza o erro do próprio container, e não só o dos filhos", async () => {
+        const wrapper = await mountSuspended(RObject, {
+            props: { error: "rform.presets.rules.required" } as never,
+            slots: { default: () => h("span") }
+        });
+
+        expect(wrapper.find(".RUtilsError").text()).toBe("Campo obrigatório.");
+    });
 });

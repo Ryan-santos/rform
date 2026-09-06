@@ -8,7 +8,7 @@
                 props.placeholder ? props.ui?.group?.ifPlaceholder : ''
             ]"
         >
-            {{ props.placeholder }}
+            {{ tr(props.placeholder) }}
 
             <span :class="props.ui?.group?.button?.container">
                 <input
@@ -108,7 +108,7 @@
         loading: undefined
     });
 
-    const { model, props } = await useField(_props);
+    const { model, props, tr } = await useField(_props);
 
     const iconDefaults: Required<IconConfig> = {
         loading: "loading",

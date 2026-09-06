@@ -36,6 +36,8 @@
                 </button>
             </li>
         </TransitionGroup>
+
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 
@@ -93,6 +95,7 @@
 
     export type Props = Element<typeof defaults, "array"> &
         Utils["Label"] &
+        Utils["Error"] &
         TextProp<typeof defaults.text> & {
             min?: number;
             max?: number;

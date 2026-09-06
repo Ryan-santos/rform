@@ -54,4 +54,13 @@ describe("RArray", () => {
         const icons = wrapper.findAll('[class*="cursor-pointer"]');
         expect(icons).toHaveLength(0);
     });
+
+    it("renderiza o erro do próprio container, e não só o dos filhos", async () => {
+        const wrapper = await mountSuspended(RArray, {
+            props: { modelValue: ["a"], error: "rform.presets.rules.required" } as never,
+            slots: { default: () => h("span") }
+        });
+
+        expect(wrapper.find(".RUtilsError").text()).toBe("Campo obrigatório.");
+    });
 });

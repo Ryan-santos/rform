@@ -5,6 +5,8 @@
         <div :class="props.ui?.group">
             <slot />
         </div>
+
+        <RUtilsError v-if="props.error" />
     </div>
 </template>
 
@@ -27,7 +29,7 @@
         default: {}
     });
 
-    export type Props = Element<typeof defaults, "object"> & Utils["Label"];
+    export type Props = Element<typeof defaults, "object"> & Utils["Label"] & Utils["Error"];
 </script>
 
 <script setup lang="ts">

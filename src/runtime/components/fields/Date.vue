@@ -23,6 +23,7 @@
                         :class="props.ui?.group?.field?.container"
                         @focusin="onFocusIn"
                         @focusout="onFocusOut"
+                        @mousedown="onFieldMousedown"
                     >
                         <RUtilsPlaceholder
                             v-if="props.placeholder"
@@ -52,6 +53,7 @@
                                 :placeholder="placeholderHint"
                                 :class="props.ui?.group?.field?.input"
                                 @blur="validate(0)"
+                                @input="onPartInput"
                             />
                             <template v-if="props.mode === 'range'">
                                 <span :class="props.ui?.group?.field?.separator">
@@ -68,6 +70,7 @@
                                         props.ui?.group?.field?.inputEnd
                                     ]"
                                     @blur="validate(1)"
+                                    @keydown="onPartKeydown"
                                 />
                             </template>
                         </div>
@@ -111,7 +114,7 @@
      */
     import { computed, ref, useTemplateRef, watch } from "vue";
 
-    import { useField } from "#rform/composables";
+    import { useField, useRangeParts } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { vMask } from "#rform/utils";
@@ -352,4 +355,11 @@
             focused.value = false;
         }
     };
+
+    const { onPartInput, onPartKeydown, onFieldMousedown } = useRangeParts({
+        field,
+        typed,
+        isRange: () => props.value.mode === "range",
+        valid: (part) => !!parseLocal(part)
+    });
 </script>

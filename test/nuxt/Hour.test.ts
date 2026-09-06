@@ -97,3 +97,66 @@ describe("RHour", () => {
         expect(last).toEqual(["08:00", "17:30"]);
     });
 });
+describe("RHour: navegação entre as partes do range", () => {
+    // Todos anexam no mesmo body, então o foco vaza de um teste para o outro.
+    const mountRange = (modelValue: unknown = ["", ""]) => {
+        (document.activeElement as HTMLElement | null)?.blur();
+
+        return mountSuspended(RHour, {
+            attachTo: document.body,
+            props: { range: true, modelValue } as never
+        });
+    };
+
+    it("foca a segunda parte quando a primeira fica completa e válida", async () => {
+        const wrapper = await mountRange();
+        const inputs = wrapper.findAll("input");
+
+        await inputs[0]!.setValue("08:00");
+        await nextTick();
+
+        expect(document.activeElement).toBe(inputs[1]!.element);
+    });
+
+    it("não rouba o cursor ao reeditar uma primeira parte que já era válida", async () => {
+        const wrapper = await mountRange(["08:00", ""]);
+        const inputs = wrapper.findAll("input");
+
+        (inputs[0]!.element as HTMLInputElement).focus();
+        await inputs[0]!.setValue("09:00");
+        await nextTick();
+
+        expect(document.activeElement).toBe(inputs[0]!.element);
+    });
+
+    it("volta para a primeira parte com Backspace na segunda vazia", async () => {
+        const wrapper = await mountRange(["08:00", ""]);
+        const inputs = wrapper.findAll("input");
+
+        (inputs[1]!.element as HTMLInputElement).focus();
+        await inputs[1]!.trigger("keydown", { key: "Backspace" });
+        await nextTick();
+
+        expect(document.activeElement).toBe(inputs[0]!.element);
+    });
+
+    it("clicar no meio foca a parte vazia", async () => {
+        const wrapper = await mountRange(["08:00", ""]);
+        const inputs = wrapper.findAll("input");
+
+        await wrapper.find('[class*="opacity-50"]').trigger("mousedown");
+        await nextTick();
+
+        expect(document.activeElement).toBe(inputs[1]!.element);
+    });
+
+    it("clicar no meio com as duas partes preenchidas foca a primeira", async () => {
+        const wrapper = await mountRange(["08:00", "17:30"]);
+        const inputs = wrapper.findAll("input");
+
+        await wrapper.find('[class*="opacity-50"]').trigger("mousedown");
+        await nextTick();
+
+        expect(document.activeElement).toBe(inputs[0]!.element);
+    });
+});

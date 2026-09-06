@@ -25,7 +25,7 @@
         >
             <RForm
                 v-model="data"
-                :on-submit="submit"
+                @submit="submit"
                 class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RDynamic :schema="api.schema">

@@ -218,60 +218,16 @@
 
 /**
  * Bloco de código tem fundo próprio, escuro nos dois temas: é um pedaço de editor
- * dentro da página, não um parágrafo. Por isso as cores dos tokens são fixas — sem
- * light-dark() — e o texto do painel nasce claro.
+ * dentro da página, não um parágrafo. As quatro cores saem do `colors` do tema
+ * do shiki — o Shades of Purple (Super Dark), o mesmo do editor.
  */
 @theme static {
-    --color-code: #171b2c;
-    --color-code-head: #12162a;
-    --color-code-line: #2b3355;
-    --color-code-text: #e6e9f5;
+    --color-code: #191830;
+    --color-code-head: #131327;
+    --color-code-line: #1f1f41;
+    --color-code-text: #ffffff;
 }
 
-/**
- * A paleta dos tokens vive aqui, e não em classes do Tailwind, porque quem emite
- * as classes é o highlight.ts — string montada em runtime não passa pelo scanner.
- */
-@layer base {
-    .tok-tag {
-        color: #7deba0;
-    }
-    .tok-attr {
-        color: #8be9fd;
-        font-style: italic;
-    }
-    .tok-string {
-        color: #f5f0a0;
-    }
-    .tok-keyword {
-        color: #ff7b9c;
-    }
-    .tok-literal {
-        color: #c3a6ff;
-    }
-    .tok-number {
-        color: #c3a6ff;
-    }
-    .tok-key {
-        color: #8be9fd;
-    }
-    .tok-fn {
-        color: #7deba0;
-    }
-    .tok-prop {
-        color: #8be9fd;
-    }
-    .tok-interp {
-        color: #ffb86c;
-    }
-    .tok-comment {
-        color: #7683b8;
-        font-style: italic;
-    }
-    .tok-punct {
-        color: #ff9ec4;
-    }
-}
 /**
  * A prosa do `@nuxt/content` sai como HTML nu — os estilos abaixo são o que
  * transforma o markdown renderizado em página. Ficam numa classe (`.prose`) em
@@ -295,19 +251,23 @@
     }
 
     .prose > p {
-        @apply max-w-prose leading-7;
+        @apply leading-7;
     }
 
     .prose a {
         @apply text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary;
     }
 
+    .prose :is(h2, h3, h4) a {
+        @apply text-inherit no-underline;
+    }
+
     .prose > ul {
-        @apply flex max-w-prose list-disc flex-col gap-2 pl-6 leading-relaxed marker:text-primary/60;
+        @apply flex list-disc flex-col gap-2 pl-6 leading-relaxed marker:text-secondary;
     }
 
     .prose > ol {
-        @apply flex max-w-prose list-decimal flex-col gap-2 pl-6 leading-relaxed marker:text-primary/60;
+        @apply flex list-decimal flex-col gap-2 pl-6 leading-relaxed marker:text-secondary;
     }
 
     .prose li > ul,
@@ -336,8 +296,17 @@
         color: var(--shiki-dark);
     }
 
+    /**
+     * Bloco cercado sem linguagem — diagrama, árvore, saída de console. Não tem
+     * token para colorir, e sem uma pele própria ele se lê como um bloco de código
+     * que perdeu a cor.
+     */
+    .prose pre.language-text {
+        @apply border-dashed bg-code/60 text-code-text/55;
+    }
+
     .prose > blockquote {
-        @apply max-w-prose border-l-2 border-primary/40 bg-primary/5 py-3 pr-4 pl-4 text-contrast/70 italic;
+        @apply border-l-2 border-secondary/50 bg-secondary/5 py-3 pr-4 pl-4 text-contrast/70 italic;
     }
 
     .prose table {

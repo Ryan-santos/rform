@@ -13,7 +13,7 @@
                 {{ title }}
             </h3>
 
-            <div class="max-w-prose text-sm text-contrast/55 [&_p]:m-0">
+            <div class="text-sm text-contrast/55 [&_p]:m-0">
                 <slot />
             </div>
         </header>
@@ -26,6 +26,8 @@
                     :class="ui"
                 >
                     <component :is="loaded" />
+
+                    <DemoActions v-if="actions" />
                 </RForm>
 
                 <div
@@ -147,6 +149,15 @@
         },
         { watch: [() => props.src] }
     );
+
+    // Um demo que declara `rule` precisa do submit para provar a validação, e quem
+    // a roda é o `RForm` daqui. O que já traz o próprio `DemoActions` não ganha um
+    // segundo par de botões.
+    const actions = computed(() => {
+        const source = code.value ?? "";
+
+        return form.value && source.includes("rule=") && !source.includes("DemoActions");
+    });
 
     const model = ref<Record<string, unknown>>({});
 

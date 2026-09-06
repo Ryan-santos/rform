@@ -1,68 +1,56 @@
 <template>
-    <div
+    <Menu
         data-allow-mismatch
-        role="radiogroup"
-        aria-label="Tema"
-        class="flex w-fit flex-row items-center gap-0.5 rounded-xl bg-background-100 p-1"
+        :icon="current.icon"
+        :label="$t('nav.theme')"
     >
-        <button
-            v-for="option in options"
-            :key="option.id"
-            type="button"
-            role="radio"
-            :aria-checked="colorMode.preference === option.id"
-            :aria-label="option.label"
-            :title="option.title"
-            class="flex size-7 cursor-pointer items-center justify-center rounded-lg transition-all duration-300"
-            :class="
-                colorMode.preference === option.id
-                    ? 'bg-background text-primary shadow-sm'
-                    : 'text-contrast/40 hover:text-contrast'
-            "
-            @click="colorMode.preference = option.id"
-        >
-            <svg
-                viewBox="0 0 24 24"
-                class="size-4"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+        <template #default="{ close }">
+            <button
+                v-for="option in options"
+                :key="option.id"
+                type="button"
+                class="flex cursor-pointer flex-row items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-background-100"
+                :class="colorMode.preference === option.id ? 'text-primary' : 'text-contrast/70'"
+                @click="
+                    colorMode.preference = option.id;
+                    close();
+                "
             >
-                <path :d="option.path" />
-            </svg>
-        </button>
-    </div>
+                <Icon
+                    :name="option.icon"
+                    class="size-4 flex-none"
+                />
+
+                {{ $t(option.label) }}
+
+                <Icon
+                    v-if="colorMode.preference === option.id"
+                    name="mi:check"
+                    class="ml-auto size-3.5 flex-none"
+                />
+            </button>
+        </template>
+    </Menu>
 </template>
 
 <script setup lang="ts">
     /**
-     * Seletor de tema do site: claro, escuro ou o do sistema.
+     * Seletor de tema do site: claro, escuro ou o do sistema. Só o ícone aparece no
+     * cabeçalho — o do tema em vigor.
      */
+    import { computed } from "vue";
+
     const colorMode = useColorMode();
 
     // `system` é opção de verdade, não estado escondido: um toggle de duas posições,
     // uma vez tocado, nunca mais devolvia a escolha ao sistema operacional.
     const options = [
-        {
-            id: "light",
-            label: "Claro",
-            title: "tema claro",
-            path: "M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8ZM12 2v2M12 20v2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M4.2 19.8l1.4-1.4"
-        },
-        {
-            id: "dark",
-            label: "Escuro",
-            title: "tema escuro",
-            path: "M20.5 14.8A8.5 8.5 0 0 1 9.2 3.5a8.5 8.5 0 1 0 11.3 11.3Z"
-        },
-        {
-            id: "system",
-            label: "Sistema",
-            title: "seguir o sistema",
-            path: "M4 5h16v10H4zM9 20h6M12 15v5"
-        }
+        { id: "light", icon: "mi:sun", label: "nav.light" },
+        { id: "dark", icon: "mi:moon", label: "nav.dark" },
+        { id: "system", icon: "mi:computer", label: "nav.system" }
     ];
+
+    const current = computed(
+        () => options.find((option) => option.id === colorMode.preference) ?? options[2]!
+    );
 </script>

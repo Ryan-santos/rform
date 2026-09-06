@@ -3,7 +3,7 @@
         name="comCallback"
         label="demo.pin.preenchaAteOFim"
         :length="4"
-        :on-complete="onComplete"
+        @complete="onComplete"
     />
     <p
         v-if="completedAt"

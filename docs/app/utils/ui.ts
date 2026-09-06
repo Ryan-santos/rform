@@ -1,5 +1,3 @@
-import type { InjectionKey, Ref } from "vue";
-
 /**
  * As camadas de `ui` são lidas do próprio módulo, não redigitadas aqui: o glob
  * pega o mesmo arquivo que o `addComponentsDir` registra, então o que a página
@@ -355,11 +353,3 @@ export function uiSnippet(name: string): string {
         `export default defineFieldDefaults(${serialize(body, 0)});`
     ].join("\n");
 }
-
-export type UiFocus = {
-    path: Ref<string | null>;
-    toggle: (path: string) => void;
-    state: (path: string) => "active" | "related" | "dimmed" | "idle";
-};
-
-export const uiFocusKey = Symbol("ui-focus") as InjectionKey<UiFocus>;

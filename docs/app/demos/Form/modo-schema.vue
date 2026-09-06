@@ -2,7 +2,7 @@
     <RForm
         v-model="data"
         :schema
-        :on-submit="submit"
+        @submit="submit"
         class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <DemoActions />

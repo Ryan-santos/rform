@@ -35,13 +35,6 @@
                 </li>
             </ul>
         </section>
-
-        <p
-            v-if="groups.length === 0"
-            class="px-4 text-contrast/40"
-        >
-            {{ $t("nav.empty", { filter }) }}
-        </p>
     </nav>
 </template>
 
@@ -49,7 +42,7 @@
     /**
      * A navegação da barra lateral. A ordem sai dos prefixos numéricos dos arquivos
      * de conteúdo, pelo `queryCollectionNavigation()` — não há segunda lista a
-     * manter. O filtro vem do campo de busca da barra do topo.
+     * manter.
      */
     import { computed } from "vue";
 
@@ -59,32 +52,9 @@
 
     const localePath = useLocalePath();
 
-    const filter = useState("docs-filter", () => "");
-
     const { data: tree } = await useDocsNav();
 
     const current = computed(() => currentPath(route.path));
 
-    const groups = computed(() => {
-        const term = filter.value.trim().toLowerCase();
-
-        const all = (tree.value ?? []).filter((group) => group.children?.length);
-
-        if (!term) {
-            return all;
-        }
-
-        return all
-            .map((group) => ({
-                ...group,
-                children: (group.children ?? []).filter(
-                    (item) =>
-                        item.title?.toLowerCase().includes(term) ||
-                        String(item.tag ?? "")
-                            .toLowerCase()
-                            .includes(term)
-                )
-            }))
-            .filter((group) => group.children.length > 0);
-    });
+    const groups = computed(() => (tree.value ?? []).filter((group) => group.children?.length));
 </script>

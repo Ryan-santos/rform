@@ -1,5 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
+import { shikiTheme } from "./app/assets/shiki";
+
 export default defineNuxtConfig({
     modules: [
         "@nuxt/content",
@@ -23,11 +25,22 @@ export default defineNuxtConfig({
         ]
     },
 
+    // O mesmo tema do `DemoCode`, para o bloco da prosa e o do demo terem a
+    // mesma cara. As duas chaves apontam para ele de propósito: o `defu` do
+    // @nuxt/content mescla com o default do mdc, e um `dark` sobrevivente traria
+    // o github-dark de volta em metade dos tokens.
     content: {
         build: {
             markdown: {
                 toc: {
                     depth: 3
+                },
+
+                highlight: {
+                    theme: {
+                        default: shikiTheme,
+                        dark: shikiTheme
+                    }
                 }
             }
         }
@@ -35,7 +48,7 @@ export default defineNuxtConfig({
 
     app: {
         head: {
-            title: "rform",
+            title: "RForm",
 
             htmlAttrs: {
                 lang: "pt-BR"

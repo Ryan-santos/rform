@@ -21,9 +21,12 @@
         </div>
 
         <DemoCode
-            :code="blocks[active]?.code ?? ''"
-            :lang="blocks[active]?.lang ?? 'ts'"
-            :label="labels[active]"
+            v-for="(block, index) in blocks"
+            v-show="index === active"
+            :key="block.label"
+            :code="block.code"
+            :lang="block.lang ?? 'ts'"
+            :label="block.label"
             body-class="max-h-[32rem] overflow-auto"
         />
     </div>
@@ -32,7 +35,11 @@
 <script setup lang="ts">
     /**
      * `::code-group` com um `:blocks` de `{ label, lang, code }` — as abas de
-     * código da prosa, pintadas pelo mesmo `highlight()` dos demos.
+     * código da prosa, pintadas pelo mesmo shiki dos demos.
+     *
+     * Todos os blocos renderizam (só um aparece): trocar de aba não pode ser um
+     * `code` novo no mesmo `DemoCode`, senão o browser refaz o realce — e para
+     * `vue` isso é baixar a gramática inteira.
      */
     import { computed, ref } from "vue";
 

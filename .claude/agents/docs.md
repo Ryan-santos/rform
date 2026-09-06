@@ -70,10 +70,24 @@ Props do `::demo`: `src` (obrigatório), `title`, `ui` (classes do wrapper vivo)
 `RForm` do `<Demo>`, sai de graça. Com `:form="false"`, o demo precisa terminar o
 `<script setup>` com `defineExpose({ data })`, que é de onde o painel lê.
 
+**Demo com `rule` já ganha submit e reset sozinho** — o `<Demo>` acha o `rule=` no
+fonte e põe o `<DemoActions />` dentro do `RForm` dele. Não escreva um à mão, a
+menos que o demo monte o próprio formulário.
+
+**Quando a página descreve o comportamento de uma lib, linke a doc dela.** Máscara é
+[maska](https://beholdr.github.io/maska/), rule é [zod](https://zod.dev),
+posicionamento é [floating-ui](https://floating-ui.com/docs/vue), sintaxe de
+mensagem é [vue-i18n](https://vue-i18n.intlify.dev). Um `::callout{type="tip"}`
+dizendo "quem faz isso é X, a doc é lá" poupa a página de reescrever, mal, o que já
+está escrito.
+
 **Link entre páginas leva o prefixo do idioma** — `/pt/concepts/traducao` no
 arquivo `pt`, `/en/...` no `en`. O `localePath` não alcança link de markdown.
 
 ## Criando um demo
+
+Callback é `@evento`, nunca `:on-*`: `@submit`, `@complete`. Vale no demo e na
+prosa.
 
 Um `.vue` em `docs/app/demos/<Componente>/<id>.vue`. Sem `<script setup>` o
 painel mostra só o miolo do `<template>`, desindentado — é o caso comum, e o que
@@ -94,9 +108,10 @@ pnpm exec vitest run test/unit/docs.test.ts
 pnpm exec vue-tsc -p docs/.nuxt/tsconfig.app.json --noEmit
 ```
 
-`test/unit/docs.test.ts` cobre três coisas: `demoSourceOf`, a paridade pt/en
-arquivo a arquivo, e que todo `::demo{src}` aponta para um arquivo que existe (e
-que todo demo é citado por alguém).
+`test/unit/docs.test.ts` cobre cinco coisas: `demoSourceOf`, a paridade pt/en
+arquivo a arquivo, que todo `::demo{src}` aponta para um arquivo que existe (e que
+todo demo é citado por alguém), o ranking de `searchDocs`, e que `pt.json` e
+`en.json` têm exatamente as mesmas chaves.
 
 Para ver na tela: `pnpm run docs` sobe em `:3000`. O `run` não é opcional: `docs`
 é comando embutido do pnpm, e `pnpm docs` morre com

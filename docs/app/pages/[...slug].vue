@@ -4,7 +4,7 @@
             <header class="flex flex-col gap-3">
                 <p
                     v-if="section"
-                    class="text-xs font-bold tracking-widest text-primary uppercase"
+                    class="text-xs font-bold tracking-widest text-secondary uppercase"
                 >
                     {{ section }}
                 </p>
@@ -16,7 +16,7 @@
 
                     <code
                         v-if="page?.tag"
-                        class="rounded-md bg-primary/10 px-2 py-1 font-mono text-sm font-medium text-primary"
+                        class="rounded-md bg-secondary/10 px-2 py-1 font-mono text-sm font-medium text-secondary"
                     >
                         {{ page.tag }}
                     </code>
@@ -24,11 +24,13 @@
 
                 <p
                     v-if="page?.description"
-                    class="max-w-prose text-lg text-contrast/55"
+                    class="text-lg text-contrast/55"
                 >
                     {{ page.description }}
                 </p>
             </header>
+
+            <hr />
 
             <ContentRenderer
                 v-if="page"
@@ -46,10 +48,10 @@
             <PageNav />
         </article>
 
-        <aside class="hidden w-56 flex-none xl:block">
-            <div class="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                <Toc :links="page?.body?.toc?.links" />
-            </div>
+        <aside
+            class="hidden w-56 flex-none xl:sticky xl:top-16 xl:block xl:max-h-[calc(100vh-4rem)] xl:overflow-y-auto"
+        >
+            <Toc :links="page?.body?.toc?.links" />
         </aside>
     </div>
 </template>
@@ -90,6 +92,6 @@
     );
 
     useHead(() => ({
-        title: page.value?.title ? `${page.value.title} · rform` : "rform"
+        title: page.value?.title ? `${page.value.title} · RForm` : "RForm"
     }));
 </script>

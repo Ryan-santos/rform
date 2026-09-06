@@ -627,6 +627,8 @@ O par nome→classe é **gerado**, em `#rform/registry` (`hooks.fields` / `hooks
 
 `tsconfig.json` só referencia `.nuxt/tsconfig.*.json`. Sem rodar `nuxi prepare` (ou o `dev`) primeiro, `vue-tsc -p .nuxt/tsconfig.app.json --noEmit` falha.
 
+**Um `generate` ou `build` também desfaz isso**, e o sintoma engana: o `.nuxt` fica sem as declarações de auto-import, e o check despeja `Cannot find name 'useI18n'`, `'useRForm'`, `'useDocsNav'` — 24 erros que parecem código quebrado e são estado do diretório. `nuxi prepare` no app resolve.
+
 São **sete** apps Nuxt, cada um com o próprio `.nuxt` e o próprio `#rform` — checar um não cobre o outro, e é por isso que o `test:types` roda os sete:
 
 ```
@@ -643,6 +645,20 @@ vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json # a fixture (campos/utils
 
 - 4 espaços, aspas duplas, semicolons, `trailingComma: "none"`, `singleAttributePerLine: true`, `vueIndentScriptAndStyle: true`.
 - Sem `insertFinalNewline`.
+
+### Callback é `@evento`, nunca `:on-*`
+
+`RForm` e `RPin` declaram `onSubmit` e `onComplete` como **prop**, e o Vue casa
+`@submit` / `@complete` com a prop declarada de mesmo nome. As duas formas
+funcionam; só uma se escreve:
+
+```vue
+<RForm @submit="enviar">      <!-- sim -->
+<RForm :on-submit="enviar">   <!-- não -->
+```
+
+Vale em todo lugar que o usuário lê ou copia — demo, página do site, playground —
+e é o que faz o componente parecer com o resto do Vue que ele já escreve.
 
 ## Comandos úteis
 
@@ -781,10 +797,30 @@ diretório, um por idioma.
 ### O chassi: barra do topo, navegação, índice
 
 Três colunas, no formato que uma doc de framework tem: `Header.vue` fixo no topo
-(marca, busca, GitHub, tema, idioma), `Sidebar.vue` grudada à esquerda,
-`Toc.vue` à direita a partir de `xl` e `PageNav.vue` (anterior/próxima) no pé.
-A busca e o menu do mobile moram em `useState`, porque quem os escreve é o
-cabeçalho e quem os lê é a barra lateral, do outro lado do layout.
+(marca à esquerda, **busca no centro**, GitHub e os dois menus de ícone à
+direita), `Sidebar.vue` grudada à esquerda, `Toc.vue` à direita a partir de `xl`
+e `PageNav.vue` (anterior/próxima) no pé. O menu do mobile mora em `useState`,
+porque quem o escreve é o cabeçalho e quem o lê é a barra lateral, do outro lado
+do layout.
+
+A marca é **`RForm`**, com as duas maiúsculas — no cabeçalho e no `<title>`. O
+pacote no npm continua `rform`, e todo comando, import e specifier de instalação
+continua minúsculo: é o nome do pacote, não a marca.
+
+Tema e idioma são **menus de ícone**, os dois pelo mesmo `Menu.vue` — um botão de
+40px que abre uma lista, fecha no `pointerdown` de fora, no `Escape` e na escolha.
+O `pointerdown` do documento, e não um overlay: overlay engoliria o clique que
+abre o menu vizinho.
+
+**O índice só gruda se a coluna dele esticar.** O `aside` é filho de um flex com
+`items-start`, então a altura dele é a do conteúdo — e um `sticky` *por dentro* não
+tem por onde correr: o índice subia junto com a página, calado. Quem tem de ser
+`sticky` é o próprio `aside`.
+
+As duas cores do tema têm papéis separados, e é o que impede o site de ser azul de
+ponta a ponta: **primary** é navegação e estado (item ativo da barra lateral, link,
+foco, submit); **secondary** é saída e identidade (marcador do índice ativo, painel
+de model, chip de tag, badge `util` da árvore de `ui`, marcador de lista, citação).
 
 **A navegação é buscada num lugar só, e isso é obrigatório.** `useDocsNav()`
 (`app/composables/nav.ts`) embrulha o `useAsyncData` da chave `nav-<locale>`. O
@@ -800,18 +836,159 @@ O item ativo do índice sai de um `IntersectionObserver` sobre os próprios tít
 com `rootMargin` recortando a faixa de leitura. Scrollspy por evento de scroll
 refaz layout a cada quadro para responder a mesma pergunta.
 
-### O bloco de código da prosa precisa de CSS nosso
+### A busca procura no texto, não no menu
 
-O `@nuxtjs/mdc` realça com shiki em **dois temas** e emite, por token,
-`--shiki-default` e `--shiki-dark` — mas **não emite a regra que aplica essas
-variáveis a `color`**. Sem uma linha do app, todo bloco cercado da prosa renderiza
-sem cor nenhuma, e nada avisa. É o que `.prose pre.shiki span { color:
-var(--shiki-dark) }` resolve, em `main.css`.
+`Search.vue` no centro do cabeçalho, com `ctrl`/`cmd`+K. As seções vêm do
+`queryCollectionSearchSections(collectionOf(locale))` — id com âncora, título,
+trilha de títulos e o **conteúdo** de cada seção da collection do idioma ativo,
+247 delas hoje. O `useLazyAsyncData` é `immediate: false` e só executa no primeiro
+`open`: é payload que uma visita que nunca busca não paga.
 
-Lê-se sempre o **escuro**, nos dois temas, porque o `pre` recebe o mesmo
-`bg-code`/`border-code-line` do `DemoCode`: bloco de código é um pedaço de editor
-dentro da página, e ter metade da página com fundo claro e a outra metade escura
-era metade do que havia de feio ali.
+Isso já foi um filtro da barra lateral, casando só título e tag — o que respondia
+"em que página está o `superRefine`?" com nada.
+
+Quem ordena é `searchDocs` (`app/utils/search.ts`, puro, testado): toda palavra do
+termo tem de aparecer em algum lugar da seção, e o peso é **onde** ela apareceu —
+título 10, começo do título +5, trilha 3, corpo 1.
+
+O `fold` (minúsculas sem acento) troca **um caractere por um caractere**, com
+tabela, em vez do `normalize("NFD")` habitual. NFD decompõe o acento em dois code
+points e muda o comprimento da string — e aí o índice da ocorrência não serve mais
+para recortar o trecho do texto **original**, que é o que a lista mostra.
+
+O destino sai do `id`, que é caminho de collection (sem prefixo de idioma) mais
+âncora. O `localePath` não engole a âncora, então ela é cortada antes e recolada
+depois.
+
+### O título da prosa é um link, e por isso saía azul e sublinhado
+
+O `@nuxt/content` embrulha o texto de todo heading num `<a href="#id">` para a
+âncora. Com `.prose a` pintando de `primary` e sublinhando, **todo `##` da
+documentação renderizava como link** — que é exatamente o que um título não é.
+
+`.prose :is(h2, h3, h4) a { color: inherit; text-decoration: none }` resolve, e sem
+tocar em `font-weight`: o peso continua vindo do próprio heading, então `h2` segue
+mais forte que `h3`.
+
+Na mesma linha, `max-w-prose` saiu de `p`, `ul`, `ol`, `blockquote`, do
+`description` da página e do cabeçalho do `<Demo>`: com barra lateral e índice já
+estreitando a coluna, ele cortava o texto **duas vezes** — o parágrafo parava no
+meio do container, e a caixa de aviso parecia meio vazia.
+
+### O código é shiki, com o tema do editor
+
+Prosa e demo pintam pelo mesmo [shiki](https://shiki.style) e pelo mesmo tema —
+Shades of Purple (Super Dark), de Ahmad Awais (MIT), copiado do `.vsix` para
+`docs/app/assets/shiki/shades-of-purple.json`. Do arquivo original ficaram o
+`tokenColors` inteiro e **duas** chaves de `colors` (`editor.background` e
+`editor.foreground`), que são as que o shiki lê; as outras 255 são cor de
+chrome do editor e só pesariam no bundle.
+
+`assets/shiki/index.ts` é quem dá tipo a ele. `ThemeRegistrationRaw` herda do
+vscode-textmate um `settings` **obrigatório** — o nome antigo do que o VS Code
+chama de `tokenColors` —, então o módulo declara os dois a partir do mesmo array.
+Sem isso não há cast possível: falta uma chave obrigatória, e o TS recusa até o
+`as` ("neither type sufficiently overlaps").
+
+#### A prosa: um tema nas duas chaves
+
+```ts
+highlight: { theme: { default: shikiTheme, dark: shikiTheme } }
+```
+
+As duas apontam para o mesmo objeto **de propósito**. O `@nuxt/content` faz
+`defu(markdown.highlight, mdcOptions.highlight, …)`, e o default do mdc é
+`{ default: "github-light", dark: "github-dark" }` — passar só o `default`
+deixaria o `dark` do mdc sobreviver ao merge, e metade dos tokens voltaria ao
+github-dark.
+
+O `@nuxtjs/mdc` chama o `codeToHast` com `defaultColor: false` **sempre**, então
+o token nunca recebe um `color:` — só `--shiki-default` e `--shiki-dark`. A regra
+que aplica essas variáveis não vem de lugar nenhum: sem `.prose pre.shiki span {
+color: var(--shiki-dark) }` no `main.css`, todo bloco cercado da prosa renderiza
+sem cor, e nada avisa.
+
+Detalhe que confunde na hora de conferir: o `compress: true` (default do
+`@nuxt/content`) tira o `style=` de cada token e o troca por uma classe curta
+(`.szBVR`), com um `<style>` na própria página declarando os `--shiki-*` dela.
+Procurar `--shiki-dark` **dentro do `<pre>`** do HTML gerado, então, não acha nada
+— e não quer dizer que a cor sumiu.
+
+**Bloco cercado sem linguagem não tem token para colorir**, e é o único que de fato
+sai sem cor: são quatro na documentação (diagramas, a árvore do pack, uma saída de
+console). Sem uma pele própria eles se leem como um bloco de código quebrado, então
+`.prose pre.language-text` os marca como o que são — borda tracejada e texto mais
+apagado. As linguagens de verdade (`ts`, `vue`, `css`, `json`, `js`, `bash`) o
+shiki já cobre; nada a declarar em `nuxt.config`.
+
+#### O demo: dois highlighters, e a divisa é quem pinta no browser
+
+`app/utils/highlight.ts` monta dois, porque as duas metades do `DemoCode` têm
+necessidades opostas:
+
+| | gramática | motor | onde pinta |
+|---|---|---|---|
+| `json` | pré-compilada (`@shikijs/langs-precompiled`) | `raw` | browser, a cada tecla |
+| `vue`, `ts` | normal (`shiki/langs/*`) | `javascript` (compila regex) | server |
+
+O painel de model repinta a cada tecla, então a gramática dele **tem** de estar no
+bundle: a pré-compilada roda no motor `raw`, que não carrega compilador de regex,
+e o par custa ~6 kB. A de `vue` não serve para isso e nem funcionaria — a versão
+pré-compilada dela marca `<RText` como `invalid.illegal`, medido token a token
+contra o oniguruma. Vai de gramática normal, atrás de `import()`, e arrasta ts,
+js, css e html junto: ~500 kB que só o server carrega.
+
+O que faz isso funcionar no browser é o **payload**. O `DemoCode` embrulha o
+realce num `useAsyncData(useId())`: o server pinta, o HTML viaja no payload, e o
+client-side navigation de um site pré-renderizado lê de lá sem baixar gramática
+nenhuma. Era o que o `Demo.vue` já fazia com o fonte do demo — sem isso o build
+estático publicaria o bloco sem cor.
+
+O motor `javascript` foi conferido, não escolhido no chute: com `forgiving: true`
+ele produz **exatamente** o mesmo HTML que o oniguruma nos 109 demos, no `.ts` e
+no `json` — daí não haver wasm em lugar nenhum do docs.
+
+#### O recorte de template precisa dizer onde está
+
+O fonte de um demo sem `<script>` é o **miolo** do `<template>`, e para a
+gramática do shiki isso não é um SFC. Sem contexto ela casa o primeiro elemento
+como se fosse o bloco de topo, e larga **todo o resto do arquivo sem escopo**: o
+segundo campo do demo sai branco, e nada avisa.
+
+`grammarContextCode: "<template>"` (o `context()` do `highlight.ts`) é o que a
+gramática precisa ouvir — é o mesmo truque que o `@nuxtjs/mdc` usa para as
+linguagens `vue-html` e `vue-template`.
+
+O gatilho é **um atributo por linha**, que é como todo demo se escreve por causa
+do `singleAttributePerLine`: um elemento numa linha só passa ileso, e foi por
+isso que a comparação contra o oniguruma nos 109 arquivos não pegou nada — ela
+comparava o `.vue` inteiro, que começa em `<template>` e portanto nunca é
+recorte. Quem cobre isso agora é `test/unit/docs.test.ts`.
+
+Na prosa o mesmo vale para um ````vue``` que seja recorte, e hoje os seis que
+existem têm **um** elemento raiz só — que é o caso que passa ileso. Um segundo
+elemento raiz num fence desses sai sem cor, e a saída é escrever o bloco inteiro,
+com `<template>`.
+
+`structure: "inline"` é o que deixa o `<pre>` ser do `DemoCode`: o shiki devolve
+só os `<span>` dos tokens, com as linhas separadas por `<br>`, e o fundo, o
+scroll e o cabeçalho continuam sendo do componente.
+
+Trocar de aba no `::code-group` não pode ser um `code` novo no mesmo `DemoCode` —
+isso refaria o realce **no browser**, que para `vue` é baixar a gramática inteira.
+Por isso ele renderiza todos os blocos e mostra um: cada um tem o próprio payload.
+
+São três dependências novas em `docs`, e as três explícitas: `shiki`,
+`@shikijs/langs-precompiled` e `@shikijs/engine-javascript` — o último chega
+pelo shiki, mas o layout do pnpm não o alcança da raiz de `docs`, e importar
+`@shikijs/engine-javascript/raw` sem declarar é a mesma phantom dep que o
+`vue`/`vite` do módulo já foram.
+
+**Isso já foi um highlighter escrito à mão** — três gramáticas de regex e uma
+paleta de classes `.tok-*` no `main.css`, porque string montada em runtime não
+passa pelo scanner do Tailwind. Cobria o que o docs mostra, mas era uma segunda
+definição de "como TypeScript se lê" convivendo com a do shiki na prosa, logo
+acima. As duas metades da página agora leem a mesma.
 
 ### `TrInput` estreita lá dentro, e isso é a feature
 
@@ -842,6 +1019,12 @@ arquivo inteiro.
 demo que monta o próprio (os três modos do `useRForm`, o `RDynamic`). Nesse caso o
 painel lê o `defineExpose({ data })` do demo por `useTemplateRef`: é uma linha no
 fim do `<script setup>`, e é o preço de o exemplo ser o dono do formulário.
+
+**Demo que declara `rule` ganha os botões sozinho.** O `<Demo>` procura `rule=` no
+fonte do arquivo e, achando, põe um `<DemoActions />` dentro do `RForm` dele — sem
+submit, um bloco de validação não valida nada e o leitor fica olhando um campo que
+nunca reclama. Quem já traz o próprio `DemoActions` (os que montam o formulário)
+não ganha um segundo par: a mesma busca no fonte serve de guarda.
 
 O par formulário↔model é **container query**, não breakpoint de viewport: o
 `<Demo>` é um `@container` e vira duas colunas em `@2xl`. Quem decide é a largura
@@ -880,10 +1063,14 @@ props que precisam de explicação, e é opcional por prop.
 O checker lista todo emit também como prop `onXxx`; o `api.ts` os move para
 `events`, senão `onUpdate:modelValue` apareceria como prop escrevível.
 
-O `api.json` está no `.prettierignore` da raiz — que é um dos arquivos de ignore
-que o oxfmt lê por padrão, junto com o `.gitignore`. Sem isso o formatador
-reescreve o arquivo e o `pnpm --filter rform-docs api` seguinte o desfaz, num
-vaivém que só aparece no `git status`.
+O `api.json` está no `ignorePatterns` do `oxfmt.config.ts`, ao lado do tema do
+shiki. Sem isso o formatador reescreve o arquivo e o `pnpm --filter rform-docs
+api` seguinte o desfaz, num vaivém que só aparece no `git status`.
+
+**Isso já morou num `.prettierignore`** — que o oxfmt lê por padrão, junto com o
+`.gitignore`. Um arquivo de config de uma ferramenta que o repo não usa, só para
+o formatador que ele usa ler: o `ignorePatterns` diz a mesma coisa no arquivo
+onde o resto da configuração do oxfmt já está.
 
 ### A árvore de camadas lê o `defaults` do módulo
 
@@ -898,6 +1085,15 @@ não existem mais. A árvore vinha vazia, calada. Hoje há um `field()` que tent
 não são campos mas têm `ui` a mostrar. O arquivo do playground foi apagado junto
 com o `DemoUi`; a árvore existe num lugar só.
 
+**O desenho é recuo e linha, não caixa dentro de caixa.** `DemoUiLayer.vue` é uma
+lista recursiva: chave, badge `util` quando for um, a classe ao lado, e as filhas
+recuadas atrás de uma borda esquerda. Antes cada camada era uma caixa com borda
+tracejada, fundo alternado por nível e um anel de foco — o `ui` do `RDate` virava
+seis molduras aninhadas, e o que se lia era a moldura, não a hierarquia. Junto foi-se
+o mecanismo de foco inteiro (o `uiFocusKey` provido pelo `UiTree`, o `state()` de
+quatro estados e a caixa "camada em foco" grudada no topo): clicar para acender uma
+camada é interação que ninguém pedia num diagrama que cabe na tela.
+
 ### As guardas
 
 `test/unit/docs.test.ts`, projeto `unit`, sem app:
@@ -909,6 +1105,12 @@ com o `DemoUi`; a árvore existe num lugar só.
    vice-versa, mais as seções.
 3. **Demos resolvem** — todo `::demo{src}` aponta para um arquivo que existe, e
    todo demo é citado por alguma página. É o apodrecimento mais provável.
+4. **`searchDocs`** — termo vazio não devolve nada, título vem antes de corpo, uma
+   palavra que não casa zera o resultado, e o trecho sai do texto **com** acento
+   (é o teste que pega uma volta ao `NFD`).
+5. **Os dois packs do site concordam em toda chave** — `pt.json` e `en.json`
+   comparados por caminho pontilhado. Uma chave nova num só idioma imprime o
+   caminho cru na tela do outro, e o `vue-tsc` não vê isso.
 
 O scanner tira bloco cercado e código inline antes de casar `::demo` — a própria
 página de contribuição mostra a sintaxe como exemplo.

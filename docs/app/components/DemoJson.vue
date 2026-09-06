@@ -3,6 +3,7 @@
         data-allow-mismatch
         :code="json"
         lang="json"
+        accent
         :label="title ?? $t('ui.model')"
         :hint="summary"
     />

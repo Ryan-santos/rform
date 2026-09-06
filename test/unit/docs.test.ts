@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { demoSourceOf } from "../../docs/app/utils/demos";
+import { highlight, paint } from "../../docs/app/utils/highlight";
+import { searchDocs, type Section } from "../../docs/app/utils/search";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -161,5 +163,105 @@ describe("demos", () => {
         const orphans = [...(await available())].filter((src) => !cited.has(src)).sort();
 
         expect(orphans).toEqual([]);
+    });
+});
+describe("busca", () => {
+    const sections: Section[] = [
+        {
+            id: "/concepts/presets#masks",
+            title: "Masks",
+            titles: ["Presets"],
+            level: 2,
+            content: "Um nome que não bate com preset nenhum vai direto pro maska como pattern cru."
+        },
+        {
+            id: "/fields/text",
+            title: "Text",
+            titles: [],
+            level: 1,
+            content: "Campo de texto. Aceita mask e as rules."
+        }
+    ];
+
+    it("não devolve nada com termo vazio", () => {
+        expect(searchDocs(sections, "   ")).toEqual([]);
+    });
+
+    it("põe o título na frente do corpo", () => {
+        expect(searchDocs(sections, "mask").map((hit) => hit.id)).toEqual([
+            "/concepts/presets#masks",
+            "/fields/text"
+        ]);
+    });
+
+    it("exige toda palavra do termo", () => {
+        expect(searchDocs(sections, "mask inexistente")).toEqual([]);
+    });
+
+    it("ignora acento nos dois lados, e recorta o trecho do texto original", () => {
+        const [hit] = searchDocs(sections, "nao bate");
+
+        expect(hit?.id).toBe("/concepts/presets#masks");
+        expect(hit?.snippet).toContain("não bate");
+    });
+});
+
+describe("i18n do site", () => {
+    /** Todo caminho pontilhado de um pack, para comparar as duas árvores. */
+    const paths = (value: unknown, prefix = ""): string[] =>
+        value && typeof value === "object"
+            ? Object.entries(value).flatMap(([key, child]) =>
+                  paths(child, prefix ? `${prefix}.${key}` : key)
+              )
+            : [prefix];
+
+    it("os dois packs concordam em toda chave", async () => {
+        const pack = async (code: string) =>
+            paths(
+                JSON.parse(await readFile(join(root, `docs/i18n/locales/${code}.json`), "utf8"))
+            ).sort();
+
+        expect(await pack("en")).toEqual(await pack("pt"));
+    });
+});
+
+describe("realce", () => {
+    const read = (path: string) => readFile(join(root, path), "utf8");
+
+    it("o tema tem o que o shiki lê, e sob o nome que o código pede", async () => {
+        const theme = JSON.parse(await read("docs/app/assets/shiki/shades-of-purple.json"));
+
+        expect(theme.name).toBe("shades-of-purple");
+        expect(theme.tokenColors.length).toBeGreaterThan(100);
+        expect(Object.keys(theme.colors)).toEqual(["editor.background", "editor.foreground"]);
+    });
+
+    // O fonte de um demo sem script é o miolo do `<template>`, e sem
+    // `grammarContextCode` o shiki larga tudo depois do primeiro elemento sem
+    // escopo — o segundo campo saía branco.
+    it("pinta todo elemento de um recorte de template, não só o primeiro", async () => {
+        // Um atributo por linha, que é como todo demo se escreve: é essa forma
+        // que a gramática confunde com o bloco de topo de um SFC.
+        const element = (name: string) => `<RText\n    name="${name}"\n/>`;
+
+        const html = await highlight([element("a"), element("b")].join("\n"), "vue");
+
+        expect(html.match(/color:#9EFFFF">&#x3C;RText/g)).toHaveLength(2);
+        expect(html).not.toContain("color:#FFFFFF");
+    });
+
+    it("pinta json na hora, sem esperar por gramática nenhuma", () => {
+        expect(paint(`{ "a": 1 }`, "json")).toContain(`<span style="color:`);
+    });
+
+    // As duas chaves de `theme` existem porque o `defu` do @nuxt/content mescla
+    // com o default do mdc: só o `default` deixaria o github-dark sobreviver.
+    it("a prosa lê a variável que o nuxt.config declara", async () => {
+        const config = await read("docs/nuxt.config.ts");
+        const css = await read("docs/app/assets/css/main.css");
+
+        expect(config).toContain("default: shikiTheme");
+        expect(config).toContain("dark: shikiTheme");
+        expect(css).toContain("color: var(--shiki-dark)");
     });
 });

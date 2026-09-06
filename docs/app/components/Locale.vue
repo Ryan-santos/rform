@@ -1,19 +1,29 @@
 <template>
-    <div class="flex w-fit flex-row items-center gap-0.5 rounded-xl bg-background-100 p-1">
-        <NuxtLink
-            v-for="option in locales"
-            :key="option.code"
-            :to="switchLocalePath(option.code)"
-            class="cursor-pointer rounded-lg px-2 py-1 font-mono text-xs transition-colors"
-            :class="
-                option.code === locale
-                    ? 'bg-background text-primary shadow-sm'
-                    : 'text-contrast/40 hover:text-contrast'
-            "
-        >
-            {{ option.code }}
-        </NuxtLink>
-    </div>
+    <Menu
+        icon="fa6-solid:globe"
+        :label="$t('nav.language')"
+    >
+        <template #default="{ close }">
+            <NuxtLink
+                v-for="option in locales"
+                :key="option.code"
+                :to="switchLocalePath(option.code)"
+                class="flex cursor-pointer flex-row items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors hover:bg-background-100"
+                :class="option.code === locale ? 'text-primary' : 'text-contrast/70'"
+                @click="close"
+            >
+                {{ option.name }}
+
+                <code class="font-mono text-xs text-contrast/30">{{ option.code }}</code>
+
+                <Icon
+                    v-if="option.code === locale"
+                    name="mi:check"
+                    class="ml-auto size-3.5 flex-none"
+                />
+            </NuxtLink>
+        </template>
+    </Menu>
 </template>
 
 <script setup lang="ts">

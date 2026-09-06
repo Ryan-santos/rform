@@ -97,6 +97,9 @@ gerados por app, e cada um tem o próprio `#rform`.
   playground. Já aconteceu de verdade: o `i18n` carregou uma documentação inteira
   (`DemoPage`, `DemoUi`, highlighter próprio, treze páginas de vitrine) até o
   `docs/` existir, e foram ~4.500 linhas apagadas de uma vez.
+- **Callback é `@evento`, nunca `:on-*`.** `<RForm @submit="enviar">`,
+  `<RPin @complete="…">`. As duas formas funcionam — `onSubmit` é prop declarada —
+  mas o playground é código que alguém copia.
 - **Cenário reproduz condição de app real.** Uma vitrine de props já existe no
   docs, gerada do fonte; repeti-la aqui é trabalho que apodrece.
 

@@ -2,12 +2,19 @@
     "nav": {
         "docs": "documentation",
         "menu": "menu",
-        "filter": "filter…",
         "empty": "nothing matching “{filter}”.",
         "notFound": "Page not found.",
         "onThisPage": "on this page",
         "previous": "previous",
-        "next": "next"
+        "next": "next",
+        "search": "search",
+        "searchPlaceholder": "search the docs…",
+        "searchHint": "type to search the page text.",
+        "theme": "theme",
+        "light": "light",
+        "dark": "dark",
+        "system": "system",
+        "language": "language"
     },
     "ui": {
         "code": "code",
@@ -21,9 +28,6 @@
         "noClass": "\"\" — no class by default",
         "layers": "show layers",
         "layerTree": "layer tree",
-        "focused": "focused layer",
-        "focusHint": "none — click a box below.",
-        "children": "layer with {n} children inside.",
         "noLayers": "No layer read from {component}.vue.",
         "fullStyle": "full style",
         "demoMissing": "does not exist in app/demos.",

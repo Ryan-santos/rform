@@ -18,7 +18,7 @@
                     :class="[
                         link.depth > 2 ? 'pl-7' : 'pl-4',
                         active === link.id
-                            ? 'border-primary text-primary'
+                            ? 'border-secondary font-medium text-contrast'
                             : 'border-transparent text-contrast/50 hover:text-contrast'
                     ]"
                 >

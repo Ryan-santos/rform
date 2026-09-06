@@ -1,0 +1,21 @@
+<template>
+    <RPin
+        name="obrigatorio"
+        label="demo.common.obrigatorio"
+        :length="4"
+        required
+        rule="required"
+    />
+    <RPin
+        name="carregando"
+        label="demo.common.carregando"
+        :length="4"
+        loading
+    />
+    <RPin
+        name="comErro"
+        label="demo.common.erroManual"
+        :length="4"
+        :error="$t('demo.pin.erro')"
+    />
+</template>

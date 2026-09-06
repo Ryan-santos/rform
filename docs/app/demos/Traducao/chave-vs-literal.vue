@@ -1,0 +1,10 @@
+<template>
+    <RText
+        name="titular"
+        label="demo.traducao.titular"
+    />
+    <RText
+        name="apelido"
+        label="~~Apelido"
+    />
+</template>

@@ -1,0 +1,12 @@
+<template>
+    <RColor
+        name="primaria"
+        label="~~#005BDF"
+        :default="'#005BDF'"
+    />
+    <RColor
+        name="secundaria"
+        label="~~#00CF6C"
+        :default="'#00CF6C'"
+    />
+</template>

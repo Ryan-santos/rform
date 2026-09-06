@@ -1,0 +1,18 @@
+<template>
+    <RDate
+        name="obrigatoria"
+        label="demo.common.obrigatorio"
+        required
+        rule="required"
+    />
+    <RDate
+        name="carregando"
+        label="demo.common.carregando"
+        loading
+    />
+    <RDate
+        name="comErro"
+        label="demo.common.erroManual"
+        :error="$t('demo.date.erro')"
+    />
+</template>

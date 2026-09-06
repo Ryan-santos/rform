@@ -36,9 +36,19 @@
         "no": "no",
         "slots": "slots",
         "events": "events",
-        "noProps": "No props read for {component} — run `pnpm --filter rform-docs api`."
+        "noProps": "No props read for {component} — run `pnpm --filter rform-docs api`.",
+        "submit": "submit (runs the rules)",
+        "reset": "reset"
     },
     "demo": {
+        "common": {
+            "nome": "Name",
+            "nomeCompleto": "full name",
+            "obrigatorio": "Required",
+            "carregando": "Loading",
+            "erroManual": "Manual error",
+            "selecione": "select"
+        },
         "text": {
             "nome": "Name",
             "nomePlaceholder": "what people call you",
@@ -62,6 +72,184 @@
             "minimoCinco": "at least 5 characters",
             "erroRosa": "Error in pink",
             "erroClasseTrocada": "Message with a swapped class."
+        },
+        "textarea": {
+            "observacao": "Notes",
+            "observacaoPlaceholder": "write as much as you like",
+            "observacaoDescricao": "Line breaks are allowed.",
+            "limite": "Limit of 140",
+            "limitePlaceholder": "an old tweet fits",
+            "erro": "Describe it with at least one sentence."
+        },
+        "number": {
+            "quantidade": "quantity",
+            "delay": "delay",
+            "segundos": "seconds",
+            "preco": "price",
+            "minutos": "minutes",
+            "erro": "Beyond the available stock."
+        },
+        "select": {
+            "cor": "Color",
+            "funcionario": "Employee",
+            "funcionarios": "Employees",
+            "semModelFull": "Without modelFull — only the id reaches the model",
+            "comModelFull": "With modelFull — the whole object reaches the model",
+            "variosIds": "Several ids",
+            "variosObjetos": "Several objects, with a slot",
+            "jaVemEscolhido": "Already chosen",
+            "uf": "State",
+            "erro": "That option left the catalogue."
+        },
+        "switch": {
+            "notificacoes": "Notifications",
+            "novidades": "Receive product e-mails",
+            "privacidade": "Privacy",
+            "perfilPublico": "Public profile",
+            "semIcon": "no icon",
+            "comecaLigado": "Starts on",
+            "termos": "Terms of use",
+            "liEAceito": "I have read and accept",
+            "semIssoNaoCria": "Without this the account is not created.",
+            "precisaAceitar": "You must accept the terms.",
+            "erro": "That option is blocked by the current plan."
+        },
+        "date": {
+            "aniversario": "Birthday",
+            "aniversarioPlaceholder": "when you were born",
+            "periodo": "Period",
+            "periodoPlaceholder": "execution date",
+            "avulsas": "Loose dates",
+            "avulsasPlaceholder": "pick as many as you like",
+            "agendamento": "Appointment",
+            "agendamentoPlaceholder": "day and time",
+            "janela": "Execution window",
+            "janelaPlaceholder": "from when to when",
+            "soEm2026": "Only in 2026",
+            "dentroDoAno": "within the year",
+            "evitandoFeriados": "Avoiding holidays",
+            "diaUtil": "business day",
+            "evitandoRecesso": "Avoiding the year-end break",
+            "antesOuDepois": "before or after the holidays",
+            "erro": "Date outside the registration period."
+        },
+        "calendar": {
+            "agenda": "Schedule",
+            "ferias": "Holiday period",
+            "feriados": "Holidays",
+            "janela": "Window with time",
+            "restrito": "2026 only, no holidays",
+            "semRecesso": "Without the year-end break",
+            "erro": "That date is already taken."
+        },
+        "hour": {
+            "horario": "time",
+            "abertura": "Opening",
+            "aberturaPlaceholder": "what time it opens",
+            "aberturaDescricao": "Local time of the venue.",
+            "atendimento": "Service window",
+            "atendimentoPlaceholder": "from … to …",
+            "erro": "Outside business hours."
+        },
+        "color": {
+            "destaque": "Accent",
+            "corDaMarca": "Brand color",
+            "cliqueParaEscolher": "click to pick",
+            "usadaNosBotoes": "Used on the buttons and links of the panel.",
+            "naoPodePreto": "Cannot be black",
+            "escolhaUmaCor": "Pick a color.",
+            "erro": "Not enough contrast for text."
+        },
+        "file": {
+            "avatar": "Avatar",
+            "arrasteOuClique": "Drag or click to add",
+            "anexos": "Attachments",
+            "podeSoltarVarios": "you can drop several at once",
+            "maximoUmMega": "At most 1 MB",
+            "acimaDeUmMega": "The file must be at most 1 MB.",
+            "erro": "File above 5 MB."
+        },
+        "pin": {
+            "codigo": "Code",
+            "resgate": "Redeem",
+            "preenchaAteOFim": "Fill it to the end",
+            "disparou": "onComplete fired at {at} with “{value}”.",
+            "erro": "Expired code, ask for another."
+        },
+        "array": {
+            "emails": "E-mails",
+            "email": "E-mail",
+            "deDoisAQuatro": "From 2 to 4 phone numbers",
+            "telefone": "Phone",
+            "tags": "Tags",
+            "tag": "tag",
+            "novaTag": "New tag",
+            "socios": "Partners",
+            "participacao": "Share (%)",
+            "setores": "Departments",
+            "novoSetor": "New department",
+            "novoIntegrante": "New member",
+            "integrante": "member",
+            "peloMenosDois": "At least 2 guests",
+            "convidado": "guest name"
+        },
+        "object": {
+            "endereco": "Address",
+            "rua": "Street",
+            "numero": "Number",
+            "cidade": "City",
+            "responsavel": "Responsible",
+            "empresa": "Company",
+            "razaoSocial": "Legal name",
+            "matriz": "Headquarters",
+            "senhaFora": "Password (outside the object)",
+            "confirmacao": "Confirmation",
+            "repitaSenha": "Repeat the password",
+            "naoConferem": "The passwords do not match.",
+            "preferencias": "Preferences",
+            "newsletter": "Newsletter",
+            "idioma": "Language"
+        },
+        "form": {
+            "nascimento": "Birth date",
+            "aceiteTermos": "I have read and accept the terms"
+        },
+        "dynamic": {
+            "razaoSocial": "Legal name",
+            "razaoSocialExemplo": "company name",
+            "abertura": "Founding date",
+            "pj": "Company",
+            "pf": "Individual"
+        },
+        "ui": {
+            "padrao": "Default",
+            "padraoPlaceholder": "the way the component declares it",
+            "comUi": "With ui",
+            "comUiPlaceholder": "bigger input, everything else intact",
+            "wrapperZerado": "Wrapper cleared",
+            "wrapperZeradoPlaceholder": "no background, no border, no ring",
+            "wrapperNovo": "Wrapper redrawn",
+            "wrapperNovoPlaceholder": "null first, new class after",
+            "erroPadrao": "Default error",
+            "erroPadraoMensagem": "Red, straight out of the box.",
+            "erroReestilizado": "Restyled error",
+            "erroReestilizadoMensagem": "Same message, different skin."
+        },
+        "traducao": {
+            "titular": "Account holder name",
+            "ajudaMax": "At most {n} character | At most {n} characters",
+            "contatos": "Contacts",
+            "adicionarContato": "Add contact",
+            "emailExemplo": "you{'@'}company.com"
+        },
+        "customizados": {
+            "comoFoi": "How was the service?",
+            "escalaMenor": "Smaller scale",
+            "maxTrocaEstrelas": "max changes the number of stars.",
+            "comDica": "With a hint",
+            "hintSaiDoUtil": "The hint comes from RUtilsHint, a file of the app — not of the module.",
+            "apelido": "Nickname",
+            "nota": "Rating"
         }
     }
 }

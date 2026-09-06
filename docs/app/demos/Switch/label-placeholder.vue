@@ -1,0 +1,15 @@
+<template>
+    <RSwitch
+        name="comLabel"
+        label="demo.switch.notificacoes"
+    />
+    <RSwitch
+        name="comPlaceholder"
+        placeholder="demo.switch.novidades"
+    />
+    <RSwitch
+        name="comOsDois"
+        label="demo.switch.privacidade"
+        placeholder="demo.switch.perfilPublico"
+    />
+</template>

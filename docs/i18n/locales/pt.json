@@ -36,9 +36,19 @@
         "no": "não",
         "slots": "slots",
         "events": "eventos",
-        "noProps": "Nenhuma prop lida para {component} — rode `pnpm --filter rform-docs api`."
+        "noProps": "Nenhuma prop lida para {component} — rode `pnpm --filter rform-docs api`.",
+        "submit": "submit (roda as rules)",
+        "reset": "reset"
     },
     "demo": {
+        "common": {
+            "nome": "Nome",
+            "nomeCompleto": "nome completo",
+            "obrigatorio": "Obrigatório",
+            "carregando": "Carregando",
+            "erroManual": "Erro manual",
+            "selecione": "selecione"
+        },
         "text": {
             "nome": "Nome",
             "nomePlaceholder": "como te chamam",
@@ -62,6 +72,184 @@
             "minimoCinco": "mínimo 5 caracteres",
             "erroRosa": "Erro em rosa",
             "erroClasseTrocada": "Mensagem com a classe trocada."
+        },
+        "textarea": {
+            "observacao": "Observação",
+            "observacaoPlaceholder": "escreva à vontade",
+            "observacaoDescricao": "Quebra de linha é permitida.",
+            "limite": "Limite de 140",
+            "limitePlaceholder": "cabe um tweet antigo",
+            "erro": "Descreva com pelo menos uma frase."
+        },
+        "number": {
+            "quantidade": "quantidade",
+            "delay": "delay",
+            "segundos": "segundos",
+            "preco": "preço",
+            "minutos": "minutos",
+            "erro": "Fora do estoque disponível."
+        },
+        "select": {
+            "cor": "Cor",
+            "funcionario": "Funcionário",
+            "funcionarios": "Funcionários",
+            "semModelFull": "Sem modelFull — só o id vai pro model",
+            "comModelFull": "Com modelFull — o objeto inteiro vai pro model",
+            "variosIds": "Vários ids",
+            "variosObjetos": "Vários objetos, com slot",
+            "jaVemEscolhido": "Já vem escolhido",
+            "uf": "UF",
+            "erro": "Essa opção saiu do catálogo."
+        },
+        "switch": {
+            "notificacoes": "Notificações",
+            "novidades": "Receber e-mails de novidades",
+            "privacidade": "Privacidade",
+            "perfilPublico": "Perfil público",
+            "semIcon": "sem icon",
+            "comecaLigado": "Começa ligado",
+            "termos": "Termos de uso",
+            "liEAceito": "Li e aceito",
+            "semIssoNaoCria": "Sem isso a conta não é criada.",
+            "precisaAceitar": "É preciso aceitar os termos.",
+            "erro": "Essa opção está bloqueada pelo plano atual."
+        },
+        "date": {
+            "aniversario": "Aniversário",
+            "aniversarioPlaceholder": "quando você nasceu",
+            "periodo": "Período",
+            "periodoPlaceholder": "data de execução",
+            "avulsas": "Datas avulsas",
+            "avulsasPlaceholder": "escolha quantas quiser",
+            "agendamento": "Agendamento",
+            "agendamentoPlaceholder": "dia e hora",
+            "janela": "Janela de execução",
+            "janelaPlaceholder": "de quando até quando",
+            "soEm2026": "Só em 2026",
+            "dentroDoAno": "dentro do ano",
+            "evitandoFeriados": "Evitando feriados",
+            "diaUtil": "dia útil",
+            "evitandoRecesso": "Evitando o recesso",
+            "antesOuDepois": "antes ou depois das festas",
+            "erro": "Data fora do período de inscrição."
+        },
+        "calendar": {
+            "agenda": "Agenda",
+            "ferias": "Período de férias",
+            "feriados": "Feriados",
+            "janela": "Janela com hora",
+            "restrito": "Só 2026, sem feriados",
+            "semRecesso": "Sem o recesso de fim de ano",
+            "erro": "Essa data já está ocupada."
+        },
+        "hour": {
+            "horario": "horário",
+            "abertura": "Abertura",
+            "aberturaPlaceholder": "que horas abre",
+            "aberturaDescricao": "Horário local do estabelecimento.",
+            "atendimento": "Janela de atendimento",
+            "atendimentoPlaceholder": "das … às …",
+            "erro": "Fora do horário comercial."
+        },
+        "color": {
+            "destaque": "Destaque",
+            "corDaMarca": "Cor da marca",
+            "cliqueParaEscolher": "clique para escolher",
+            "usadaNosBotoes": "Usada nos botões e links do painel.",
+            "naoPodePreto": "Não pode ser preto",
+            "escolhaUmaCor": "Escolha uma cor.",
+            "erro": "Contraste insuficiente para texto."
+        },
+        "file": {
+            "avatar": "Avatar",
+            "arrasteOuClique": "Arraste ou clique para adicionar",
+            "anexos": "Anexos",
+            "podeSoltarVarios": "pode soltar vários de uma vez",
+            "maximoUmMega": "Máximo 1 MB",
+            "acimaDeUmMega": "O arquivo precisa ter no máximo 1 MB.",
+            "erro": "Arquivo acima de 5 MB."
+        },
+        "pin": {
+            "codigo": "Código",
+            "resgate": "Resgate",
+            "preenchaAteOFim": "Preencha até o fim",
+            "disparou": "onComplete disparou às {at} com “{value}”.",
+            "erro": "Código expirado, peça outro."
+        },
+        "array": {
+            "emails": "E-mails",
+            "email": "E-mail",
+            "deDoisAQuatro": "De 2 a 4 telefones",
+            "telefone": "Telefone",
+            "tags": "Tags",
+            "tag": "tag",
+            "novaTag": "Nova tag",
+            "socios": "Sócios",
+            "participacao": "Participação (%)",
+            "setores": "Setores",
+            "novoSetor": "Novo setor",
+            "novoIntegrante": "Novo integrante",
+            "integrante": "integrante",
+            "peloMenosDois": "Pelo menos 2 convidados",
+            "convidado": "nome do convidado"
+        },
+        "object": {
+            "endereco": "Endereço",
+            "rua": "Rua",
+            "numero": "Número",
+            "cidade": "Cidade",
+            "responsavel": "Responsável",
+            "empresa": "Empresa",
+            "razaoSocial": "Razão social",
+            "matriz": "Matriz",
+            "senhaFora": "Senha (fora do objeto)",
+            "confirmacao": "Confirmação",
+            "repitaSenha": "Repita a senha",
+            "naoConferem": "As senhas não conferem.",
+            "preferencias": "Preferências",
+            "newsletter": "Newsletter",
+            "idioma": "Idioma"
+        },
+        "form": {
+            "nascimento": "Nascimento",
+            "aceiteTermos": "Li e aceito os termos"
+        },
+        "dynamic": {
+            "razaoSocial": "Razão social",
+            "razaoSocialExemplo": "nome da empresa",
+            "abertura": "Data de abertura",
+            "pj": "Pessoa jurídica",
+            "pf": "Pessoa física"
+        },
+        "ui": {
+            "padrao": "Padrão",
+            "padraoPlaceholder": "do jeito que o componente declara",
+            "comUi": "Com ui",
+            "comUiPlaceholder": "input maior, resto intacto",
+            "wrapperZerado": "Wrapper zerado",
+            "wrapperZeradoPlaceholder": "sem fundo, sem borda, sem anel",
+            "wrapperNovo": "Wrapper redesenhado",
+            "wrapperNovoPlaceholder": "null primeiro, classe nova depois",
+            "erroPadrao": "Erro padrão",
+            "erroPadraoMensagem": "Vermelho, como vem de fábrica.",
+            "erroReestilizado": "Erro reestilizado",
+            "erroReestilizadoMensagem": "Mesma mensagem, outra pele."
+        },
+        "traducao": {
+            "titular": "Nome do titular",
+            "ajudaMax": "No máximo {n} caractere | No máximo {n} caracteres",
+            "contatos": "Contatos",
+            "adicionarContato": "Adicionar contato",
+            "emailExemplo": "voce{'@'}empresa.com"
+        },
+        "customizados": {
+            "comoFoi": "Como foi o atendimento?",
+            "escalaMenor": "Escala menor",
+            "maxTrocaEstrelas": "max troca a quantidade de estrelas.",
+            "comDica": "Com dica",
+            "hintSaiDoUtil": "O hint sai do RUtilsHint, que é um arquivo do app — não do módulo.",
+            "apelido": "Apelido",
+            "nota": "Nota"
         }
     }
 }

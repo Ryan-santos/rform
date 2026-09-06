@@ -1,0 +1,43 @@
+<template>
+    <RText
+        name="required"
+        label="~~required"
+        rule="required"
+    />
+    <RText
+        name="email"
+        label="~~email"
+        rule="email"
+    />
+    <RText
+        name="url"
+        label="~~url"
+        rule="url"
+    />
+    <RText
+        name="cpf"
+        label="~~brCpf"
+        mask="brCpf"
+        rule="brCpf"
+    />
+    <RText
+        name="cnpj"
+        label="~~brCnpj"
+        mask="brCnpj"
+        rule="brCnpj"
+    />
+    <RText
+        name="cep"
+        label="~~brCep"
+        mask="brCep"
+        rule="brCep"
+    />
+    <RText
+        name="telefone"
+        label="~~brTelefone"
+        mask="brTelefone"
+        rule="brTelefone"
+    />
+
+    <DemoActions />
+</template>

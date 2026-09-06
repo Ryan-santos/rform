@@ -1,0 +1,15 @@
+<template>
+    <RDate
+        name="agendamento"
+        label="demo.date.agendamento"
+        placeholder="demo.date.agendamentoPlaceholder"
+        time
+    />
+    <RDate
+        name="janela"
+        label="demo.date.janela"
+        placeholder="demo.date.janelaPlaceholder"
+        mode="range"
+        time
+    />
+</template>

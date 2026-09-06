@@ -1,0 +1,13 @@
+<template>
+    <RPin
+        name="numerico"
+        label="~~type=&quot;numeric&quot;"
+        type="numeric"
+    />
+    <RPin
+        name="alfanumerico"
+        label="~~type=&quot;alphanumeric&quot;"
+        type="alphanumeric"
+        :length="5"
+    />
+</template>

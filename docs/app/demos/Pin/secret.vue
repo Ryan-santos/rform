@@ -1,0 +1,9 @@
+<template>
+    <RPin
+        name="secreto"
+        label="demo.pin.resgate"
+        type="alphanumeric"
+        :length="4"
+        secret
+    />
+</template>

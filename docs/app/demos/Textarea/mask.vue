@@ -1,0 +1,14 @@
+<template>
+    <RTextarea
+        name="dinheiroArea"
+        label="~~mask=&quot;dinheiro&quot;"
+        mask="dinheiro"
+        :rows="2"
+    />
+    <RTextarea
+        name="cpfArea"
+        label="~~mask=&quot;brCpf&quot;"
+        mask="brCpf"
+        :rows="2"
+    />
+</template>

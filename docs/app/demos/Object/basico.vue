@@ -1,0 +1,21 @@
+<template>
+    <RObject
+        name="endereco"
+        label="demo.object.endereco"
+    >
+        <RText
+            name="cep"
+            label="~~CEP"
+            mask="brCep"
+            rule="brCep"
+        />
+        <RText
+            name="rua"
+            label="demo.object.rua"
+        />
+        <RNumber
+            name="numero"
+            label="demo.object.numero"
+        />
+    </RObject>
+</template>

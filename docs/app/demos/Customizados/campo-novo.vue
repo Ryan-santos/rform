@@ -1,0 +1,13 @@
+<template>
+    <RRating
+        name="nota"
+        label="demo.customizados.comoFoi"
+        rule="required"
+    />
+    <RRating
+        name="notaCurta"
+        label="demo.customizados.escalaMenor"
+        :max="3"
+        :hint="$t('demo.customizados.maxTrocaEstrelas')"
+    />
+</template>

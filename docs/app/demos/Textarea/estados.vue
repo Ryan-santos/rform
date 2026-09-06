@@ -1,0 +1,21 @@
+<template>
+    <RTextarea
+        name="obrigatorio"
+        label="demo.common.obrigatorio"
+        required
+        rule="required"
+        :rows="2"
+    />
+    <RTextarea
+        name="carregando"
+        label="demo.common.carregando"
+        loading
+        :rows="2"
+    />
+    <RTextarea
+        name="comErro"
+        label="demo.common.erroManual"
+        :error="$t('demo.textarea.erro')"
+        :rows="2"
+    />
+</template>

@@ -1,0 +1,26 @@
+<template>
+    <RObject
+        name="empresa"
+        label="demo.object.empresa"
+    >
+        <RText
+            name="razaoSocial"
+            label="demo.object.razaoSocial"
+        />
+        <RObject
+            name="matriz"
+            label="demo.object.matriz"
+        >
+            <RText
+                name="cidade"
+                label="demo.object.cidade"
+            />
+            <RSelect
+                name="uf"
+                label="demo.select.uf"
+                placeholder="demo.common.selecione"
+                :options="['SP', 'RJ', 'MG', 'BA', 'RS']"
+            />
+        </RObject>
+    </RObject>
+</template>

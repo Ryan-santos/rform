@@ -1,0 +1,13 @@
+<template>
+    <RCalendar
+        name="obrigatorio"
+        label="demo.common.obrigatorio"
+        required
+        rule="required"
+    />
+    <RCalendar
+        name="comErro"
+        label="demo.common.erroManual"
+        :error="$t('demo.calendar.erro')"
+    />
+</template>

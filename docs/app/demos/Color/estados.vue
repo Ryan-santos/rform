@@ -1,0 +1,18 @@
+<template>
+    <RColor
+        name="obrigatoria"
+        label="demo.common.obrigatorio"
+        required
+        rule="required"
+    />
+    <RColor
+        name="carregando"
+        label="demo.common.carregando"
+        loading
+    />
+    <RColor
+        name="comErro"
+        label="demo.common.erroManual"
+        :error="$t('demo.color.erro')"
+    />
+</template>

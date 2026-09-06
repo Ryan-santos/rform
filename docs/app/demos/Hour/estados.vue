@@ -1,0 +1,18 @@
+<template>
+    <RHour
+        name="obrigatorio"
+        label="demo.common.obrigatorio"
+        required
+        rule="required"
+    />
+    <RHour
+        name="carregando"
+        label="demo.common.carregando"
+        loading
+    />
+    <RHour
+        name="comErro"
+        label="demo.common.erroManual"
+        :error="$t('demo.hour.erro')"
+    />
+</template>

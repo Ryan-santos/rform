@@ -1,0 +1,19 @@
+<template>
+    <RObject
+        name="responsavel"
+        label="demo.object.responsavel"
+        required
+    >
+        <RText
+            name="nome"
+            label="demo.common.nome"
+            required
+            rule="required"
+        />
+        <RText
+            name="email"
+            label="~~e-mail"
+            rule="email"
+        />
+    </RObject>
+</template>

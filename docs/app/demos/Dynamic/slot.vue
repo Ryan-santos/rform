@@ -10,7 +10,7 @@
                     :name="fieldName"
                     label="demo.array.socios"
                     class="@md:col-span-2"
-                    :rule="rule as Rule<'array'>"
+                    :rule="arrayRule(rule)"
                 >
                     <RObject :name="index">
                         <RText
@@ -34,6 +34,9 @@
     import { z } from "zod";
 
     import type { Rule } from "#rform/types/presets";
+
+    // O escopo do slot entrega um `Rule` largo, e o `RArray` pede o dele
+    const arrayRule = (rule?: Rule) => rule as Rule<"array">;
 
     const { data, schema } = useRForm({
         empresa: {

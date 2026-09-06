@@ -8,13 +8,13 @@ import { RForm, RText } from "#components";
 // Um campo só registra o validador quando um Form provê o registro de rules, então
 // todo caso aqui passa pela cadeia de verdade: useField → resolveRule → validation.
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {
-    let scope: { validate: () => Promise<void> } | undefined;
+    let scope: { validate: () => Promise<boolean> } | undefined;
 
     const wrapper = await mountSuspended(RForm, {
         props: { modelValue: model } as never,
         slots: {
             default: (received: Record<string, unknown>) => {
-                scope = received as unknown as { validate: () => Promise<void> };
+                scope = received as unknown as { validate: () => Promise<boolean> };
                 return h(RText, { name: "campo", rule } as never);
             }
         }
@@ -23,13 +23,11 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     return {
         wrapper,
         validate: async () => {
-            try {
-                await scope!.validate();
-            } catch {
-                // O `validate` rejeita no primeiro campo que falha; o que se asserta
-                // é a mensagem, e ela pousa no próprio campo.
-            }
+            // O `validate` devolve boolean e nunca rejeita; o que se asserta é a
+            // mensagem, e quem a escreve no campo é o `errorsBag` do Form.
+            await scope!.validate();
 
+            await nextTick();
             await nextTick();
 
             return wrapper.text();

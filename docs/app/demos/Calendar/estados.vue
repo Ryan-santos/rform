@@ -8,6 +8,6 @@
     <RCalendar
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.calendar.erro')"
+        error="demo.calendar.erro"
     />
 </template>

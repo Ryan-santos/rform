@@ -16,6 +16,6 @@
         name="comErro"
         label="demo.common.erroManual"
         accept="png, jpg"
-        :error="$t('demo.file.erro')"
+        error="demo.file.erro"
     />
 </template>

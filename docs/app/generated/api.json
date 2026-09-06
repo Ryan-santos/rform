@@ -10,7 +10,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -85,7 +85,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -160,7 +160,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -233,7 +233,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -326,7 +326,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -403,7 +403,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -481,7 +481,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -559,7 +559,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -626,7 +626,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -709,7 +709,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -808,7 +808,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -878,7 +878,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -956,7 +956,7 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
                 "required": false
             },
             {
@@ -1136,7 +1136,12 @@
             },
             {
                 "name": "error",
-                "type": "string | undefined",
+                "type": "TrInput | undefined",
+                "required": false
+            },
+            {
+                "name": "focusError",
+                "type": "boolean | undefined",
                 "required": false
             },
             {
@@ -1162,6 +1167,11 @@
             {
                 "name": "rule",
                 "type": "Rule<any> | undefined",
+                "required": false
+            },
+            {
+                "name": "rules",
+                "type": "ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>> | undefined",
                 "required": false
             },
             {

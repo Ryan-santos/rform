@@ -13,6 +13,6 @@
     <RDate
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.date.erro')"
+        error="demo.date.erro"
     />
 </template>

@@ -2,12 +2,12 @@ import { computed, inject, type ComputedRef, type Ref } from "vue";
 
 import userDefaults from "#rform/defaults";
 import { utils as registry, hooks } from "#rform/registry";
-import type { DeepRequired, Element, WithTextSource } from "#rform/types";
+import type { DeepRequired, WithTextSource } from "#rform/types";
 import type Utils from "#rform/types/components/utils";
 import { hookUi, merger, prefixText } from "#rform/utils";
 
 import type { Tr } from "../utils/i18n";
-import type { ValueProp } from "./useField";
+import type { FieldProps, ValueProp } from "./useField";
 import { keyProp } from "./useField";
 import useTranslate from "./useTranslate";
 
@@ -15,8 +15,11 @@ import useTranslate from "./useTranslate";
  * O que um util de fato recebe: as props `Element` do campo pai, as próprias, e um
  * `ui` mesclado sobre os defaults completos — então toda chave de `ui` existe, que
  * é o que os templates já assumem.
+ *
+ * `error` chega `string`, e não `TrInput`: quem traduz é o `useField`, na fronteira
+ * do call site.
  */
-export type UtilProps<P> = Omit<Element & P, "ui"> & {
+export type UtilProps<P extends object> = Omit<FieldProps<P>, "ui"> & {
     ui: DeepRequired<NonNullable<P extends { ui?: infer U } ? U : never>>;
 };
 

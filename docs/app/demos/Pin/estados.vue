@@ -16,6 +16,6 @@
         name="comErro"
         label="demo.common.erroManual"
         :length="4"
-        :error="$t('demo.pin.erro')"
+        error="demo.pin.erro"
     />
 </template>

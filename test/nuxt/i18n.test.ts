@@ -105,6 +105,42 @@ describe("a prop text e a procedência dela", () => {
     });
 });
 
+describe("o error é TrInput na entrada", () => {
+    const mountError = async (error: string) =>
+        await mountSuspended(RText, {
+            props: { name: "campo", modelValue: "", error } as never
+        });
+
+    it("traduz a chave que o call site passa", async () => {
+        await setLocale("pt-BR");
+
+        const wrapper = await mountError("rform.presets.rules.required");
+
+        expect(wrapper.text()).toContain("Campo obrigatório.");
+    });
+
+    it("re-renderiza a mensagem quando o locale muda", async () => {
+        await setLocale("pt-BR");
+
+        const wrapper = await mountError("rform.presets.rules.required");
+
+        await setLocale("en");
+        await nextTick();
+
+        expect(wrapper.text()).toContain("Required field.");
+
+        await setLocale("pt-BR");
+    });
+
+    it("deixa passar o que não é chave, como todo `tr` sem ponte", async () => {
+        await setLocale("pt-BR");
+
+        const wrapper = await mountError("Nome já registrado");
+
+        expect(wrapper.text()).toContain("Nome já registrado");
+    });
+});
+
 // Um campo só registra o validador quando um Form provê o registro de rules, então
 // isto passa pela cadeia de verdade: useField → resolveRule → validation.
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {

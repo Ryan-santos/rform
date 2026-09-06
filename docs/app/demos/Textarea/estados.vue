@@ -15,7 +15,7 @@
     <RTextarea
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.textarea.erro')"
+        error="demo.textarea.erro"
         :rows="2"
     />
 </template>

@@ -17,6 +17,7 @@ import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
 import { hookUi, merger, prefixText, resolveMask, resolveRule } from "#rform/utils";
 
+import { injectErrorsBag } from "./errorsBag";
 import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
 import useTranslate from "./useTranslate";
@@ -30,9 +31,17 @@ export type Value = {
 
 export const key = Symbol() as InjectionKey<Value>;
 
+/**
+ * O que sai do merger: as props do campo com o `error` já resolvido — na entrada ele
+ * é `TrInput`, e quem o traduz é este arquivo.
+ */
+export type FieldProps<T extends object = object> = Omit<Element & T, "error"> & {
+    error?: string;
+};
+
 export type ValueProp<T extends object = object> = {
     id: string | null;
-    props: ComputedRef<Element & T>;
+    props: ComputedRef<FieldProps<T>>;
     model: ModelRef<unknown>;
 };
 
@@ -69,16 +78,27 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
     const defaults = shallowRef<Element>({});
     const overrides = userDefaults[componentName];
 
-    const localProps = ref<Element>({
-        error: undefined
-    });
+    const localProps = ref<Element>({});
+
+    // Fora do `localProps`, e `string`: o que o `errorsBag` empurra já é a mensagem
+    // pronta, enquanto o `error` do call site ainda é um `TrInput` a resolver.
+    const error = ref<string>();
 
     // Ausente em `Form` e `Dynamic`: o mapa gerado só lista o que saiu de um
     // diretório `fields`.
     const hook = (hooks.fields as Record<string, string | undefined>)[componentName];
 
     const props = computed(() => {
-        const merged = merger(defaults.value, overrides, localProps.value, sourceProps);
+        const merged = merger(
+            defaults.value,
+            overrides,
+            localProps.value,
+            sourceProps
+        ) as FieldProps<T>;
+
+        // A tradução acontece aqui, na fronteira do call site: um segundo `tr` sobre a
+        // mensagem do bag a levaria ao `t` do app e cairia no aviso de *missing key*.
+        merged.error = sourceProps.error ? tr(sourceProps.error) : error.value;
 
         merged.ui = hookUi(merged.ui, hook) as typeof merged.ui;
 
@@ -86,6 +106,12 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
     });
 
     const upper = inject(key, undefined);
+
+    // Antes do `useModel`: o setter descarta a entrada do bag pelo `id`.
+    const upperId = upper?.id ? `${upper.id}.` : "";
+    const id = props.value.name !== undefined ? `${upperId}${props.value.name}` : null;
+
+    const errorsBag = injectErrorsBag();
 
     const cloneDefault = (): unknown => {
         const def = props.value.default;
@@ -99,7 +125,14 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
     // `localValue` congelaria (ver "useField" no `.claude/CLAUDE.md`).
     const model = useModel(sourceProps, "modelValue", {
         set(value): S {
-            localProps.value.error = undefined;
+            error.value = undefined;
+
+            // Consome a entrada do Form: sem isso, a mesma mensagem empurrada de novo
+            // (submit → corrige → submit) não seria mudança e o watcher não dispararia.
+            if (id && errorsBag && id in errorsBag.value) {
+                delete errorsBag.value[id];
+            }
+
             value = opts?.set?.(value) ?? value ?? cloneDefault();
 
             if (
@@ -163,9 +196,6 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
         { immediate: true, flush: "sync" }
     );
 
-    const upperId = upper?.id ? `${upper.id}.` : "";
-    const id = props.value.name !== undefined ? `${upperId}${props.value.name}` : null;
-
     provide(keyProp, {
         id,
         props,
@@ -174,6 +204,17 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
 
     const rulesList = injectRulesList();
     const formRoot = injectFormRoot();
+
+    // O bag é o único escritor do `error`. `flush: "sync"` pelo mesmo motivo do
+    // watcher de seed: o setter do model limpa o erro de forma síncrona, e um flush
+    // atrasado inverteria a ordem.
+    watch(
+        () => (id && errorsBag ? errorsBag.value[id] : undefined),
+        (message) => {
+            error.value = message;
+        },
+        { immediate: true, flush: "sync" }
+    );
 
     const field = componentName.toLowerCase();
 
@@ -214,16 +255,12 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
             const validate = resolveRule(rule, loaded?.rules ?? {}, field);
 
             if (validate) {
+                // Só devolve a mensagem: quem a escreve no campo é o `errorsBag`.
                 const fn = async () => {
                     try {
                         localProps.value.loading = true;
 
-                        const error = await validate(model.value, formRoot?.value);
-
-                        if (error) {
-                            localProps.value.error = error;
-                            throw new Error(error);
-                        }
+                        return await validate(model.value, formRoot?.value);
                     } finally {
                         localProps.value.loading = undefined;
                     }
@@ -231,7 +268,12 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
 
                 rulesList?.value?.set(id, fn);
             } else {
-                localProps.value.error = undefined;
+                error.value = undefined;
+
+                if (errorsBag && id in errorsBag.value) {
+                    delete errorsBag.value[id];
+                }
+
                 rulesList?.value?.delete(id);
             }
         },

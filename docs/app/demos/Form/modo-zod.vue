@@ -1,7 +1,7 @@
 <template>
     <RForm
         v-model="data"
-        @submit="submit"
+        :rules
         class="grid grid-cols-1 gap-4 @md:grid-cols-2"
     >
         <RText
@@ -38,15 +38,9 @@
 
         <DemoActions />
     </RForm>
-
-    <DemoJson
-        :value="parse"
-        title="rules.safeParseAsync(data)"
-    />
 </template>
 
 <script setup lang="ts">
-    import { ref } from "vue";
     import { z } from "zod";
 
     const { data, rules } = useRForm({
@@ -58,12 +52,6 @@
             rua: z.string().min(3)
         })
     });
-
-    const parse = ref<unknown>("—");
-
-    const submit = async () => {
-        parse.value = await rules.safeParseAsync(data.value);
-    };
 
     // O painel de model do `<Demo>` lê daqui: este exemplo monta o próprio `RForm`.
     defineExpose({ data });

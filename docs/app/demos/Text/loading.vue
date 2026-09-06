@@ -7,6 +7,6 @@
     <RText
         name="comErro"
         label="demo.text.erroManual"
-        :error="$t('demo.text.erroMensagem')"
+        error="demo.text.erroMensagem"
     />
 </template>

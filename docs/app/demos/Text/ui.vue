@@ -2,7 +2,7 @@
     <RText
         name="uiOverride"
         label="demo.text.erroRosa"
-        :error="$t('demo.text.erroClasseTrocada')"
+        error="demo.text.erroClasseTrocada"
         :ui="{
             Utils: {
                 Error: {

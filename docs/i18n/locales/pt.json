@@ -216,7 +216,10 @@
         },
         "form": {
             "nascimento": "Nascimento",
-            "aceiteTermos": "Li e aceito os termos"
+            "aceiteTermos": "Li e aceito os termos",
+            "enviarServidor": "Enviar ao servidor",
+            "nomeRegistrado": "Nome já registrado",
+            "empurrarErro": "Empurrar erro da API"
         },
         "dynamic": {
             "razaoSocial": "Razão social",

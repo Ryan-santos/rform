@@ -19,6 +19,6 @@
         label="demo.common.erroManual"
         placeholder="demo.common.selecione"
         :options="['a', 'b']"
-        :error="$t('demo.select.erro')"
+        error="demo.select.erro"
     />
 </template>

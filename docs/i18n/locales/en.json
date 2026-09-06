@@ -216,7 +216,10 @@
         },
         "form": {
             "nascimento": "Birth date",
-            "aceiteTermos": "I have read and accept the terms"
+            "aceiteTermos": "I have read and accept the terms",
+            "enviarServidor": "Send to the server",
+            "nomeRegistrado": "Name already taken",
+            "empurrarErro": "Push an API error"
         },
         "dynamic": {
             "razaoSocial": "Legal name",

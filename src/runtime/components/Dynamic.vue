@@ -1,7 +1,7 @@
 <template>
     <template v-if="isSchema">
         <template
-            v-for="(field, key) in schema as Schema"
+            v-for="(field, key) in entries"
             :key="key"
         >
             <slot
@@ -19,15 +19,15 @@
     </template>
 
     <component
-        v-else-if="(schema as FieldConfig).type === 'object'"
+        v-else-if="config?.type === 'object'"
         :is="resolved"
         :name="name"
         v-bind="rest"
     >
-        <RDynamic :schema="(schema as { children: Schema }).children">
+        <RDynamic :schema="objectChildren">
             <template
                 v-for="(_, slotName) in $slots"
-                #[slotName]="scope: SlotScope"
+                #[slotName]="scope"
             >
                 <slot
                     :name="slotName"
@@ -38,16 +38,16 @@
     </component>
 
     <component
-        v-else-if="(schema as FieldConfig).type === 'array'"
+        v-else-if="config?.type === 'array'"
         :is="resolved"
         :name="name"
         v-bind="rest"
     >
         <template v-slot="{ index }">
             <RDynamic
-                v-if="!('slot' in (schema as { children: FieldConfig | SlotField }).children)"
+                v-if="arrayChild"
                 :name="index"
-                :schema="(schema as { children: FieldConfig }).children"
+                :schema="arrayChild"
             />
         </template>
     </component>
@@ -71,7 +71,7 @@
 
     import map from "#rform/components-map";
     import type { SlotScope } from "#rform/types";
-    import type { FieldConfig, Schema, SlotField } from "#rform/types/schema";
+    import type { FieldConfig, Schema } from "#rform/types/schema";
 
     export type Props = {
         name?: string | number;
@@ -92,18 +92,36 @@
             !("slot" in props.schema)
     );
 
-    const resolved = computed(() => {
-        if (isSchema.value) {
-            return null;
+    /** As entradas de um schema aninhado; vazio quando o `schema` é um campo. */
+    const entries = computed((): Schema => (isSchema.value ? (props.schema as Schema) : {}));
+
+    /** O campo, quando não é schema. Todo narrowing mora aqui e não no template. */
+    const config = computed(() => (isSchema.value ? undefined : (props.schema as FieldConfig)));
+
+    const objectChildren = computed(() =>
+        config.value?.type === "object" ? config.value.children : {}
+    );
+
+    /** O item de um `array`; `undefined` quando é slot, e aí quem renderiza é o pai. */
+    const arrayChild = computed(() => {
+        const current = config.value;
+
+        if (current?.type !== "array" || "slot" in current.children) {
+            return undefined;
         }
-        return map[(props.schema as FieldConfig).type];
+
+        return current.children;
     });
 
+    const resolved = computed(() => (config.value ? map[config.value.type] : null));
+
     const rest = computed(() => {
-        if (isSchema.value) {
+        if (!config.value) {
             return {};
         }
+
         const { type, children, slot, ...r } = props.schema as Record<string, unknown>;
+
         return r;
     });
 </script>

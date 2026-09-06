@@ -13,6 +13,6 @@
     <RHour
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.hour.erro')"
+        error="demo.hour.erro"
     />
 </template>

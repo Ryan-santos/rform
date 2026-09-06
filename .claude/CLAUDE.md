@@ -53,13 +53,68 @@ Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compil
 ### useField (`src/runtime/composables/useField.ts`)
 
 - Lê o pai (Form) via `inject(key)`. Quando há pai e `props.name` está definido, `model.value` lê/escreve diretamente em `upper.model.value[name]` — é por isso que mutações em arrays no model do filho refletem no Form.
-- Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger` — depois de passar o `defaults` do componente pelo `prefixText`, que é o que dá procedência de graça ao texto (ver `defaults.text`, na seção de i18n).
+- Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger` — e sobrescreve o `error` depois, que é a única prop com duas procedências (ver "O `error` é `TrInput`", adiante) — depois de passar o `defaults` do componente pelo `prefixText`, que é o que dá procedência de graça ao texto (ver `defaults.text`, na seção de i18n).
 - Carrega os defaults do componente pelo `#rform/registry` gerado (`nome → () => import(path)`). **Não** pode ser `import('../components/${name}.vue')`: o Vite compila isso num glob ancorado no arquivo da composable, e um campo em `app/rform/fields` não faz parte dele. As entradas são thunks, então o ciclo `Text.vue → useField → registry → Text.vue` não fecha em tempo de carga.
 - `componentName` vem do `src/vite.plugin.ts`. Nome ausente ou fora do registry **lança**. Havia um fallback `"Text"` (e `"Label"` no `useUtil`) que renderizava o campo com os defaults de outro componente sem dizer nada.
 - O `useModel` recebe `sourceProps`, **não** `props.value`: este é o snapshot que o `merger` devolveu durante o setup, um objeto simples que o `useModel` não rastreia — o `localValue` congelaria no `modelValue` inicial, e toda mudança posterior no objeto ligado (um reset, uma carga async) deixaria o campo escrevendo num objeto destacado.
 - O `get()` **clona** o `default` no fallback. `props.value.default` é o próprio objeto que o componente declarou em escopo de módulo — o `merger` copia objeto e array por referência quando a chave existe numa fonte só. Entregá-lo cru deixava um filho escrever direto nele (um `RObject` destacado, cujo índice acabou de ser removido, ainda lê por ali), poluindo o default de toda instância seguinte no processo. O `??` mantém o clone preguiçoso.
 - O `seed()` desiste quando o índice está **além do fim** do array — o array acabou de encolher (um splice do botão de remover, ou um reset que devolveu o default vazio). Semear ali ressuscitaria o slot: o watcher é `flush: "sync"`, então roda antes de o `v-for` desmontar o item, e `arr[length] = default` cresce o array de novo.
 - `#rform/presets` é importado **dinamicamente**, e só quando o campo declara `rule` ou `mask`. O barrel importa todo preset estaticamente e toda rule importa zod, então um import estático aqui poria zod no caminho crítico de qualquer página com campo, validado ou não. A carga inicial é aguardada dentro do `setup`, onde o registry já é aguardado; um `rule` que aparece depois resolve pelo `loadPresets` no watcher, um microtask atrás — que a validação, sendo async, não percebe.
+- O `fn` que o campo registra no `rulesList` **só devolve a mensagem**: não escreve no `error` e não lança. Quem escreve é o `errorsBag` (adiante), e é isso que mata os dois escritores concorrentes do mesmo slot — e a unhandled rejection do `@submit.prevent`.
+- `upperId`/`id` são montados **antes** do `useModel`, e não mais depois do `provide(keyProp)`: o setter do model precisa do `id` para descartar a entrada do bag. Sem mudança de comportamento — `id` só lê `sourceProps.name` e `upper`, ambos prontos ali.
+
+### O `errorsBag`: um escritor só para o `error` (`src/runtime/composables/errorsBag.ts`)
+
+O Form provê quatro coisas, e as direções não são as mesmas:
+
+| provide | direção | o que carrega |
+|---|---|---|
+| `useProvide` | Form → campo | `{ id, model }` — a raiz da injeção |
+| `defineFormRoot` | Form → campo | o model inteiro, para o `form` de toda `validation` |
+| `defineRulesList` | campo → Form | **pull**: `id → () => Promise<string \| void>` |
+| `defineErrorsBag` | Form → campo | **push**: `id → string` |
+
+Os dois últimos são chaveados pelo **mesmo `id` pontilhado**, e é a inversão que faz tudo caber: o bag é o **único escritor** do `error` de um campo. O Form junta as duas fontes — os issues do `:rules` agregado e o retorno de cada `fn` do `rulesList` — num mapa só e escreve no bag; o watcher de cada campo espelha `bag[id]` no próprio ref `error`.
+
+- **O setter do model apaga a entrada do bag**, além de zerar o `error`. Sem isso a mesma mensagem empurrada duas vezes (submit → corrige → submit) não é mudança para o watcher, e o erro simplesmente não reaparece — modo de falha mudo.
+- **`flush: "sync"`** no watcher, pelo mesmo motivo do watcher de seed: o setter do model limpa o erro de forma síncrona, e um flush atrasado inverteria a ordem.
+- `validate()` **devolve `boolean`** e nunca rejeita, e **recalcula tudo**: o mapa é substituído por inteiro, não acrescentado — é o que cobre o model mudado por fora (`data.value.nome = "x"` não passa pelo setter do campo, e o erro ficaria grudado). `submit()` devolve `undefined` quando passou, ou o mapa de erros.
+- As portas de entrada de um erro vindo de fora são o **retorno do `onSubmit`** e o `setErrors` do `defineExpose`. **Não há prop `errors`**: em modo `schema`/`RDynamic` não existe tag de campo para receber um `:error`, então o canal tem de ser do Form.
+- `issue.path.join(".")` casa com o `id` do `useField` **por construção** — o `name` de um filho de `RArray` *é* o índice, então `["itens", 0, "nome"]` → `"itens.0.nome"`. Issue de raiz (`path: []`) vira a chave `""`, que nenhum campo tem: aparece no retorno do `submit` e não renderiza em lugar nenhum.
+- A rule do campo **vence** o issue agregado: é a declaração mais local.
+- Em modo `schema` o mesmo `rule` valida duas vezes — uma pelo campo, uma pelo agregado. As mensagens são idênticas (é o mesmo preset), então o resultado é correto e só desperdiça um parse; não vale mecanismo para evitar. É por isso que `docs/app/demos/Form/modo-schema.vue` continua **sem** `:rules`, e o `modo-zod.vue` passou a ter.
+
+#### O `error` é `TrInput` na entrada e `string` na saída
+
+`error` é chave de tradução como `label` e `placeholder` — `<RText error="form.erros.nome" />`, e num app com i18n um literal solto ali é erro de compilação, como em toda prop de texto. Mas ele é a única delas com **duas** procedências, e é isso que decide onde a tradução acontece:
+
+| de onde vem | o que é | quem resolve |
+|---|---|---|
+| `sourceProps.error` — o call site | `TrInput` | `useField`, dentro do computed de `props` |
+| o `errorsBag` — rule, issue do `:rules`, `setErrors` | mensagem pronta | ninguém: já veio resolvida |
+
+Por isso o `error` interno **não mora mais no `localProps`**: é um `ref<string>` à parte, e o computed escolhe entre os dois com `sourceProps.error ? tr(sourceProps.error) : error.value`.
+
+**Resolver no `RUtilsError`, como o `Label` faz, seria o simétrico e está errado.** Um `tr` sobre a mensagem do bag a levaria ao `t` do app — e com ponte isso é o aviso de *missing key* do vue-i18n uma vez por campo inválido, em toda submissão. O `tr` de um lado só é o que mantém a mensagem de uma rule intacta. `test/nuxt/formErrors.test.ts` grava a fronteira empurrando `"rform.presets.rules.required"` pelo `setErrors` e exigindo que ele **apareça cru**.
+
+A contrapartida é que o tipo de entrada e o de leitura divergem, e os dois estão escritos: `Element["error"]` é `TrInput`, e `FieldProps<T>` (`useField`) troca a chave por `string` — que é o que `UtilProps` herda e o que todo template de campo lê. É a mesma assimetria que `WithTextSource` e o `ui` de `UtilProps` já carregam.
+
+#### O foco é resolvido pelo DOM
+
+`focusFirstError` (`src/runtime/utils/`) procura `.RUtilsError`, sobe até o `.RField` dono e foca o primeiro focável dentro dele — `focus({ preventScroll: true })` e **depois** `scrollIntoView({ block: "center" })`, porque o `focus()` sozinho rola de forma abrupta e descentralizada. Os dois ganchos já existem e já são testados (`hookUi`).
+
+**Pelo DOM, e não pelo `rulesList`**: o registro está em ordem de registro, e "primeiro campo com erro" é uma afirmação sobre a ordem **visual**. `querySelector` responde em ordem de documento e cobre de graça tanto o campo que o `RDynamic` renderiza quanto o que o app escreveu à mão. O escopo é o `ref="form"` do próprio `<form>`, e é ele que impede um `RForm` de roubar o foco de outro na mesma página. O `nextTick` antes da chamada é obrigatório: o watcher do campo é síncrono, mas o `<p class="RUtilsError">` só existe depois do render.
+
+`scrollIntoView` **não existe no happy-dom/jsdom**, e `focus()` é no-op numa árvore destacada — daí o `Element.prototype.scrollIntoView = vi.fn()` e o `attachTo: document.body` em `test/nuxt/formErrors.test.ts`.
+
+#### `focusError` não pode morar no `defaults`
+
+Dois modos de falha calados no mesmo prop, e por isso ele fica **fora** do `defaults` e é lido como `!== false`:
+
+- o `merger` pula quando o resultado é truthy e o valor novo é falsy (a regra "não apaga"), então um `defaults.focusError: true` seria **impossível** de desligar com `:focus-error="false"`;
+- `focusError?: boolean` compila com `type: Boolean`, e o boolean casting do Vue transformaria a prop **ausente** em `false` — daí ele entrar no `withDefaults` como `undefined`, junto de `required` e `loading`.
+
+O mesmo vale para `rules`: `defaults` só existe para semear o `merger`, e o `merger` copia qualquer chave de `sourceProps` de qualquer jeito.
 
 ### useUtil (`src/runtime/composables/useUtil.ts`)
 
@@ -69,6 +124,7 @@ Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compil
 ### useRForm (`src/runtime/composables/useRForm.ts`)
 
 - A tabela de presets é buscada **dentro** do `superRefine`, não no import. Estaticamente, este módulo era a última aresta de `#rform/composables` para `#rform/presets`, e os arquivos de preset chamam `defineRule(...)` em escopo de módulo — efeito colateral que o Rollup não consegue provar inócuo — então toda página que importasse *qualquer* composable do barrel embarcava as nove rules e, com elas, zod. O refinement já é async, e o import é no-op depois que o chunk carregou.
+- O `rules` agregado **deixou de ser órfão**: quem o consome é `<RForm :rules>`, que faz o `safeParseAsync` no submit e distribui cada issue pelo `path` (ver "O `errorsBag`"). Nada mudou aqui — o formato já saía certo.
 
 ### Defaults do usuário (`app/rform/defaults.ts`)
 
@@ -457,6 +513,7 @@ Cuidado com esse parâmetro: `arr.map(parseIncoming)` passaria o **índice** com
 
 - `C` é o field type ("text", "color", ...) e filtra quais presets o `rule` aceita, via `available` de cada um. Todo **campo** passa o seu: `Element<typeof defaults, "text">`. `Form` não passa `C`, porque não é campo e não tem membro no `FieldType`. Os que sobrescrevem o model (`File`, `Hour`, `Number`) passam `D` como terceiro parâmetro.
 - Tipa `modelValue`/`default` baseado em `OBJ["default"]` via `ConvertNeverToUnknown`.
+- `error` é `TrInput`, como `label` e `placeholder` — mas só na entrada: o que sai do merger é `FieldProps<T>`, com `error?: string`. Ver "O `error` é `TrInput` na entrada e `string` na saída".
 - **Não** tipa nada a partir de `OBJ["text"]`, e não tem como — ver "O `Element` não deriva os props de texto", acima. Campo com texto intersecciona `TextProp<typeof defaults.text>` no próprio `Props`, ao lado da entrada em `defaults.text`; `label` e `placeholder` também ficam de fora do `Element` — quem os usa declara o próprio `TrInput` (é o `placeholder?: TrInput` do `File`).
 - Atenção: se `defaults.default = null`, então `modelValue?: null` — props com valores diferentes precisam sobrescrever via `Omit<Element<...>, "modelValue" | "default"> & { modelValue?: unknown; default?: unknown }`.
 
@@ -659,6 +716,35 @@ funcionam; só uma se escreve:
 
 Vale em todo lugar que o usuário lê ou copia — demo, página do site, playground —
 e é o que faz o componente parecer com o resto do Vue que ele já escreve.
+
+### Tipagem não entra no template
+
+Nenhum `as`, nenhum `satisfies`, nenhuma anotação em escopo de slot dentro de um
+`<template>`. Quando o markup precisa de um valor estreitado, quem estreita é um
+`computed` — ou uma função, quando o valor vem do escopo de um slot:
+
+```vue
+<!-- não -->
+<LazyRDynamic :schema="props.schema as Schema" />
+<RArray :rule="rule as Rule<'array'>" />
+
+<!-- sim -->
+<LazyRDynamic v-if="schema" :schema />
+<RArray :rule="arrayRule(rule)" />
+```
+
+Três razões, e a terceira é a que mais dói: o cast some do olhar de quem lê o
+markup, que é onde se procura o que um componente recebe; ele fica num lugar que o
+`vue-tsc` checa e nenhuma busca por tipo encontra; e num demo do site ele vira
+exemplo — o leitor copia o cast junto.
+
+A anotação de escopo de slot é o caso menos óbvio e cai na mesma regra:
+`#[slotName]="scope: SlotScope"` vira `#[slotName]="scope"`, porque o
+`defineSlots<Record<string, (scope: SlotScope) => unknown>>()` do `RDynamic` já
+tipa o escopo do outro lado — a anotação era eco, não informação.
+
+Quem guarda é `test/unit/templates.test.ts`, sobre os 202 `.vue` do módulo, do
+site, dos quatro playgrounds e da fixture.
 
 ## Comandos úteis
 

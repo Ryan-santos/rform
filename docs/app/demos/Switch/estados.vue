@@ -10,6 +10,6 @@
     <RSwitch
         name="comErro"
         placeholder="demo.common.erroManual"
-        :error="$t('demo.switch.erro')"
+        error="demo.switch.erro"
     />
 </template>

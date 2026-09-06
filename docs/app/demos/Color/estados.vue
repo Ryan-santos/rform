@@ -13,6 +13,6 @@
     <RColor
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.color.erro')"
+        error="demo.color.erro"
     />
 </template>

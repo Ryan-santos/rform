@@ -88,10 +88,13 @@ export type WithTextSource<P> = Omit<P, "text"> & { text?: TextSource };
  *
  * `text` está ausente de propósito: cada componente o intersecciona com
  * `TextProp<typeof defaults.text>`, porque só ele sabe a forma da própria árvore.
+ *
+ * `error` é `TrInput` como `label` e `placeholder`, mas só na entrada: quem resolve é
+ * o `useField`, e o que sai do merger é sempre a mensagem pronta.
  */
 export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<OBJ["default"]>> = {
     name?: string | number;
-    error?: string;
+    error?: TrInput;
     required?: boolean;
     rule?: Rule<C>;
     loading?: boolean;
@@ -99,4 +102,13 @@ export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<
     ui?: DeepPartial<OBJ["ui"]>;
     modelValue?: D;
     "onUpdate:modelValue"?: <T extends D>($event: T) => void;
+};
+
+/**
+ * O que o app empurra para dentro do formulário: erros vindos de fora, na forma
+ * que uma API produz. Aninhado, já pontilhado ou os dois misturados — quem
+ * achata é o `flattenErrors`.
+ */
+export type FormErrors = {
+    [key: string]: string | string[] | FormErrors;
 };

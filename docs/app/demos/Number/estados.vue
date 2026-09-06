@@ -7,6 +7,6 @@
     <RNumber
         name="comErro"
         label="demo.common.erroManual"
-        :error="$t('demo.number.erro')"
+        error="demo.number.erro"
     />
 </template>

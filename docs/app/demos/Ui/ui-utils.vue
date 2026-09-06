@@ -2,12 +2,12 @@
     <RText
         name="erroPadrao"
         label="demo.ui.erroPadrao"
-        :error="$t('demo.ui.erroPadraoMensagem')"
+        error="demo.ui.erroPadraoMensagem"
     />
     <RText
         name="erroRosa"
         label="demo.ui.erroReestilizado"
-        :error="$t('demo.ui.erroReestilizadoMensagem')"
+        error="demo.ui.erroReestilizadoMensagem"
         :ui="{
             Utils: {
                 Error: {

@@ -35,7 +35,7 @@
                             :name="fieldName"
                             label="empresa.socios"
                             class="md:col-span-2"
-                            :rule="rule as Rule<'array'>"
+                            :rule="arrayRule(rule)"
                         >
                             <RObject :name="index">
                                 <RText
@@ -73,6 +73,8 @@
     import { z } from "zod";
 
     import type { Rule } from "#rform/types/presets";
+
+    const arrayRule = (rule?: Rule) => rule as Rule<"array">;
 
     const tipo = ref("pj");
 

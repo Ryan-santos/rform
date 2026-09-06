@@ -22,7 +22,6 @@
                 required
                 rule="brCpf"
                 :loading="checando"
-                :error="erroCpf"
             />
             <RText
                 name="email"
@@ -150,14 +149,11 @@
 
     const parse = ref("");
 
-    // O erro que a rule não tem como saber: ele vem do servidor, e entra pela prop
-    // `error` do campo — o mesmo canal do RUtilsError, sem passar por validação.
-    const erroCpf = ref<string | undefined>(undefined);
-
+    // O erro do servidor entra pelo **retorno** do onSubmit, e o Form o distribui por
+    // `name` — nenhum campo aqui carrega `:error`.
     const submit = async () => {
         enviando.value = true;
         checando.value = true;
-        erroCpf.value = undefined;
 
         await new Promise((resolve) => setTimeout(resolve, 900));
 
@@ -165,10 +161,9 @@
         enviando.value = false;
 
         if (data.value.cpf === "111.111.111-11") {
-            erroCpf.value = t("checkout.cpfDuplicado");
             parse.value = t("checkout.recusado");
 
-            return;
+            return { cpf: t("checkout.cpfDuplicado") };
         }
 
         parse.value = t("checkout.aceito");

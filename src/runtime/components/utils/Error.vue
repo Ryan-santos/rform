@@ -14,14 +14,16 @@
 
 <script lang="ts">
     /**
-     * Mensagem de erro do campo, alimentada pelo `error` que a validação escreve.
+     * Mensagem de erro do campo. Chega pronta: o `errorsBag` empurra a mensagem já
+     * resolvida, e o `error` do call site quem traduz é o `useField`.
      */
     import { useUtil } from "#rform/composables";
-    import type { DeepPartial } from "#rform/types";
+    import type { DeepPartial, TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
+    // Sem sentinela `error: ""`, como no Label: `error` é `TrInput`, e num app com
+    // i18n `""` não é nenhum dos membros desse tipo.
     export const defaults = defineDefaults({
-        error: "",
         ui: {
             container: "text-(--rf-color-danger) ml-1 text-sm font-semibold tracking-wide",
             icon: {
@@ -32,7 +34,7 @@
     });
 
     export type Props = {
-        error?: string;
+        error?: TrInput;
         ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>

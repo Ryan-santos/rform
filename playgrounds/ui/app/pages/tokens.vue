@@ -1,10 +1,7 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="Trocar tema é trocar variável"
-            description="Nenhum ui do módulo foi tocado abaixo. O que muda é o valor das variáveis, escrito num style inline no wrapper."
-        >
-            <div class="flex flex-row flex-wrap gap-2 pb-4">
+    <div class="flex flex-col gap-6">
+        <Card title="tema">
+            <div class="flex flex-row flex-wrap gap-2">
                 <button
                     v-for="tema in temas"
                     :key="tema.nome"
@@ -21,10 +18,11 @@
                 </button>
             </div>
 
-            <div
-                :style="vars"
-                class="rounded-2xl border border-contrast/10 p-4"
-            >
+            <Json :value="vars" />
+        </Card>
+
+        <Scenario :value="data">
+            <div :style="vars">
                 <RForm
                     v-model="data"
                     class="flex flex-col gap-4"
@@ -48,25 +46,20 @@
                     />
                     <RSwitch
                         name="ligado"
-                        placeholder="usa --rf-color-primary"
+                        placeholder="Ligado"
                         :default="true"
                     />
                 </RForm>
             </div>
-        </Card>
-
-        <Card
-            title="As variáveis do tema em foco"
-            description="É isto que o wrapper acima declara — e num app de verdade elas moram num @layer rform do seu CSS."
-        >
-            <Json :value="temas.find((tema) => tema.nome === atual)?.vars" />
-        </Card>
+        </Scenario>
     </div>
 </template>
 
 <script setup lang="ts">
     import { computed, ref } from "vue";
 
+    // Nenhum `ui` é tocado aqui: o que muda é o valor das variáveis, num style
+    // inline sobre o wrapper.
     const temas = [
         {
             nome: "padrão",

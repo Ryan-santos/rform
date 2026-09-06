@@ -7,11 +7,6 @@
             />
         </Head>
 
-        <NuxtLoadingIndicator
-            color="var(--color-primary)"
-            :height="5"
-        />
-
         <NuxtPage />
     </NuxtLayout>
 </template>

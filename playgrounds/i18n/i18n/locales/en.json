@@ -4,12 +4,9 @@
         "nomeCompleto": "full name",
         "email": "E-mail",
         "emailExemplo": "you{'@'}company.com",
-        "senha": "Password",
         "descricao": "Description",
         "enviar": "Submit",
-        "max": "At most {n} characters",
         "cpf": "CPF",
-        "telefone": "Phone",
         "endereco": "Address",
         "cep": "CEP",
         "rua": "Street",
@@ -27,12 +24,18 @@
         "cidade": "City",
         "socios": "Partners (custom slot)"
     },
-    "campos": {
-        "itens": "one item | {n} items"
-    },
     "traducao": {
         "titular": "Account holder name",
         "ajudaMax": "At most {n} characters",
         "socios": "Partners"
+    },
+    "rform": {
+        "presets": {
+            "rules": {
+                "min": {
+                    "length": "At least {min} character (app). | At least {min} characters (app)."
+                }
+            }
+        }
     }
 }

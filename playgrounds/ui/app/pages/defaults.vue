@@ -1,8 +1,8 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="app/rform/defaults.ts, aplicado"
-            description="Nenhum campo abaixo passa ui. O input maior, o placeholder em versalete e o erro em itálico vêm todos do arquivo do projeto."
+    <div class="flex flex-col gap-6">
+        <Scenario
+            title="sem ui no call site"
+            :value="data"
         >
             <RForm
                 v-model="data"
@@ -11,7 +11,7 @@
                 <RText
                     name="nome"
                     label="Nome"
-                    placeholder="input com p-4, do defaults"
+                    placeholder="input com p-4"
                 />
                 <RText
                     name="erro"
@@ -20,7 +20,7 @@
                 />
                 <RSelect
                     name="uf"
-                    label="Select com popover w-80"
+                    label="UF"
                     placeholder="selecione"
                     :options="['SP', 'RJ', 'MG', 'BA', 'RS']"
                 />
@@ -31,11 +31,11 @@
                     :rows="2"
                 />
             </RForm>
-        </Card>
+        </Scenario>
 
-        <Card
-            title="A prop ainda ganha"
-            description="O mesmo RText, com ui no call site: a última fonte da cadeia."
+        <Scenario
+            title="a prop ganha"
+            :value="data"
         >
             <RForm
                 v-model="data"
@@ -54,11 +54,7 @@
                     }"
                 />
             </RForm>
-        </Card>
-
-        <Card title="model">
-            <Json :value="data" />
-        </Card>
+        </Scenario>
     </div>
 </template>
 

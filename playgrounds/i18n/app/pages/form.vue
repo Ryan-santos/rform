@@ -1,97 +1,11 @@
 <template>
-    <DemoPage
-        title="Form"
-        tag="RForm"
-        :source
-        :form="false"
-        description="O mesmo cadastro de cliente PF montado nos três modos do useRForm. Troque de aba: o formulário na tela é o mesmo, o que muda é de onde vêm a UI, os tipos e a validação."
-    >
-        <DemoModes
-            v-model="mode"
-            :modes="modes"
-        />
-
-        <Demo
-            v-if="mode === 'schema'"
-            id="modo-schema"
-            script="modo-schema"
-            title="Modo 1 — schema completo (renderiza UI)"
-            description="useRForm(schema) devolve data, rules e schema. O RForm recebe o schema e monta o formulário sozinho — não há uma única tag de campo escrita à mão aqui."
+    <div class="flex flex-col gap-6">
+        <Scenario
+            title="todos os campos"
+            :value="data"
         >
             <RForm
-                v-model="schemaData"
-                :schema="schemaFields"
-                :on-submit="submit"
-                class="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-                <DemoActions />
-            </RForm>
-        </Demo>
-
-        <Demo
-            v-if="mode === 'zod'"
-            id="modo-zod"
-            script="modo-zod"
-            title="Modo 2 — só zod (sem UI gerada)"
-            description="useRForm recebe um objeto só de ZodType, então devolve data e rules — e nada de schema. A UI é sua; o rules agregado valida o objeto inteiro no submit."
-        >
-            <RForm
-                v-model="zodData"
-                :on-submit="submit"
-                class="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-                <RText
-                    name="nome"
-                    label="form.nome"
-                    placeholder="form.nomeCompleto"
-                    required
-                />
-                <RText
-                    name="cpf"
-                    label="form.cpf"
-                    mask="brCpf"
-                    required
-                />
-                <RText
-                    name="email"
-                    label="form.email"
-                    placeholder="form.emailExemplo"
-                />
-                <RText
-                    name="telefone"
-                    label="form.telefone"
-                    mask="brTelefone"
-                />
-                <RObject
-                    name="endereco"
-                    label="form.endereco"
-                    class="md:col-span-2"
-                >
-                    <RText
-                        name="cep"
-                        label="form.cep"
-                        mask="brCep"
-                    />
-                    <RText
-                        name="rua"
-                        label="form.rua"
-                    />
-                </RObject>
-
-                <DemoActions submit-text="submit (roda rules.safeParseAsync)" />
-            </RForm>
-        </Demo>
-
-        <Demo
-            v-if="mode === 'ts'"
-            id="modo-ts"
-            script="modo-ts"
-            title="Modo 3 — só TS (sem runtime)"
-            description="useRForm<T>() não recebe nada em runtime: só tipa o data. Sem rules e sem schema — quem valida são os presets declarados em cada campo, e o painel ao lado mostra que safeParse não existe neste modo."
-        >
-            <RForm
-                v-model="tsData"
-                :on-submit="submit"
+                v-model="data"
                 class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RText
@@ -105,21 +19,60 @@
                     name="cpf"
                     label="form.cpf"
                     mask="brCpf"
-                    required
                     rule="brCpf"
                 />
-                <RText
-                    name="email"
-                    label="form.email"
-                    placeholder="form.emailExemplo"
-                    rule="email"
+                <RTextarea
+                    name="descricao"
+                    label="form.descricao"
+                    length="140"
+                    :rows="2"
                 />
-                <RText
-                    name="telefone"
-                    label="form.telefone"
-                    mask="brTelefone"
-                    rule="brTelefone"
+                <RNumber
+                    name="numero"
+                    label="form.numero"
+                    :min="0"
+                    :max="100"
+                    :step="10"
                 />
+                <RSelect
+                    name="uf"
+                    label="form.uf"
+                    placeholder="form.selecione"
+                    :options="['SP', 'RJ', 'MG']"
+                    search
+                />
+                <RDate
+                    name="nascimento"
+                    label="form.nascimento"
+                />
+                <RHour
+                    name="hora"
+                    label="~~Hora"
+                />
+                <RPin
+                    name="codigo"
+                    label="~~Código"
+                    :separator="3"
+                />
+                <RColor
+                    name="cor"
+                    label="~~Cor"
+                />
+                <RFile
+                    name="anexo"
+                    label="~~Anexo"
+                    accept="png, jpg"
+                />
+                <RCalendar
+                    name="agenda"
+                    label="~~Agenda"
+                    mode="range"
+                />
+                <RSwitch
+                    name="aceite"
+                    placeholder="form.aceiteTermos"
+                />
+
                 <RObject
                     name="endereco"
                     label="form.endereco"
@@ -137,187 +90,135 @@
                     />
                 </RObject>
 
-                <DemoActions submit-text="submit (roda as rules dos campos)" />
-            </RForm>
-        </Demo>
+                <RArray
+                    v-slot="{ index }"
+                    name="emails"
+                    label="form.email"
+                    class="md:col-span-2"
+                    :min="1"
+                >
+                    <RText
+                        :name="index"
+                        placeholder="form.emailExemplo"
+                        rule="email"
+                    />
+                </RArray>
 
-        <template #output>
-            <div class="flex min-h-0 grow flex-col gap-3">
-                <DemoJson
-                    :value="active.data"
-                    title="data"
-                    class="min-h-0 flex-1"
+                <button
+                    type="submit"
+                    class="w-fit cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm text-white md:col-span-2"
+                >
+                    {{ $t("form.enviar") }}
+                </button>
+            </RForm>
+        </Scenario>
+
+        <Scenario
+            title="select: os quatro formatos de options"
+            :value="select"
+        >
+            <RForm
+                v-model="select"
+                class="flex flex-col gap-4"
+            >
+                <RSelect
+                    name="primitivo"
+                    label="~~array primitivo"
+                    placeholder="form.selecione"
+                    :options="['pequeno', 'médio', 'grande']"
                 />
-                <DemoJson
-                    :value="active.parse"
-                    :title="active.rules ? 'rules.safeParseAsync(data)' : 'sem rules neste modo'"
-                    class="min-h-0 flex-1"
-                />
-            </div>
-        </template>
-    </DemoPage>
+
+                <RSelect
+                    v-slot="{ selected }"
+                    name="cor"
+                    label="~~objeto { chave: label }"
+                    placeholder="form.selecione"
+                    :options="{ blue: 'azul', red: 'vermelho', green: 'verde' }"
+                >
+                    <span
+                        class="block size-3 rounded-full"
+                        :style="`background-color: ${selected.value}`"
+                    />
+                    <p>{{ selected.label }}</p>
+                </RSelect>
+
+                <RSelect
+                    v-slot="{ selected, list }"
+                    name="responsavel"
+                    label="~~single + modelFull, com slot"
+                    placeholder="form.selecione"
+                    :options="users"
+                    key-value="id"
+                    key-label="name"
+                    model-full
+                >
+                    <img
+                        :src="selected.original.picture"
+                        class="block size-5 rounded-full bg-primary"
+                    />
+                    <p>{{ selected.label }}</p>
+                    <p
+                        v-if="list"
+                        class="ml-auto text-xs text-contrast/40"
+                    >
+                        {{ selected.original.role }}
+                    </p>
+                </RSelect>
+
+                <RSelect
+                    v-slot="{ selected, list }"
+                    name="equipe"
+                    label="~~multiple + modelFull"
+                    placeholder="form.selecione"
+                    :options="users"
+                    key-value="id"
+                    key-label="name"
+                    multiple
+                    model-full
+                >
+                    <template
+                        v-for="item in selected"
+                        :key="String(item.value)"
+                    >
+                        <img
+                            :src="item.original?.picture"
+                            class="block size-5 rounded-full bg-primary"
+                        />
+                        <p v-if="list">
+                            {{ item.label }}
+                        </p>
+                    </template>
+                </RSelect>
+            </RForm>
+        </Scenario>
+    </div>
 </template>
 
 <script setup lang="ts">
-    import { computed, ref } from "vue";
-    import { z } from "zod";
+    import { ref } from "vue";
 
-    import source from "./form.vue?raw";
-
-    const mode = ref("schema");
-
-    const modes = [
+    const users = [
         {
-            id: "schema",
-            label: "1 · schema completo",
-            description: "O schema é o dado: ele descreve os campos, e o RForm os renderiza."
+            id: 1,
+            name: "João Silva",
+            role: "Suporte",
+            picture: "https://randomuser.me/api/portraits/men/1.jpg"
         },
         {
-            id: "zod",
-            label: "2 · só zod",
-            description:
-                "Sem UI gerada. Tipos e validação vêm do zod; o formulário é escrito à mão."
+            id: 2,
+            name: "Maria Souza",
+            role: "Financeiro",
+            picture: "https://randomuser.me/api/portraits/women/2.jpg"
         },
         {
-            id: "ts",
-            label: "3 · só TS",
-            description:
-                "Nada em runtime. Só o tipo do data; a validação fica nos presets de cada campo."
+            id: 3,
+            name: "Pedro Santos",
+            role: "Comercial",
+            picture: "https://randomuser.me/api/portraits/men/3.jpg"
         }
     ];
 
-    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map((uf) => ({ id: uf, name: uf }));
+    const data = ref<Record<string, unknown>>({});
 
-    // #region modo-schema
-    const {
-        data: schemaData,
-        rules: schemaRules,
-        schema: schemaFields
-    } = useRForm({
-        nome: {
-            type: "text",
-            label: "form.nome",
-            placeholder: "form.nomeCompleto",
-            rule: z.string().min(2, "mínimo 2 caracteres")
-        },
-        cpf: {
-            type: "text",
-            label: "form.cpf",
-            mask: "brCpf",
-            rule: "brCpf"
-        },
-        email: {
-            type: "text",
-            label: "form.email",
-            placeholder: "form.emailExemplo",
-            rule: "email"
-        },
-        telefone: {
-            type: "text",
-            label: "form.telefone",
-            mask: "brTelefone",
-            rule: "brTelefone"
-        },
-        nascimento: {
-            type: "date",
-            label: "form.nascimento"
-        },
-        endereco: {
-            type: "object",
-            label: "form.endereco",
-            children: {
-                cep: {
-                    type: "text",
-                    label: "form.cep",
-                    mask: "brCep",
-                    rule: "brCep"
-                },
-                rua: {
-                    type: "text",
-                    label: "form.rua"
-                },
-                numero: {
-                    type: "number",
-                    label: "form.numero"
-                },
-                /**
-                 * Em schema o `options` só aceita array de objetos: o generic
-                 * `Opts` do RSelect cai no default `OptArrayObj` quando o tipo
-                 * vem de `Components["Select"]`. As chaves são as do defaults
-                 * do componente — `id` e `name`.
-                 */
-                uf: {
-                    type: "select",
-                    label: "form.uf",
-                    placeholder: "form.selecione",
-                    options: ufs
-                }
-            }
-        },
-        aceite: {
-            type: "switch",
-            placeholder: "form.aceiteTermos",
-            rule: z.literal(true, "É preciso aceitar os termos.")
-        }
-    });
-    // #endregion
-
-    // #region modo-zod
-    const { data: zodData, rules: zodRules } = useRForm({
-        nome: z.string().min(2, "mínimo 2 caracteres"),
-        cpf: z.string().min(14, "CPF incompleto"),
-        email: z.email("e-mail inválido"),
-        telefone: z.string().optional(),
-        endereco: z.object({
-            cep: z.string().min(9, "CEP incompleto"),
-            rua: z.string().min(3, "informe a rua")
-        })
-    });
-    // #endregion
-
-    // #region modo-ts
-    type Cadastro = {
-        nome?: string;
-        cpf?: string;
-        email?: string;
-        telefone?: string;
-        endereco?: {
-            cep?: string;
-            rua?: string;
-        };
-    };
-
-    const { data: tsData } = useRForm<Cadastro>();
-    // #endregion
-
-    const parses = ref<Record<string, unknown>>({});
-
-    const active = computed(() => {
-        const table = {
-            schema: { data: schemaData.value, rules: schemaRules },
-            zod: { data: zodData.value, rules: zodRules },
-            ts: { data: tsData.value, rules: undefined }
-        } as const;
-
-        const current = table[mode.value as keyof typeof table];
-
-        return {
-            data: current.data,
-            rules: current.rules,
-            parse:
-                parses.value[mode.value] ??
-                (current.rules ? "clique em submit" : "este modo não devolve rules")
-        };
-    });
-
-    // `safeParseAsync`, e não `safeParse`: rule referenciada por nome de preset vira
-    // `z.any().superRefine(async …)` no objeto agregado, e um parse síncrono lançaria.
-    const submit = async () => {
-        const { rules, data } = active.value;
-
-        parses.value = {
-            ...parses.value,
-            [mode.value]: rules ? await rules.safeParseAsync(data) : "este modo não devolve rules"
-        };
-    };
+    const select = ref<Record<string, unknown>>({});
 </script>

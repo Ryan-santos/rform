@@ -1,10 +1,10 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="Um schema servido pela rede"
-            description="O RDynamic recebe o JSON de /api/schema. Trocar o tipo é uma requisição nova — o template não muda."
+    <div class="flex flex-col gap-6">
+        <Scenario
+            title="RDynamic com schema de /api/schema"
+            :value="data"
         >
-            <div class="mb-4 flex w-fit flex-row gap-1 rounded-xl bg-background-100 p-1">
+            <div class="flex w-fit flex-row gap-1 rounded-xl bg-background-100 p-1">
                 <button
                     v-for="option in ['pj', 'pf']"
                     :key="option"
@@ -30,13 +30,9 @@
                     :schema
                 />
             </RForm>
-        </Card>
+        </Scenario>
 
-        <Card title="model">
-            <Json :value="data" />
-        </Card>
-
-        <Card title="o schema, como veio da rota">
+        <Card title="schema">
             <Json :value="schema" />
         </Card>
     </div>

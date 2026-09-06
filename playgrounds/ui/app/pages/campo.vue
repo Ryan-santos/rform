@@ -1,12 +1,12 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="ui é um DeepPartial"
-            description="Você escreve só a camada que muda, e quem junta as classes é o tailwind-merge: p-6 troca o padding e o anel de foco continua ali."
+    <div class="flex flex-col gap-6">
+        <Scenario
+            title="ui é DeepPartial"
+            :value="data"
         >
             <RForm
                 v-model="data"
-                class="grid gap-4 md:grid-cols-2"
+                class="flex flex-col gap-4"
             >
                 <RText
                     name="padrao"
@@ -26,15 +26,15 @@
                     }"
                 />
             </RForm>
-        </Card>
+        </Scenario>
 
-        <Card
-            title="null apaga a camada"
-            description="undefined é 'não passei' e é pulado. null é explícito: zera as classes. String vazia não serve, porque o tailwind-merge junta e o default sobrevive."
+        <Scenario
+            title="null apaga"
+            :value="data"
         >
             <RForm
                 v-model="data"
-                class="grid gap-4 md:grid-cols-2"
+                class="flex flex-col gap-4"
             >
                 <RText
                     name="zerado"
@@ -56,15 +56,15 @@
                     }"
                 />
             </RForm>
-        </Card>
+        </Scenario>
 
-        <Card
-            title="O popover é do Dropdown"
-            description="Toda aparência de painel mora em ui.Utils.Dropdown.popover, nunca num class no template do campo — é por isso que Select, Date e Color convivem com larguras diferentes."
+        <Scenario
+            title="popover"
+            :value="data"
         >
             <RForm
                 v-model="data"
-                class="grid gap-4 md:grid-cols-2"
+                class="flex flex-col gap-4"
             >
                 <RSelect
                     name="medido"
@@ -86,11 +86,7 @@
                     }"
                 />
             </RForm>
-        </Card>
-
-        <Card title="model">
-            <Json :value="data" />
-        </Card>
+        </Scenario>
     </div>
 </template>
 

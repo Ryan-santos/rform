@@ -4,10 +4,7 @@
         "nomeCompleto": "full name",
         "email": "E-mail",
         "emailExemplo": "you{'@'}company.com",
-        "senha": "Password",
-        "descricao": "Description",
         "enviar": "Submit",
-        "max": "At most {n} characters",
         "cpf": "CPF",
         "telefone": "Phone",
         "endereco": "Address",
@@ -21,18 +18,9 @@
     },
     "empresa": {
         "razaoSocial": "Legal name",
-        "razaoSocialExemplo": "company name",
         "cnpj": "CNPJ",
         "abertura": "Founding date",
         "cidade": "City",
-        "socios": "Partners (custom slot)"
-    },
-    "campos": {
-        "itens": "one item | {n} items"
-    },
-    "traducao": {
-        "titular": "Account holder name",
-        "ajudaMax": "At most {n} characters",
         "socios": "Partners"
     },
     "checkout": {
@@ -46,7 +34,6 @@
     "editar": {
         "descartar": "discard changes",
         "sujo": "dirty",
-        "limpo": "clean",
-        "original": "original record"
+        "limpo": "clean"
     }
 }

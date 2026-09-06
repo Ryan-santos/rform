@@ -1,10 +1,13 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="A assimetria do ~~"
-            description="Num app COM @nuxtjs/i18n, tr remove o marcador. Sem ponte, tr é a identidade para tudo que não começa com rform. — então o ~~ sobrevive na tela. É custo aceito, não bug: sem i18n não há nada contra o que resolver uma chave do app."
+    <div class="flex flex-col gap-6">
+        <Scenario
+            title="~~ sobrevive sem ponte"
+            :value="data"
         >
-            <RForm v-model="data">
+            <RForm
+                v-model="data"
+                class="flex flex-col gap-4"
+            >
                 <RText
                     name="literal"
                     label="~~Este label tem ~~ na frente"
@@ -16,23 +19,16 @@
                     placeholder="e é o jeito de escrever aqui"
                 />
             </RForm>
-        </Card>
+        </Scenario>
 
-        <Card
-            title="Chave do módulo, escrita por extenso"
-            description="rform.* continua resolvendo: é o único prefixo que o motor próprio trata."
-        >
+        <Card title="chave do módulo, por extenso">
             <p class="font-mono text-sm text-primary">tr("rform.formats.date") → {{ pattern }}</p>
-        </Card>
-
-        <Card title="model">
-            <Json :value="data" />
         </Card>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { ref } from "vue";
+    import { computed, ref } from "vue";
 
     import { tr } from "#rform/utils";
 

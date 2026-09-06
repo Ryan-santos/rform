@@ -2,7 +2,7 @@
     <div class="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-6 py-6">
         <header class="flex flex-row flex-wrap items-center gap-x-4 gap-y-2">
             <h1 class="font-mono text-sm font-bold">
-                rform <span class="text-primary">·</span> basic
+                rform <span class="text-primary">·</span> i18n
             </h1>
 
             <nav class="flex flex-row flex-wrap gap-1">
@@ -22,6 +22,7 @@
             </nav>
 
             <div class="ml-auto flex flex-row items-center gap-2">
+                <Locale />
                 <Theme />
             </div>
         </header>

@@ -1,66 +1,53 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="Mesmo code mescla"
-            description="app/rform/locales/pt-BR.ts declara duas chaves. O resto do pack continua vindo do embutido — nada some."
+    <Scenario
+        title="pack do usuário mescla no embutido"
+        :value="data"
+    >
+        <RForm
+            v-model="data"
+            class="flex flex-col gap-4"
         >
-            <div class="flex flex-row items-center gap-3 pb-2">
-                <span class="text-xs text-contrast/40">idioma</span>
-                <Locale />
-            </div>
-
-            <RForm v-model="data">
-                <RArray
-                    v-slot="{ index }"
-                    name="contatos"
-                    label="Contatos"
-                    :min="1"
-                >
-                    <RText
-                        :name="index"
-                        placeholder="contato"
-                        rule="required"
-                    />
-                </RArray>
-
-                <RSelect
-                    name="uf"
-                    label="UF"
-                    placeholder="selecione"
-                    :options="['SP', 'RJ', 'MG']"
-                    search
+            <RArray
+                v-slot="{ index }"
+                name="contatos"
+                label="Contatos"
+                :min="1"
+            >
+                <RText
+                    :name="index"
+                    placeholder="contato"
+                    rule="required"
                 />
+            </RArray>
 
-                <RFile
-                    name="anexo"
-                    label="Anexo"
-                    accept="png, jpg"
-                />
+            <RSelect
+                name="uf"
+                label="UF"
+                placeholder="selecione"
+                :options="['SP', 'RJ', 'MG']"
+                search
+            />
 
-                <button
-                    type="submit"
-                    class="mt-2 w-fit cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm text-white"
-                >
-                    submit
-                </button>
-            </RForm>
-        </Card>
+            <RFile
+                name="anexo"
+                label="Anexo"
+                accept="png, jpg"
+            />
 
-        <Card
-            title="Um code que o pack embutido não tem"
-            description="es só declara duas chaves. Escolha 'es' acima: o botão do RArray fala espanhol, e o texto de busca do RSelect cai no fallback — o pack default."
-        >
-            <p class="font-mono text-xs text-contrast/50">app/rform/locales/es.ts</p>
-        </Card>
-
-        <Card title="model">
-            <Json :value="data" />
-        </Card>
-    </div>
+            <button
+                type="submit"
+                class="w-fit cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm text-white"
+            >
+                submit
+            </button>
+        </RForm>
+    </Scenario>
 </template>
 
 <script setup lang="ts">
     import { ref } from "vue";
 
+    // `app/rform/locales/pt-BR.ts` troca duas chaves; `es.ts` só tem essas duas, e
+    // o resto do pack cai no fallback. Troque o idioma no cabeçalho.
     const data = ref<Record<string, unknown>>({});
 </script>

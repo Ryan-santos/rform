@@ -4,12 +4,9 @@
         "nomeCompleto": "nome completo",
         "email": "E-mail",
         "emailExemplo": "voce{'@'}empresa.com",
-        "senha": "Senha",
         "descricao": "Descrição",
         "enviar": "Enviar",
-        "max": "No máximo {n} caracteres",
         "cpf": "CPF",
-        "telefone": "Telefone",
         "endereco": "Endereço",
         "cep": "CEP",
         "rua": "Rua",
@@ -27,12 +24,18 @@
         "cidade": "Cidade",
         "socios": "Sócios (slot custom)"
     },
-    "campos": {
-        "itens": "um item | {n} itens"
-    },
     "traducao": {
         "titular": "Nome do titular",
         "ajudaMax": "No máximo {n} caracteres",
         "socios": "Sócios"
+    },
+    "rform": {
+        "presets": {
+            "rules": {
+                "min": {
+                    "length": "Mínimo de {min} caractere (app). | Mínimo de {min} caracteres (app)."
+                }
+            }
+        }
     }
 }

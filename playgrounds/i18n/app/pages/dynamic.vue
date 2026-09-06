@@ -1,51 +1,34 @@
 <template>
-    <DemoPage
-        title="Dynamic"
-        tag="RDynamic"
-        :source
-        :form="false"
-        description="Onboarding de empresa, com o schema chegando como dado. Os mesmos três modos do useRForm — e aqui fica visível que só o Modo 1 alimenta o RDynamic: sem schema não há o que renderizar."
-    >
-        <DemoModes
-            v-model="mode"
-            :modes="modes"
-        />
-
-        <Demo
-            v-if="mode === 'schema'"
-            id="modo-schema"
-            script="modo-schema"
-            title="Modo 1 — schema completo (renderiza UI)"
-            description="O RDynamic percorre o schema e resolve cada type pelo components-map. object e array recursam sozinhos; um campo com slot em vez de type devolve o controle pra você."
-        >
+    <div class="flex flex-col gap-6">
+        <Card title="schema">
             <div class="flex w-fit flex-row gap-1 rounded-xl bg-background-100 p-1">
                 <button
-                    v-for="option in tipos"
-                    :key="option.id"
+                    v-for="option in ['pj', 'pf']"
+                    :key="option"
                     type="button"
-                    class="rounded-lg px-3 py-1.5 text-sm transition-colors duration-300"
+                    class="cursor-pointer rounded-lg px-3 py-1.5 text-sm transition-colors"
                     :class="
-                        tipo === option.id
+                        tipo === option
                             ? 'bg-primary text-white'
                             : 'text-contrast/60 hover:text-primary'
                     "
-                    @click="tipo = option.id"
+                    @click="tipo = option"
                 >
-                    {{ option.label }}
+                    {{ option }}
                 </button>
             </div>
+        </Card>
 
-            <p class="max-w-prose text-sm text-contrast/50">
-                Os dois botões trocam o schema, não o template. É o mesmo
-                <code class="font-mono">&lt;RDynamic&gt;</code> renderizando formulários diferentes.
-            </p>
-
+        <Scenario
+            title="RDynamic, com slot no lugar de um type"
+            :value="data"
+        >
             <RForm
-                v-model="apiData"
+                v-model="data"
                 :on-submit="submit"
                 class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
-                <RDynamic :schema="apiSchema">
+                <RDynamic :schema="api.schema">
                     <template #socios="{ fieldName, rule }">
                         <RArray
                             v-slot="{ index }"
@@ -70,116 +53,19 @@
                     </template>
                 </RDynamic>
 
-                <DemoActions submit-text="submit (roda rules.safeParseAsync)" />
-            </RForm>
-        </Demo>
-
-        <Demo
-            v-if="mode === 'zod'"
-            id="modo-zod"
-            script="modo-zod"
-            title="Modo 2 — só zod (sem UI gerada)"
-            description="Passando só ZodType, o useRForm devolve data e rules — e nenhum schema. Sem schema o RDynamic não tem o que renderizar, então o formulário abaixo é escrito à mão; o zod agregado continua validando o objeto inteiro."
-        >
-            <RForm
-                v-model="zodData"
-                :on-submit="submit"
-                class="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-                <RText
-                    name="empresa"
-                    label="empresa.razaoSocial"
-                    placeholder="empresa.razaoSocialExemplo"
-                    required
-                />
-                <RText
-                    name="cnpj"
-                    label="empresa.cnpj"
-                    mask="brCnpj"
-                    required
-                />
-                <RObject
-                    name="endereco"
-                    label="form.endereco"
-                    class="md:col-span-2"
+                <button
+                    type="submit"
+                    class="w-fit cursor-pointer rounded-lg bg-primary px-4 py-2 text-sm text-white md:col-span-2"
                 >
-                    <RText
-                        name="cep"
-                        label="form.cep"
-                        mask="brCep"
-                    />
-                    <RText
-                        name="cidade"
-                        label="empresa.cidade"
-                    />
-                </RObject>
-
-                <DemoActions submit-text="submit (roda rules.safeParseAsync)" />
+                    {{ $t("form.enviar") }}
+                </button>
             </RForm>
-        </Demo>
+        </Scenario>
 
-        <Demo
-            v-if="mode === 'ts'"
-            id="modo-ts"
-            script="modo-ts"
-            title="Modo 3 — só TS (sem runtime)"
-            description="useRForm<T>() não recebe argumento nenhum: nada de schema, nada de rules, zero custo em runtime. Sobra o tipo do data — e a validação volta a ser responsabilidade de cada campo."
-        >
-            <RForm
-                v-model="tsData"
-                :on-submit="submit"
-                class="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-                <RText
-                    name="empresa"
-                    label="empresa.razaoSocial"
-                    placeholder="empresa.razaoSocialExemplo"
-                    required
-                    rule="required"
-                />
-                <RText
-                    name="cnpj"
-                    label="empresa.cnpj"
-                    mask="brCnpj"
-                    required
-                    rule="brCnpj"
-                />
-                <RObject
-                    name="endereco"
-                    label="form.endereco"
-                    class="md:col-span-2"
-                >
-                    <RText
-                        name="cep"
-                        label="form.cep"
-                        mask="brCep"
-                        rule="brCep"
-                    />
-                    <RText
-                        name="cidade"
-                        label="empresa.cidade"
-                    />
-                </RObject>
-
-                <DemoActions submit-text="submit (roda as rules dos campos)" />
-            </RForm>
-        </Demo>
-
-        <template #output>
-            <div class="flex min-h-0 grow flex-col gap-3">
-                <DemoJson
-                    :value="active.data"
-                    title="data"
-                    class="min-h-0 flex-1"
-                />
-                <DemoJson
-                    :value="active.parse"
-                    :title="active.rules ? 'rules.safeParseAsync(data)' : 'sem rules neste modo'"
-                    class="min-h-0 flex-1"
-                />
-            </div>
-        </template>
-    </DemoPage>
+        <Card title="rules.safeParseAsync(data)">
+            <Json :value="parse" />
+        </Card>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -188,39 +74,8 @@
 
     import type { Rule } from "#rform/types/presets";
 
-    import source from "./dynamic.vue?raw";
-
-    const mode = ref("schema");
-
-    const modes = [
-        {
-            id: "schema",
-            label: "1 · schema completo",
-            description: "O schema é o dado. O RDynamic o percorre e monta a árvore de campos."
-        },
-        {
-            id: "zod",
-            label: "2 · só zod",
-            description:
-                "Sem UI gerada: o useRForm não devolve schema, então não há o que o RDynamic renderize."
-        },
-        {
-            id: "ts",
-            label: "3 · só TS",
-            description: "Sem nada em runtime. Só o tipo do data."
-        }
-    ];
-
-    const tipos = [
-        { id: "pj", label: "Pessoa jurídica" },
-        { id: "pf", label: "Pessoa física" }
-    ];
-
     const tipo = ref("pj");
 
-    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map((uf) => ({ id: uf, name: uf }));
-
-    // #region modo-schema
     const pj = useRForm({
         empresa: {
             type: "text",
@@ -251,18 +106,6 @@
                 cidade: {
                     type: "text",
                     label: "empresa.cidade"
-                },
-                /**
-                 * Em schema o `options` só aceita array de objetos: o generic
-                 * `Opts` do RSelect cai no default `OptArrayObj` quando o tipo
-                 * vem de `Components["Select"]`. As chaves são as do defaults
-                 * do componente — `id` e `name`.
-                 */
-                uf: {
-                    type: "select",
-                    label: "form.uf",
-                    placeholder: "form.selecione",
-                    options: ufs
                 }
             }
         },
@@ -284,92 +127,25 @@
             label: "form.cpf",
             mask: "brCpf",
             rule: "brCpf"
-        },
-        endereco: {
-            type: "object",
-            label: "form.endereco",
-            children: {
-                cep: {
-                    type: "text",
-                    label: "form.cep",
-                    mask: "brCep",
-                    rule: "brCep"
-                },
-                cidade: {
-                    type: "text",
-                    label: "empresa.cidade"
-                }
-            }
         }
     });
 
     const api = computed(() => (tipo.value === "pj" ? pj : pf));
 
-    const apiSchema = computed(() => api.value.schema);
-    // #endregion
-
     // Dois `useRForm`, um vivo: o schema é um valor simples, então trocar qual deles
     // o `RDynamic` recebe já troca o formulário.
-    const apiData = computed({
+    const data = computed({
         get: () => api.value.data.value as Record<string, unknown>,
         set: (value) => {
             api.value.data.value = value as never;
         }
     });
 
-    // #region modo-zod
-    const { data: zodData, rules: zodRules } = useRForm({
-        empresa: z.string().min(2, "informe a razão social"),
-        cnpj: z.string().min(18, "CNPJ incompleto"),
-        endereco: z.object({
-            cep: z.string().min(9, "CEP incompleto"),
-            cidade: z.string().min(2, "informe a cidade")
-        })
-    });
-    // #endregion
-
-    // #region modo-ts
-    type Onboarding = {
-        empresa?: string;
-        cnpj?: string;
-        endereco?: {
-            cep?: string;
-            cidade?: string;
-        };
-    };
-
-    const { data: tsData } = useRForm<Onboarding>();
-    // #endregion
-
-    const parses = ref<Record<string, unknown>>({});
-
-    const active = computed(() => {
-        const table = {
-            schema: { data: apiData.value, rules: api.value.rules, key: `schema:${tipo.value}` },
-            zod: { data: zodData.value, rules: zodRules, key: "zod" },
-            ts: { data: tsData.value, rules: undefined, key: "ts" }
-        } as const;
-
-        const current = table[mode.value as keyof typeof table];
-
-        return {
-            data: current.data,
-            rules: current.rules,
-            key: current.key,
-            parse:
-                parses.value[current.key] ??
-                (current.rules ? "clique em submit" : "este modo não devolve rules")
-        };
-    });
+    const parse = ref<unknown>("clique em submit");
 
     // `safeParseAsync`, e não `safeParse`: rule referenciada por nome de preset vira
     // `z.any().superRefine(async …)` no objeto agregado, e um parse síncrono lançaria.
     const submit = async () => {
-        const { rules, data, key } = active.value;
-
-        parses.value = {
-            ...parses.value,
-            [key]: rules ? await rules.safeParseAsync(data) : "este modo não devolve rules"
-        };
+        parse.value = await api.value.rules.safeParseAsync(data.value);
     };
 </script>

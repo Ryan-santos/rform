@@ -1,10 +1,7 @@
 <template>
-    <div class="flex flex-col gap-4">
-        <Card
-            title="Uma tela que abre preenchida"
-            description="default semeia o campo quando o model está vazio; modelValue é o valor controlado. Numa tela de edição quem manda é o segundo."
-        >
-            <div class="mb-4 flex flex-row flex-wrap gap-2">
+    <div class="flex flex-col gap-6">
+        <Card title="registro">
+            <div class="flex flex-row flex-wrap gap-2">
                 <button
                     v-for="registro in registros"
                     :key="registro.id"
@@ -21,6 +18,13 @@
                 </button>
             </div>
 
+            <Json :value="original" />
+        </Card>
+
+        <Scenario
+            title="abre preenchida"
+            :value="data"
+        >
             <RForm
                 v-model="data"
                 class="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -46,33 +50,25 @@
                     placeholder="form.selecione"
                     :options="ufs"
                 />
+
+                <div class="flex flex-row flex-wrap items-center gap-3 md:col-span-2">
+                    <button
+                        type="button"
+                        class="cursor-pointer rounded-lg border border-contrast/10 px-4 py-2 text-sm"
+                        @click="carregar(atual)"
+                    >
+                        {{ $t("editar.descartar") }}
+                    </button>
+
+                    <span
+                        class="rounded-lg px-2 py-1 font-mono text-xs"
+                        :class="sujo ? 'bg-warn/15 text-warn' : 'bg-success/15 text-success'"
+                    >
+                        {{ sujo ? $t("editar.sujo") : $t("editar.limpo") }}
+                    </span>
+                </div>
             </RForm>
-
-            <div class="flex flex-row flex-wrap items-center gap-3 pt-4">
-                <button
-                    type="button"
-                    class="cursor-pointer rounded-lg border border-contrast/10 px-4 py-2 text-sm"
-                    @click="carregar(atual)"
-                >
-                    {{ $t("editar.descartar") }}
-                </button>
-
-                <span
-                    class="rounded-lg px-2 py-1 font-mono text-xs"
-                    :class="sujo ? 'bg-warn/15 text-warn' : 'bg-success/15 text-success'"
-                >
-                    {{ sujo ? $t("editar.sujo") : $t("editar.limpo") }}
-                </span>
-            </div>
-        </Card>
-
-        <Card title="model">
-            <Json :value="data" />
-        </Card>
-
-        <Card :title="$t('editar.original')">
-            <Json :value="original" />
-        </Card>
+        </Scenario>
     </div>
 </template>
 

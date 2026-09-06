@@ -1,7 +1,9 @@
-// @vitest-environment nuxt
-import { describe, expect, it } from "vitest";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+
+// @vitest-environment nuxt
+import { describe, expect, it } from "vitest";
+
 import { defineMask, defineRule } from "#rform/utils";
 
 // Vite rewrites `new URL(<template literal>, import.meta.url)`, so paths are
@@ -34,8 +36,9 @@ describe("preset helpers", () => {
 describe("#rform/utils barrel", () => {
     it("re-exports every util's named exports, not just its default", async () => {
         const utils = await read("rform/utils.ts");
-        const files = (await readdir(join(root, "src/runtime/utils")))
-            .filter(file => file.endsWith(".ts"));
+        const files = (await readdir(join(root, "src/runtime/utils"))).filter((file) =>
+            file.endsWith(".ts")
+        );
 
         for (const file of files) {
             expect(utils).toContain(`export * from "`);
@@ -78,7 +81,7 @@ describe("FieldType", () => {
     it("lists one member per field component, across both roots", async () => {
         const contents = await read("rform/types/fields.d.ts");
         const generated = [...contents.matchAll(/"([^"]+)"/g)]
-            .map(match => match[1] ?? "")
+            .map((match) => match[1] ?? "")
             .sort((a, b) => a.localeCompare(b));
 
         const roots = [
@@ -87,12 +90,14 @@ describe("FieldType", () => {
         ];
 
         // A set: the fixture replaces `Switch`, which is one member, not two.
-        const expected = [...new Set(
-            (await Promise.all(roots.map(dir => readdir(dir))))
-                .flat()
-                .filter(file => file.endsWith(".vue"))
-                .map(file => file.slice(0, -4).toLowerCase())
-        )].sort((a, b) => a.localeCompare(b));
+        const expected = [
+            ...new Set(
+                (await Promise.all(roots.map((dir) => readdir(dir))))
+                    .flat()
+                    .filter((file) => file.endsWith(".vue"))
+                    .map((file) => file.slice(0, -4).toLowerCase())
+            )
+        ].sort((a, b) => a.localeCompare(b));
 
         expect(generated).toEqual(expected);
     });

@@ -23,11 +23,7 @@
             class="flex flex-col gap-2"
         >
             <summary
-                class="
-                    w-fit cursor-pointer list-none rounded-md bg-secondary/10 px-2 py-1 text-xs
-                    font-bold tracking-widest text-secondary uppercase transition-colors
-                    hover:bg-secondary/20
-                "
+                class="w-fit cursor-pointer list-none rounded-md bg-secondary/10 px-2 py-1 text-xs font-bold tracking-widest text-secondary uppercase transition-colors hover:bg-secondary/20"
             >
                 código
             </summary>
@@ -55,22 +51,26 @@
 
 <script setup lang="ts">
     import { computed, inject, ref } from "vue";
+
     import { demoSourceKey, extractDemo, extractRegion } from "~/utils/demo";
 
-    const props = withDefaults(defineProps<{
-        /** Matched verbatim against the source to find this block in the template. */
-        id: string
-        title: string
-        description?: string
-        /** Name of a `// #region` block in the page's script to show above the template. */
-        script?: string
-        /** Classes for the wrapper around the live example. */
-        ui?: string
-    }>(), {
-        description: undefined,
-        script: undefined,
-        ui: "flex flex-col gap-4"
-    });
+    const props = withDefaults(
+        defineProps<{
+            /** Matched verbatim against the source to find this block in the template. */
+            id: string;
+            title: string;
+            description?: string;
+            /** Name of a `// #region` block in the page's script to show above the template. */
+            script?: string;
+            /** Classes for the wrapper around the live example. */
+            ui?: string;
+        }>(),
+        {
+            description: undefined,
+            script: undefined,
+            ui: "flex flex-col gap-4"
+        }
+    );
 
     const source = inject(demoSourceKey, ref(""));
 

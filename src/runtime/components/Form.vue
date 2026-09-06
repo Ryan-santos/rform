@@ -6,7 +6,7 @@
     >
         <LazyRDynamic
             v-if="hasSchema"
-            :schema="(props.schema as Schema)"
+            :schema="props.schema as Schema"
         >
             <template
                 v-for="slotName in namedSlotNames"
@@ -27,13 +27,15 @@
 </template>
 
 <script lang="ts">
+    import { computed, useSlots } from "vue";
+
+    import { useInjection, useProvide } from "#rform/composables";
     import type { Element, SlotScope } from "#rform/types";
     import type { Schema } from "#rform/types/schema";
-    import { useInjection, useProvide } from "#rform/composables";
+    import { defineDefaults } from "#rform/utils";
+
     import { defineFormRoot } from "../composables/formRoot";
     import { defineRulesList } from "../composables/rulesList";
-    import { defineDefaults } from "#rform/utils";
-    import { computed, useSlots } from "vue";
 
     type Base = Record<string, unknown>;
 
@@ -47,7 +49,7 @@
     // member in `FieldType` to narrow `rule` against.
     export type Props<T extends Base = Base> = Element<typeof defaults> & {
         schema?: Schema;
-        onSubmit?: (data: T) => unknown | Promise<unknown>
+        onSubmit?: (data: T) => unknown | Promise<unknown>;
     };
 </script>
 
@@ -57,11 +59,7 @@
         loading: undefined
     });
 
-    const {
-        id,
-        model,
-        props
-    } = await useInjection(_props);
+    const { id, model, props } = await useInjection(_props);
 
     useProvide({
         id,
@@ -74,8 +72,7 @@
 
     const slots = useSlots();
 
-    const namedSlotNames = computed(() =>
-        Object.keys(slots).filter(name => name !== "default"));
+    const namedSlotNames = computed(() => Object.keys(slots).filter((name) => name !== "default"));
 
     const hasSchema = computed(() => {
         const s = props.value.schema;
@@ -83,7 +80,7 @@
     });
 
     const validate = async () => {
-        await Promise.all(rulesList.value.values().map(f => f()));
+        await Promise.all(rulesList.value.values().map((f) => f()));
     };
 
     const submit = async () => {

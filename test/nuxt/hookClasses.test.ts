@@ -1,8 +1,10 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { h } from "vue";
+
 import { RForm, RText } from "#components";
+
 // By path, not `#components`: this one lives in the fixture.
 import RRating from "../fixtures/basic/rform/fields/Rating.vue";
 
@@ -20,9 +22,7 @@ describe("classes-gancho na raiz", () => {
     it("marca um campo embutido com a genérica e a do componente", async () => {
         const wrapper = await mountSuspended(RText);
 
-        expect(wrapper.find("div").classes()).toEqual(
-            expect.arrayContaining(["RField", "RText"])
-        );
+        expect(wrapper.find("div").classes()).toEqual(expect.arrayContaining(["RField", "RText"]));
     });
 
     it("marca um util com o prefixo dele", async () => {

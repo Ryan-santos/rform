@@ -19,27 +19,26 @@
             some do campo de visão justamente quando o clique acontece lá embaixo.
         -->
         <div
-            class="
-                sticky top-2 z-10 flex flex-col gap-1 rounded-xl border p-3 backdrop-blur-sm
-                transition-colors duration-300
+            class="sticky top-2 z-10 flex flex-col gap-1 rounded-xl border p-3 backdrop-blur-sm transition-colors duration-300"
+            :class="
+                focused
+                    ? 'border-primary/50 bg-primary/10'
+                    : 'border-contrast/10 bg-background-50/80'
             "
-            :class="focused
-                ? 'border-primary/50 bg-primary/10'
-                : 'border-contrast/10 bg-background-50/80'"
         >
-            <p class="font-mono text-xs text-contrast/40">
-                camada em foco
-            </p>
+            <p class="font-mono text-xs text-contrast/40">camada em foco</p>
 
             <template v-if="focused">
                 <code
                     class="font-mono text-sm font-bold"
                     :class="focused.kind === 'util' ? 'text-secondary' : 'text-primary'"
-                >{{ focused.path }}</code>
+                    >{{ focused.path }}</code
+                >
                 <code
                     v-if="focused.value !== undefined"
                     class="font-mono text-xs leading-relaxed break-words text-contrast/60"
-                >{{ focused.value || "\"\" (sem classe por padrão)" }}</code>
+                    >{{ focused.value || '"" (sem classe por padrão)' }}</code
+                >
                 <p
                     v-else
                     class="text-xs text-contrast/50"
@@ -58,9 +57,12 @@
 
         <!-- Empilhado: lado a lado, nem a árvore nem o código tinham largura para respirar. -->
         <div class="flex flex-col gap-4">
-            <div class="flex flex-col gap-3 rounded-xl border border-contrast/10 bg-background-50 p-4">
+            <div
+                class="flex flex-col gap-3 rounded-xl border border-contrast/10 bg-background-50 p-4"
+            >
                 <p class="font-mono text-xs text-contrast/40">
-                    <span class="font-medium text-primary">R{{ component }}</span> · árvore de camadas
+                    <span class="font-medium text-primary">R{{ component }}</span> · árvore de
+                    camadas
                 </p>
 
                 <DemoUiLayer
@@ -91,11 +93,12 @@
 
 <script setup lang="ts">
     import { computed, provide, ref } from "vue";
+
     import { fieldTree, uiFocusKey, uiSnippet, type UiNode } from "~/utils/ui";
 
     const props = defineProps<{
         /** Nome do componente sem o prefixo `R` — "Text", "Select", … */
-        component: string
+        component: string;
     }>();
 
     const nodes = computed(() => fieldTree(props.component));

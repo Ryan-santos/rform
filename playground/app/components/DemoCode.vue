@@ -1,23 +1,25 @@
 <template>
     <div class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-code-line bg-code">
-        <header class="flex flex-none flex-row items-center justify-between gap-2 border-b border-code-line bg-code-head px-3 py-2">
+        <header
+            class="flex flex-none flex-row items-center justify-between gap-2 border-b border-code-line bg-code-head px-3 py-2"
+        >
             <div class="flex min-w-0 flex-row items-baseline gap-2">
-                <span class="size-2 flex-none rounded-full bg-gradient-to-br from-primary to-secondary" />
+                <span
+                    class="size-2 flex-none rounded-full bg-gradient-to-br from-primary to-secondary"
+                />
                 <h3 class="truncate text-xs font-bold tracking-widest text-code-text/70 uppercase">
                     {{ label }}
                 </h3>
                 <span
                     v-if="hint"
                     class="truncate font-mono text-xs text-code-text/35"
-                >{{ hint }}</span>
+                    >{{ hint }}</span
+                >
             </div>
 
             <button
                 type="button"
-                class="
-                    flex-none rounded-md px-2 py-1 text-xs text-code-text/40 transition-colors
-                    hover:text-secondary
-                "
+                class="flex-none rounded-md px-2 py-1 text-xs text-code-text/40 transition-colors hover:text-secondary"
                 @click="copy"
             >
                 {{ copied ? "copiado" : "copiar" }}
@@ -36,21 +38,25 @@
 
 <script setup lang="ts">
     import { computed, ref } from "vue";
+
     import { highlight, type Lang } from "~/utils/highlight";
 
-    const props = withDefaults(defineProps<{
-        code: string
-        lang?: Lang
-        label?: string
-        hint?: string
-        /** Classes do `<pre>` — é onde o scroll e a altura máxima moram. */
-        bodyClass?: string
-    }>(), {
-        lang: "ts",
-        label: "código",
-        hint: undefined,
-        bodyClass: "grow"
-    });
+    const props = withDefaults(
+        defineProps<{
+            code: string;
+            lang?: Lang;
+            label?: string;
+            hint?: string;
+            /** Classes do `<pre>` — é onde o scroll e a altura máxima moram. */
+            bodyClass?: string;
+        }>(),
+        {
+            lang: "ts",
+            label: "código",
+            hint: undefined,
+            bodyClass: "grow"
+        }
+    );
 
     const html = computed(() => highlight(props.code, props.lang));
 

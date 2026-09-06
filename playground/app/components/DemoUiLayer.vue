@@ -11,17 +11,20 @@
                 <span
                     v-if="node.kind === 'util'"
                     class="rounded-sm bg-secondary/15 px-1 py-0.5 font-mono text-[0.625rem] leading-none font-bold text-secondary uppercase"
-                >util</span>
+                    >util</span
+                >
 
                 <span
                     class="font-mono text-xs leading-none font-medium transition-colors"
                     :class="label(node)"
-                >{{ node.key }}</span>
+                    >{{ node.key }}</span
+                >
 
                 <span
                     v-if="node.children?.length"
                     class="font-mono text-[0.625rem] leading-none text-contrast/30"
-                >{{ node.children.length }}</span>
+                    >{{ node.children.length }}</span
+                >
             </div>
 
             <!--
@@ -31,7 +34,8 @@
             <code
                 v-if="node.value !== undefined"
                 class="mt-2 block rounded-md bg-contrast/[0.06] px-2 py-1 font-mono text-xs leading-relaxed break-words text-contrast/70"
-            >{{ node.value || "\"\" — sem classe por padrão" }}</code>
+                >{{ node.value || '"" — sem classe por padrão' }}</code
+            >
 
             <!-- Util com árvore grande fica fechado: o ui do Calendar tem mais camadas que o campo. -->
             <details
@@ -39,11 +43,7 @@
                 class="mt-2"
             >
                 <summary
-                    class="
-                        w-fit cursor-pointer list-none rounded-sm bg-secondary/10 px-1.5 py-0.5
-                        font-mono text-[0.625rem] text-secondary transition-colors
-                        hover:bg-secondary/20
-                    "
+                    class="w-fit cursor-pointer list-none rounded-sm bg-secondary/10 px-1.5 py-0.5 font-mono text-[0.625rem] text-secondary transition-colors hover:bg-secondary/20"
                     @click.stop
                 >
                     ver camadas
@@ -68,14 +68,18 @@
 
 <script setup lang="ts">
     import { inject } from "vue";
+
     import { uiFocusKey, type UiNode } from "~/utils/ui";
 
-    const props = withDefaults(defineProps<{
-        nodes: UiNode[]
-        depth?: number
-    }>(), {
-        depth: 0
-    });
+    const props = withDefaults(
+        defineProps<{
+            nodes: UiNode[];
+            depth?: number;
+        }>(),
+        {
+            depth: 0
+        }
+    );
 
     /**
      * O foco é do `DemoUi`, não de cada nível: injetar em vez de descer por prop

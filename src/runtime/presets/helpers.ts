@@ -15,9 +15,7 @@ export const digits = (value: unknown) => text(value).replace(/[^0-9]/g, "");
  * emptiness — otherwise every field would report two errors at once.
  */
 export const isBlank = (value: unknown) =>
-    value === undefined
-    || value === null
-    || (typeof value === "string" && value.trim() === "");
+    value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 
 export const allSameDigit = (value: string) => /^(\d)\1+$/.test(value);
 

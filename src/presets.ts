@@ -1,11 +1,10 @@
-const capitalize = (value: string) =>
-    value.charAt(0).toUpperCase() + value.slice(1);
+const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 
 const camelize = (segment: string) =>
     segment
         .split(/[-_]+/)
-        .filter(part => part !== "")
-        .map((part, index) => index === 0 ? part : capitalize(part))
+        .filter((part) => part !== "")
+        .map((part, index) => (index === 0 ? part : capitalize(part)))
         .join("");
 
 /**
@@ -14,22 +13,21 @@ const camelize = (segment: string) =>
  * `br/insc-est.ts` -> `brInscEst`
  */
 export const presetName = (relativePath: string) => {
-    const segments = relativePath.split(/[/\\]+/).filter(segment => segment !== "");
+    const segments = relativePath.split(/[/\\]+/).filter((segment) => segment !== "");
     const last = segments.pop() ?? "";
 
     return [...segments, last.replace(/\.[^.]+$/, "")]
         .map(camelize)
-        .map((segment, index) => index === 0 ? segment : capitalize(segment))
+        .map((segment, index) => (index === 0 ? segment : capitalize(segment)))
         .join("");
 };
 
 export type PresetFile = {
-    name: string
-    file: string
+    name: string;
+    file: string;
 };
 
-const isModule = (file: string) =>
-    /\.[tj]s$/.test(file) && !/\.d\.[tj]s$/.test(file);
+const isModule = (file: string) => /\.[tj]s$/.test(file) && !/\.d\.[tj]s$/.test(file);
 
 /**
  * Pairs every preset module under a `rules`/`masks` root with its derived name.

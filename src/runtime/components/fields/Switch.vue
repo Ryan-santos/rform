@@ -8,7 +8,6 @@
                 props.placeholder ? props.ui?.group?.ifPlaceholder : ''
             ]"
         >
-
             {{ props.placeholder }}
 
             <span :class="props.ui?.group?.button?.container">
@@ -16,7 +15,7 @@
                     v-model="model"
                     type="checkbox"
                     :class="props.ui?.group?.button?.input"
-                >
+                />
                 <span :class="props.ui?.group?.button?.indicator">
                     <Transition
                         :enterActiveClass="props.ui?.transition?.enterActiveClass"
@@ -43,18 +42,20 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
-    import { useInjection } from "#rform/composables";
-    import type Utils from "#rform/types/components/utils/props";
     import { computed } from "vue";
+
+    import { useInjection } from "#rform/composables";
+    import type { Element } from "#rform/types";
+    import type Utils from "#rform/types/components/utils/props";
+    import { defineDefaults } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
             group: {
                 container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
-                ifPlaceholder: "rounded-(--rf-radius-xl) border border-(--rf-color-background-100) p-2",
+                ifPlaceholder:
+                    "rounded-(--rf-radius-xl) border border-(--rf-color-background-100) p-2",
                 button: {
                     container: `
                         relative flex w-11 flex-row rounded-full bg-(--rf-color-background-100) p-0.5
@@ -81,17 +82,16 @@
     });
 
     export type IconConfig = {
-        loading?: string
-        true?: string
-        false?: string
+        loading?: string;
+        true?: string;
+        false?: string;
     };
 
-    export type Props = Element<typeof defaults, "switch">
-        & Utils["Description"]
-        & Utils["Error"]
-        & Utils["Placeholder"]
-        & {
-            icon?: boolean | IconConfig
+    export type Props = Element<typeof defaults, "switch"> &
+        Utils["Description"] &
+        Utils["Error"] &
+        Utils["Placeholder"] & {
+            icon?: boolean | IconConfig;
         };
 </script>
 
@@ -102,10 +102,7 @@
         loading: undefined
     });
 
-    const {
-        model,
-        props
-    } = await useInjection(_props);
+    const { model, props } = await useInjection(_props);
 
     const iconDefaults: Required<IconConfig> = {
         loading: "loading",
@@ -120,9 +117,8 @@
             return undefined;
         }
 
-        const names = config && typeof config === "object"
-            ? { ...iconDefaults, ...config }
-            : iconDefaults;
+        const names =
+            config && typeof config === "object" ? { ...iconDefaults, ...config } : iconDefaults;
 
         if (props.value.loading) {
             return names.loading;

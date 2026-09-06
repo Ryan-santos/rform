@@ -10,13 +10,16 @@
 <script setup lang="ts">
     import { computed } from "vue";
 
-    const props = withDefaults(defineProps<{
-        value?: unknown
-        title?: string
-    }>(), {
-        value: undefined,
-        title: "model"
-    });
+    const props = withDefaults(
+        defineProps<{
+            value?: unknown;
+            title?: string;
+        }>(),
+        {
+            value: undefined,
+            title: "model"
+        }
+    );
 
     /**
      * A `File` serializes to `{}`, which reads as "the field is empty" — the one
@@ -33,8 +36,7 @@
     const json = computed(() => {
         try {
             return JSON.stringify(props.value, replacer, 4) ?? "undefined";
-        }
-        catch (error) {
+        } catch (error) {
             return `// não serializável: ${String(error)}`;
         }
     });

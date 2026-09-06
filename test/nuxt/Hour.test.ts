@@ -1,7 +1,8 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { nextTick } from "vue";
+
 import { RHour } from "#components";
 
 describe("RHour", () => {

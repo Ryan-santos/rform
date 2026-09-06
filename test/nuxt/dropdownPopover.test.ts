@@ -1,6 +1,7 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
+
 import { RColor, RDate, RSelect } from "#components";
 
 /**
@@ -37,7 +38,10 @@ describe("dropdown popover", () => {
     });
 
     it("drops w-(--width) for the fixed width of a field that measures none", async () => {
-        for (const [component, width] of [[RDate, "w-72"], [RColor, "w-64"]] as const) {
+        for (const [component, width] of [
+            [RDate, "w-72"],
+            [RColor, "w-64"]
+        ] as const) {
             const wrapper = await mountSuspended(component, { props: {} as never });
             const classes = popover(wrapper);
 

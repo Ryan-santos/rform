@@ -9,10 +9,10 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
     import { useInjection, useProvide } from "#rform/composables";
+    import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
+    import { defineDefaults } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
@@ -22,8 +22,7 @@
         default: {}
     });
 
-    export type Props = Element<typeof defaults, "object">
-        & Utils["Label"];
+    export type Props = Element<typeof defaults, "object"> & Utils["Label"];
 </script>
 
 <script setup lang="ts">
@@ -32,11 +31,7 @@
         loading: undefined
     });
 
-    const {
-        id,
-        model,
-        props
-    } = await useInjection(_props);
+    const { id, model, props } = await useInjection(_props);
 
     useProvide({
         id,

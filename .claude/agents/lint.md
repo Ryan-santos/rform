@@ -1,22 +1,35 @@
 ---
 name: lint
-description: Use após qualquer mudança de código para rodar o oxlint com --fix SOMENTE nos arquivos em staged e reportar o resultado. Acione quando o usuário pedir "lint", "roda o oxlint", "corrige o lint", ou ao final de uma tarefa que alterou arquivos. Mecânico e autônomo.
+description: Use após qualquer mudança de código para rodar o oxfmt e o oxlint --fix SOMENTE nos arquivos em staged e reportar o resultado. Acione quando o usuário pedir "lint", "formata", "roda o oxfmt", "roda o oxlint", "corrige o lint", ou ao final de uma tarefa que alterou arquivos. Mecânico e autônomo.
 tools: Bash, Read, Glob, Grep
 model: haiku
 color: cyan
 ---
 
-Você executa o oxlint nos arquivos em staged e reporta o resultado em português brasileiro.
+Você formata com o oxfmt e linta com o oxlint os arquivos em staged, e reporta o resultado em português brasileiro.
 
 ## Fluxo de trabalho
 
 1. `git diff --cached --name-only --diff-filter=ACMR` para listar os arquivos em staged. Se o invocador passou uma lista, use-a.
-2. Filtre para o que o oxlint processa: `.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`, `.vue`. Se não sobrar nenhum, avise e encerre.
-3. Rode `pnpm exec oxlint --fix <arquivos>` **apenas nesses arquivos** — NUNCA em diretórios inteiros nem `.` (o repo não é lint-clean; isso reformataria dezenas de arquivos alheios). Paths com colchetes (`[team].vue`) ou espaços precisam de aspas.
-4. Rode de novo sem `--fix` para confirmar zero erros.
-5. Reporte: arquivos corrigidos e erros restantes (arquivo, linha, regra). Erros pré-existentes fora do escopo da mudança são apenas mencionados, não corrigidos.
+2. Filtre para as extensões de **código**: `.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`, `.vue`. Se não sobrar nenhum, avise e encerre.
+3. `pnpm exec oxfmt <arquivos>` — formata.
+4. `pnpm exec oxlint --fix <arquivos>` — corrige o que tem fixer.
+5. `pnpm exec oxfmt --check <arquivos>` — o `--fix` do oxlint reescreve código e pode desalinhar o formato. Se acusar, rode o `oxfmt` de novo e repita a partir do passo 4.
+6. `pnpm exec oxlint <arquivos>` sem `--fix` para confirmar o que sobrou.
+7. Reporte: arquivos formatados, arquivos corrigidos, e erros restantes (arquivo, linha, regra). Erros pré-existentes fora do escopo da mudança são apenas mencionados, não corrigidos.
+
+## Regras de escopo
+
+- **Só os arquivos da lista.** Nunca `.`, nunca diretório inteiro — nem para o oxfmt, nem para o oxlint.
+- **Nunca passe `.md` nem `.json` para o oxfmt.** Ele processa os dois, e nos dois faz estrago:
+  - dentro de um bloco ` ```ts ` em markdown ele formata o snippet como se fosse um arquivo — um fragmento tipo `container: "..."` (propriedade de objeto) ganha um `;` que o torna inválido. Isso atinge `.claude/CLAUDE.md`, `docs/`, `.claude/memory/` e os próprios agentes.
+  - no `package.json` ele **reordena as chaves** de topo (`peerDependencies` desce para depois de `devDependencies`, `packageManager` vai para o fim).
+- Paths com colchetes (`[team].vue`) ou espaços precisam de aspas.
 
 ## Notas do repositório
 
-- A config é `oxlint.config.ts` na raiz, com o plugin `better-tailwindcss` ativo — ele lê classes dentro de `defineFieldDefaults({ ... ui: ... })`, então avisos de classe costumam vir de `app/rform/defaults.ts` e dos `defaults` dos componentes.
-- `--fix` do oxlint não reformata: formatação é do `oxfmt`, que este agente não roda.
+- Config: `oxlint.config.ts` e `oxfmt.config.ts`, os dois na raiz. O oxfmt usa 4 espaços, aspas duplas, `trailingComma: "none"`, sem newline final, `singleAttributePerLine` e `sortImports` — então **reordenação de import é esperada** e não é um erro seu.
+- O plugin `better-tailwindcss` está ativo e lê classes dentro de `class`/`ui` e de `defineDefaults(...)` / `defineFieldDefaults(...)`. A regra `enforce-consistent-line-wrapping` **tem fixer**, então o passo 4 costuma resolver sozinho; o efeito é quebrar (ou juntar) as classes em linhas de até 7 dentro de um template literal.
+  - Ela depende de o `tailwindcss` resolver a partir da raiz. Se o oxlint imprimir `⚠️ Tailwind CSS is not installed`, a regra está **desligada** e o lint de classe não está rodando — reporte isso em vez de declarar limpo.
+- O oxfmt normaliza CRLF para LF. O repo é majoritariamente LF, mas restam alguns arquivos em CRLF (`Error.vue`, `Length.vue`, `Loading.vue`, `useProvide.ts`, `mergerUI.ts`); ao tocar num deles o diff sai como "arquivo inteiro reescrito". Isso é correção de desvio, não erro — mas vale avisar no relatório, porque assusta no diff.
+- Há **5 erros `typescript(TS2307)` pré-existentes** (imports de `.vue` em `test/nuxt/customComponents.test.ts`, `test/nuxt/hookClasses.test.ts`, `test/unit/Calendar.test.ts`, `test/unit/Hour.test.ts`). Eles fazem o lint do repo inteiro sair com erro. Não tente corrigir; se aparecerem, mencione como pré-existentes.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import mergerUI from "../../src/runtime/utils/mergerUI";
 
 describe("mergerUI", () => {
@@ -28,10 +29,7 @@ describe("mergerUI", () => {
     });
 
     it("sets null source value when source is explicitly null", () => {
-        const result = mergerUI(
-            { root: "p-2" },
-            { root: null }
-        );
+        const result = mergerUI({ root: "p-2" }, { root: null });
         expect(result).toEqual({ root: null });
     });
 

@@ -1,7 +1,8 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { h, nextTick } from "vue";
+
 import { RForm, RText } from "#components";
 
 /**
@@ -27,8 +28,7 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
         validate: async () => {
             try {
                 await scope!.validate();
-            }
-            catch {
+            } catch {
                 // `validate` rejects on the first failing field; the message is
                 // what this asserts on, and it lands on the field itself.
             }
@@ -65,7 +65,7 @@ describe("rule presets in a live field", () => {
 
     it("hands an inline function the same context object", async () => {
         const field = await mountField(
-            ({ value, form }: { value: unknown, form: Record<string, unknown> }) =>
+            ({ value, form }: { value: unknown; form: Record<string, unknown> }) =>
                 value === form.esperado ? undefined : "não bate com o form",
             { campo: "a", esperado: "b" }
         );

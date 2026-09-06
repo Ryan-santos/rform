@@ -13,19 +13,19 @@ const VALID_NAME = /^[A-Z][A-Za-z0-9]*$/;
 
 export type ComponentSource = {
     /** Absolute directory the files were read from. */
-    root: string
+    root: string;
     /** Directory entries, as returned by `readdir`. */
-    files: string[]
+    files: string[];
     /** `app/rform/*` rather than the module's own runtime. */
-    user: boolean
+    user: boolean;
 };
 
 export type ComponentFile = {
-    name: string
+    name: string;
     /** Path relative to `root`, so the caller owns path joining. */
-    file: string
-    root: string
-    user: boolean
+    file: string;
+    root: string;
+    user: boolean;
 };
 
 const isComponent = (file: string) => file.endsWith(".vue");

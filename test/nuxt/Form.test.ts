@@ -1,7 +1,8 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it, vi } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { defineComponent, h } from "vue";
+
 import { RForm } from "#components";
 
 describe("RForm", () => {
@@ -50,7 +51,7 @@ describe("RForm", () => {
         });
 
         await wrapper.find("form").trigger("submit");
-        await new Promise(r => setTimeout(r));
+        await new Promise((r) => setTimeout(r));
 
         expect(onSubmit).toHaveBeenCalledTimes(1);
         expect(onSubmit).toHaveBeenCalledWith({ foo: "bar" });

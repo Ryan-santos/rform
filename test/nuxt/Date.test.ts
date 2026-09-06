@@ -1,7 +1,8 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { defineComponent, h, nextTick, ref } from "vue";
+
 import { RDate, RForm } from "#components";
 
 describe("RDate", () => {
@@ -160,7 +161,7 @@ describe("RDate", () => {
                 h(
                     RForm,
                     {
-                        "modelValue": form.value,
+                        modelValue: form.value,
                         "onUpdate:modelValue": (v: Record<string, unknown>) => {
                             form.value = v;
                         }

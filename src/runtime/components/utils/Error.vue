@@ -29,13 +29,11 @@
     });
 
     export type Props = {
-        error?: string
-        ui?: DeepPartial<typeof defaults.ui>
+        error?: string;
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 
 <script setup lang="ts">
-    const {
-        props
-    } = useUtilProps<Props>(defaults);
+    const { props } = useUtilProps<Props>(defaults);
 </script>

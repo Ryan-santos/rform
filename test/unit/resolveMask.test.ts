@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import resolveMask from "../../src/runtime/utils/resolveMask";
 
 const masks = {
@@ -17,8 +18,9 @@ describe("resolveMask", () => {
     });
 
     it("resolves a preset holding a dynamic mask", () => {
-        expect(resolveMask("cpfCnpj", masks))
-            .toEqual({ mask: ["###.###.###-##", "##.###.###/####-##"] });
+        expect(resolveMask("cpfCnpj", masks)).toEqual({
+            mask: ["###.###.###-##", "##.###.###/####-##"]
+        });
     });
 
     it("passes an unknown string through as a raw maska pattern", () => {

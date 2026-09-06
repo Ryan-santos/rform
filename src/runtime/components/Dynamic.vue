@@ -1,7 +1,7 @@
 <template>
     <template v-if="isSchema">
         <template
-            v-for="(field, key) in (schema as Schema)"
+            v-for="(field, key) in schema as Schema"
             :key="key"
         >
             <slot
@@ -62,9 +62,10 @@
 
 <script setup lang="ts">
     import { computed } from "vue";
+
     import map from "#rform/components-map";
-    import type { FieldConfig, Schema, SlotField } from "#rform/types/schema";
     import type { SlotScope } from "#rform/types";
+    import type { FieldConfig, Schema, SlotField } from "#rform/types/schema";
 
     export type Props = {
         name?: string | number;
@@ -79,11 +80,13 @@
      */
     defineSlots<Record<string, (scope: SlotScope) => unknown>>();
 
-    const isSchema = computed(() =>
-        !!props.schema
-        && typeof props.schema === "object"
-        && !("type" in props.schema)
-        && !("slot" in props.schema));
+    const isSchema = computed(
+        () =>
+            !!props.schema &&
+            typeof props.schema === "object" &&
+            !("type" in props.schema) &&
+            !("slot" in props.schema)
+    );
 
     const resolved = computed(() => {
         if (isSchema.value) {

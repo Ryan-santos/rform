@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 const COMPONENTS = path.join("src", "runtime", "components");
@@ -24,7 +25,7 @@ const FIXTURE = path.join("test", "fixtures", "basic", ".nuxt", "rform");
 
 const sources = async () => {
     const roots = [COMPONENTS, path.join(COMPONENTS, "fields"), path.join(COMPONENTS, "utils")];
-    const found: { file: string, text: string }[] = [];
+    const found: { file: string; text: string }[] = [];
 
     for (const root of roots) {
         for (const entry of await readdir(root, { withFileTypes: true })) {
@@ -43,26 +44,28 @@ const sources = async () => {
  * Tokenizar o arquivo inteiro, não linha a linha: as classes quebram linha dentro dos
  * template strings, então um regex por linha erra nas bordas do wrap.
  */
-const classTokens = (text: string) => text
-    .split(/\s+/)
-    /**
-     * Tirar a pontuação que delimita a string, senão a última classe de cada literal
-     * chega como `text-white",` e escapa de todo padrão ancorado em `$`. Só nas
-     * pontas: `(`/`)`/`[`/`]` fazem parte de `bg-(--rf-…)` e `has-[:focus]:`, e o `!`
-     * de `bg-(--rf-color-primary)!` também precisa sobreviver.
-     */
-    .map(token => token.replace(/^[`'"{[,;]+/, "").replace(/[`'"},;:]+$/, ""))
-    .filter(Boolean);
+const classTokens = (text: string) =>
+    text
+        .split(/\s+/)
+        /**
+         * Tirar a pontuação que delimita a string, senão a última classe de cada literal
+         * chega como `text-white",` e escapa de todo padrão ancorado em `$`. Só nas
+         * pontas: `(`/`)`/`[`/`]` fazem parte de `bg-(--rf-…)` e `has-[:focus]:`, e o `!`
+         * de `bg-(--rf-color-primary)!` também precisa sobreviver.
+         */
+        .map((token) => token.replace(/^[`'"{[,;]+/, "").replace(/[`'"},;:]+$/, ""))
+        .filter(Boolean);
 
 /**
  * Tirar variante (`hover:`, `has-[:focus]:`), o `!` final e o `/NN` final antes de
  * casar. Normalizar primeiro é o que impede `-primary` de pegar o próprio
  * `bg-(--rf-color-primary)`.
  */
-const core = (token: string) => token
-    .replace(/^(?:[a-z0-9-]+|[a-z-]+\[[^\]]*\]|(?:group|peer)-[a-z-]+):(?=\S)/g, "")
-    .replace(/!+$/, "")
-    .replace(/\/\d+$/, "");
+const core = (token: string) =>
+    token
+        .replace(/^(?:[a-z0-9-]+|[a-z-]+\[[^\]]*\]|(?:group|peer)-[a-z-]+):(?=\S)/g, "")
+        .replace(/!+$/, "")
+        .replace(/\/\d+$/, "");
 
 const BANNED = [
     // Tokens `@theme` que só o playground define.
@@ -86,7 +89,7 @@ describe("theme tokens", () => {
             for (const token of classTokens(text)) {
                 const bare = core(token);
 
-                if (BANNED.some(pattern => pattern.test(bare))) {
+                if (BANNED.some((pattern) => pattern.test(bare))) {
                     offenders.push(`${file}: ${token}`);
                 }
             }
@@ -107,7 +110,7 @@ describe("theme tokens", () => {
 
         const stylesheet = await readFile(STYLESHEET, "utf8");
         const declared = new Set(
-            [...stylesheet.matchAll(/--rf-[a-z0-9-]+(?=\s*:)/g)].map(match => match[0])
+            [...stylesheet.matchAll(/--rf-[a-z0-9-]+(?=\s*:)/g)].map((match) => match[0])
         );
 
         /**
@@ -120,11 +123,11 @@ describe("theme tokens", () => {
 
         // Os dois sentidos: nada usado sem declarar (renderiza transparente, calado),
         // nada declarado sem uso (token morto que ninguém sabe que não faz nada).
-        expect([...used].filter(name => !declared.has(name))).toEqual([]);
-        expect([...declared].filter(name => !used.has(name) && !orphans.has(name))).toEqual([]);
+        expect([...used].filter((name) => !declared.has(name))).toEqual([]);
+        expect([...declared].filter((name) => !used.has(name) && !orphans.has(name))).toEqual([]);
 
         // E a lista não pode envelhecer: um `ui` que passe a ler o `-200` tira ele daqui.
-        expect([...orphans].filter(name => used.has(name) || !declared.has(name))).toEqual([]);
+        expect([...orphans].filter((name) => used.has(name) || !declared.has(name))).toEqual([]);
     });
 
     it("generates a #rform/tailwindcss carrying both the @source and the tokens", async () => {
@@ -140,8 +143,10 @@ describe("theme tokens", () => {
          * `node_modules/rform`.
          */
         // Sem comentários: o do template cita `@import "tailwindcss"` e entraria no match.
-        const source = (await readFile(path.join(FIXTURE, "tailwind.css"), "utf8"))
-            .replace(/\/\*[\s\S]*?\*\//g, "");
+        const source = (await readFile(path.join(FIXTURE, "tailwind.css"), "utf8")).replace(
+            /\/\*[\s\S]*?\*\//g,
+            ""
+        );
 
         const sources = [...source.matchAll(/@source\s+"([^"]+)"/g)];
 
@@ -197,10 +202,16 @@ describe("theme tokens", () => {
                 depth++;
             } else if (part === "}") {
                 depth--;
-                if (depth === 0) {inLayer = false;}
+                if (depth === 0) {
+                    inLayer = false;
+                }
             } else {
-                if (depth === 0 && /@layer\s+rform\s*$/.test(part)) {inLayer = true;}
-                if (!inLayer) {outside += part;}
+                if (depth === 0 && /@layer\s+rform\s*$/.test(part)) {
+                    inLayer = true;
+                }
+                if (!inLayer) {
+                    outside += part;
+                }
             }
         }
 
@@ -219,9 +230,10 @@ describe("theme tokens", () => {
          */
         const stylesheet = await readFile(STYLESHEET, "utf8");
         const stripped = stylesheet.replace(/\/\*[\s\S]*?\*\//g, "");
-        const atRules = [...stripped.matchAll(/@[a-z-]+/g)].map(match => match[0].slice(1));
+        const atRules = [...stripped.matchAll(/@[a-z-]+/g)].map((match) => match[0].slice(1));
 
-        expect([...new Set(atRules)].filter(rule => !["layer", "media", "supports"].includes(rule)))
-            .toEqual([]);
+        expect(
+            [...new Set(atRules)].filter((rule) => !["layer", "media", "supports"].includes(rule))
+        ).toEqual([]);
     });
 });

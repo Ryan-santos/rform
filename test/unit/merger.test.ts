@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import merger from "../../src/runtime/utils/merger";
 
 describe("merger", () => {
@@ -20,34 +21,22 @@ describe("merger", () => {
     });
 
     it("merges nested objects recursively", () => {
-        const result = merger(
-            { nested: { a: 1, b: 2 } },
-            { nested: { b: 99, c: 3 } }
-        );
+        const result = merger({ nested: { a: 1, b: 2 } }, { nested: { b: 99, c: 3 } });
         expect(result.nested).toEqual({ a: 1, b: 99, c: 3 });
     });
 
     it("does not recurse into arrays — later array replaces earlier", () => {
-        const result = merger(
-            { items: [1, 2, 3] },
-            { items: [9] }
-        );
+        const result = merger({ items: [1, 2, 3] }, { items: [9] });
         expect(result.items).toEqual([9]);
     });
 
     it("delegates ui key to mergerUI for object-shaped ui", () => {
-        const result = merger(
-            { ui: { root: "p-2 text-red-500" } },
-            { ui: { root: "p-4" } }
-        );
+        const result = merger({ ui: { root: "p-2 text-red-500" } }, { ui: { root: "p-4" } });
         expect((result.ui as { root: string }).root).toBe("text-red-500 p-4");
     });
 
     it("overwrites a string ui key with the later value (no twMerge for top-level strings)", () => {
-        const result = merger(
-            { ui: "p-2 text-red-500" },
-            { ui: "p-4" }
-        );
+        const result = merger({ ui: "p-2 text-red-500" }, { ui: "p-4" });
         expect(result.ui).toBe("p-4");
     });
 

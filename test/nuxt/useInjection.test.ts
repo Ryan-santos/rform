@@ -1,8 +1,10 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { defineComponent, h, provide, ref } from "vue";
+
 import type { Element } from "#rform/types";
+
 import useInjection, { key } from "../../src/runtime/composables/useInjection";
 
 const Harness = defineComponent({
@@ -10,19 +12,19 @@ const Harness = defineComponent({
         sourceProps: { type: Object, required: true },
         modelValue: { type: null, default: undefined }
     },
-    async setup (props) {
-        const ctx = await useInjection(
-            props.sourceProps as Element,
-            undefined,
-            "Text"
-        );
+    async setup(props) {
+        const ctx = await useInjection(props.sourceProps as Element, undefined, "Text");
         return () =>
-            h("pre", { "data-testid": "merged" }, JSON.stringify({
-                id: ctx.id,
-                modelValue: ctx.props.value.modelValue,
-                defaultValue: ctx.props.value.default,
-                name: ctx.props.value.name
-            }));
+            h(
+                "pre",
+                { "data-testid": "merged" },
+                JSON.stringify({
+                    id: ctx.id,
+                    modelValue: ctx.props.value.modelValue,
+                    defaultValue: ctx.props.value.default,
+                    name: ctx.props.value.name
+                })
+            );
     }
 });
 
@@ -53,7 +55,7 @@ describe("useInjection", () => {
             props: {
                 modelValue: { type: null, default: undefined }
             },
-            async setup () {
+            async setup() {
                 const ctx = await useInjection(
                     { name: "child", modelValue: undefined } as never,
                     undefined,
@@ -64,7 +66,7 @@ describe("useInjection", () => {
         });
 
         const Wrapper = defineComponent({
-            setup () {
+            setup() {
                 provide(key, { id: "root", model: parentModel as never });
                 return () => h(Child);
             }

@@ -13,13 +13,12 @@
             :aria-checked="colorMode.preference === option.id"
             :aria-label="option.label"
             :title="option.title"
-            class="
-                flex size-7 cursor-pointer items-center justify-center rounded-lg
-                transition-all duration-300
+            class="flex size-7 cursor-pointer items-center justify-center rounded-lg transition-all duration-300"
+            :class="
+                colorMode.preference === option.id
+                    ? 'bg-background text-primary shadow-sm'
+                    : 'text-contrast/40 hover:text-contrast'
             "
-            :class="colorMode.preference === option.id
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-contrast/40 hover:text-contrast'"
             @click="colorMode.preference = option.id"
         >
             <svg

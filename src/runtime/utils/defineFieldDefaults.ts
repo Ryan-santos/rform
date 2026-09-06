@@ -1,4 +1,5 @@
 import type Components from "#rform/types/components";
+
 import type { DeepPartial } from "../../type";
 
 /**
@@ -10,11 +11,11 @@ import type { DeepPartial } from "../../type";
  * stops working.
  */
 type UtilDefaults<U> = {
-    [K in keyof U]?: U[K] extends { ui?: infer _ } ? Pick<DeepPartial<U[K]>, "ui"> : never
+    [K in keyof U]?: U[K] extends { ui?: infer _ } ? Pick<DeepPartial<U[K]>, "ui"> : never;
 };
 
 type FieldDefaults = DeepPartial<Omit<Components, "Utils">> & {
-    Utils?: UtilDefaults<Components["Utils"]>
+    Utils?: UtilDefaults<Components["Utils"]>;
 };
 
 /**
@@ -31,6 +32,6 @@ type FieldDefaults = DeepPartial<Omit<Components, "Utils">> & {
  * They sit between the component's defaults and the props passed at the call
  * site, so a prop on the field always wins.
  */
-export default function <const T extends FieldDefaults> (defaults: T) {
+export default function <const T extends FieldDefaults>(defaults: T) {
     return defaults;
 }

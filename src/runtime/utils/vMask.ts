@@ -46,9 +46,8 @@ const apply = (el: HTMLElement, binding: DirectiveBinding<MaskBinding>) => {
         return;
     }
 
-    const options = typeof binding.value === "string"
-        ? { mask: binding.value }
-        : { ...binding.value };
+    const options =
+        typeof binding.value === "string" ? { mask: binding.value } : { ...binding.value };
 
     const instance = instances.get(el);
 
@@ -64,7 +63,7 @@ const apply = (el: HTMLElement, binding: DirectiveBinding<MaskBinding>) => {
 export default {
     mounted: apply,
     updated: apply,
-    unmounted (el: HTMLElement) {
+    unmounted(el: HTMLElement) {
         if (isField(el)) {
             teardown(el);
         }

@@ -1,21 +1,26 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it, vi } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { h, nextTick, ref } from "vue";
+
 import { RPin } from "#components";
 
 const mountPin = async (props: Record<string, unknown> = {}) => {
     const model = ref<string>((props.modelValue as string) ?? "");
 
-    const wrapper = await mountSuspended({
-        setup: () => () => h(RPin, {
-            ...props,
-            modelValue: model.value,
-            "onUpdate:modelValue": (value: string) => {
-                model.value = value;
-            }
-        })
-    }, { attachTo: document.body });
+    const wrapper = await mountSuspended(
+        {
+            setup: () => () =>
+                h(RPin, {
+                    ...props,
+                    modelValue: model.value,
+                    "onUpdate:modelValue": (value: string) => {
+                        model.value = value;
+                    }
+                })
+        },
+        { attachTo: document.body }
+    );
 
     return {
         wrapper,
@@ -38,7 +43,7 @@ describe("RPin", () => {
     it("spreads the model across the boxes", async () => {
         const { boxes } = await mountPin({ modelValue: "123" });
 
-        expect(boxes().map(box => box.element.value)).toEqual(["1", "2", "3", "", "", ""]);
+        expect(boxes().map((box) => box.element.value)).toEqual(["1", "2", "3", "", "", ""]);
     });
 
     it("writes a typed character into the model", async () => {

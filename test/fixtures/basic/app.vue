@@ -6,9 +6,7 @@
                 name="name"
                 data-testid="name-input"
             />
-            <p data-testid="name-value">
-                name={{ displayName(data) }}
-            </p>
+            <p data-testid="name-value">name={{ displayName(data) }}</p>
         </RForm>
     </div>
 </template>
@@ -18,7 +16,7 @@
 
     const data = ref<Record<string, unknown>>({});
 
-    function displayName (model: Record<string, unknown>): string {
+    function displayName(model: Record<string, unknown>): string {
         return String(model?.name ?? "");
     }
 </script>

@@ -1,11 +1,13 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { defineComponent, h, nextTick, ref, type Ref } from "vue";
 import { z } from "zod";
+
 import { RArray, RForm, RNumber, RObject, RText } from "#components";
-import useRForm from "../../src/runtime/composables/useRForm";
 import type { Schema } from "#rform/types/schema";
+
+import useRForm from "../../src/runtime/composables/useRForm";
 
 type Obj = Record<string, unknown>;
 
@@ -13,7 +15,7 @@ type Obj = Record<string, unknown>;
  * RForm mutates the bound object in place for child writes, but replaces it on
  * reset — so the harness has to follow the emit to keep reading the live model.
  */
-function harness (initial: Obj, children: () => unknown) {
+function harness(initial: Obj, children: () => unknown) {
     const model = ref<Obj>(initial);
 
     const Host = defineComponent({
@@ -21,7 +23,7 @@ function harness (initial: Obj, children: () => unknown) {
             h(
                 RForm,
                 {
-                    "modelValue": model.value,
+                    modelValue: model.value,
                     "onUpdate:modelValue": (v: Obj) => {
                         model.value = v;
                     }
@@ -35,7 +37,7 @@ function harness (initial: Obj, children: () => unknown) {
 
 const flush = async () => {
     await nextTick();
-    await new Promise(r => setTimeout(r));
+    await new Promise((r) => setTimeout(r));
     await nextTick();
 };
 
@@ -105,9 +107,7 @@ describe("estrutura de saída — modo template", () => {
     });
 
     it("campo sem default no call site recebe o default do próprio componente", async () => {
-        const { model, Host } = harness({}, () => [
-            h(RText, { name: "semDefault" } as never)
-        ]);
+        const { model, Host } = harness({}, () => [h(RText, { name: "semDefault" } as never)]);
         await mountSuspended(Host);
         await flush();
 
@@ -160,15 +160,15 @@ describe("estrutura de saída — modo dynamic (schema completo)", () => {
             }
         } as unknown as Schema);
 
-    function dynHarness () {
+    function dynHarness() {
         const form = build();
         const model = form.data as Ref<Obj>;
 
         const Host = defineComponent({
             setup: () => () =>
                 h(RForm, {
-                    "schema": form.schema,
-                    "modelValue": model.value,
+                    schema: form.schema,
+                    modelValue: model.value,
                     "onUpdate:modelValue": (v: Obj) => {
                         model.value = v;
                     }
@@ -230,7 +230,7 @@ describe("estrutura de saída — modo dynamic (schema completo)", () => {
 });
 
 describe("estrutura de saída — modo só zod", () => {
-    function zodHarness () {
+    function zodHarness() {
         const form = useRForm({
             teste: z.string(),
             idade: z.number()
@@ -242,7 +242,7 @@ describe("estrutura de saída — modo só zod", () => {
                 h(
                     RForm,
                     {
-                        "modelValue": model.value,
+                        modelValue: model.value,
                         "onUpdate:modelValue": (v: Obj) => {
                             model.value = v;
                         }
@@ -295,7 +295,7 @@ describe("estrutura de saída — modo só zod", () => {
 });
 
 describe("estrutura de saída — modo só TS", () => {
-    function tsHarness () {
+    function tsHarness() {
         const form = useRForm<{ teste?: string; idade?: number }>();
         const model = form.data as unknown as Ref<Obj>;
 
@@ -304,7 +304,7 @@ describe("estrutura de saída — modo só TS", () => {
                 h(
                     RForm,
                     {
-                        "modelValue": model.value,
+                        modelValue: model.value,
                         "onUpdate:modelValue": (v: Obj) => {
                             model.value = v;
                         }
@@ -351,9 +351,7 @@ describe("estrutura de saída — aninhamento profundo", () => {
                 h(RObject, { name: "b" } as never, {
                     default: () => [
                         h(RObject, { name: "c" } as never, {
-                            default: () => [
-                                h(RText, { name: "leaf", default: "deep" } as never)
-                            ]
+                            default: () => [h(RText, { name: "leaf", default: "deep" } as never)]
                         })
                     ]
                 })
@@ -397,8 +395,7 @@ describe("estrutura de saída — aninhamento profundo", () => {
     it("array de primitivos: remover encurta a lista, sem rebrotar o slot", async () => {
         const { model, Host } = harness({}, () => [
             h(RArray, { name: "users" } as never, {
-                default: ({ index }: { index: number }) =>
-                    h(RText, { name: index } as never)
+                default: ({ index }: { index: number }) => h(RText, { name: index } as never)
             })
         ]);
         const wrapper = await mountSuspended(Host);
@@ -434,8 +431,7 @@ describe("estrutura de saída — aninhamento profundo", () => {
     it("array volta para o default vazio no reset", async () => {
         const { model, Host } = harness({}, () => [
             h(RArray, { name: "users" } as never, {
-                default: ({ index }: { index: number }) =>
-                    h(RText, { name: index } as never)
+                default: ({ index }: { index: number }) => h(RText, { name: index } as never)
             })
         ]);
         const wrapper = await mountSuspended(Host);
@@ -514,9 +510,7 @@ describe("estrutura de saída — aninhamento profundo", () => {
             h(RArray, { name: "lista" } as never, {
                 default: ({ index }: { index: number }) =>
                     h(RObject, { name: index } as never, {
-                        default: () => [
-                            h(RText, { name: "nome", default: "novo" } as never)
-                        ]
+                        default: () => [h(RText, { name: "nome", default: "novo" } as never)]
                     })
             })
         ]);
@@ -534,9 +528,7 @@ describe("estrutura de saída — aninhamento profundo", () => {
             h(RArray, { name: "lista", default: [] } as never, {
                 default: ({ index }: { index: number }) =>
                     h(RObject, { name: index } as never, {
-                        default: () => [
-                            h(RText, { name: "nome", default: "novo" } as never)
-                        ]
+                        default: () => [h(RText, { name: "nome", default: "novo" } as never)]
                     })
             })
         ];

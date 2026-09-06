@@ -1,9 +1,11 @@
-// @vitest-environment nuxt
-import { describe, expect, it, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { mount } from "@vue/test-utils";
+// @vitest-environment nuxt
+import { describe, expect, it, vi } from "vitest";
 import { defineComponent, ref } from "vue";
+
 import { RDate, RHour, RText, RTextarea } from "#components";
+
 import vMask from "../../src/runtime/utils/vMask";
 
 const typeInto = (el: HTMLInputElement | HTMLTextAreaElement, value: string) => {
@@ -115,10 +117,7 @@ describe("vMask binds only the element it sits on", () => {
 
         mount(Wrapper);
 
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringContaining("v-mask"),
-            expect.anything()
-        );
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("v-mask"), expect.anything());
 
         warn.mockRestore();
     });
@@ -168,7 +167,7 @@ describe("mask changing at runtime", () => {
         expect((input.element as HTMLInputElement).value).toBe("529.982.247-25");
 
         await wrapper.setProps({ mask: "brCnpj" } as never);
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect((input.element as HTMLInputElement).value).toBe("52.998.224/725");
     });

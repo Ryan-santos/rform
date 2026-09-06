@@ -23,8 +23,8 @@ const VIEWPORT_GAP = 10;
 export const DROPDOWN_MIN_HEIGHT = 160;
 
 export type DropdownMiddlewareOptions = {
-    offset?: number
-    middleware?: Middleware[]
+    offset?: number;
+    middleware?: Middleware[];
 };
 
 /**
@@ -50,8 +50,7 @@ export const dropdownFit = (minHeight: number = DROPDOWN_MIN_HEIGHT): Middleware
                 "--width",
                 `${Math.max(0, rects.reference.width)}px`
             );
-            elements.floating.style.maxHeight
-                = `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`;
+            elements.floating.style.maxHeight = `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`;
         }
     });
 

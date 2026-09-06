@@ -11,17 +11,18 @@ const modules = import.meta.glob<{ defaults?: Record<string, unknown> }>(
 );
 
 /** O mesmo glob em `?raw`, para ler o template e saber onde cada Util entra. */
-const sources = import.meta.glob<string>(
-    "../../../src/runtime/components/**/*.vue",
-    { eager: true, query: "?raw", import: "default" }
-);
+const sources = import.meta.glob<string>("../../../src/runtime/components/**/*.vue", {
+    eager: true,
+    query: "?raw",
+    import: "default"
+});
 
 /**
  * A busca é pelo sufixo `components/<caminho>` porque `Calendar.vue` existe nas
  * duas pastas — sem o `components/` na frente, campo e util colidiriam.
  */
-function entry<T> (map: Record<string, T>, path: string): T | undefined {
-    const key = Object.keys(map).find(name => name.endsWith(`/components/${path}`));
+function entry<T>(map: Record<string, T>, path: string): T | undefined {
+    const key = Object.keys(map).find((name) => name.endsWith(`/components/${path}`));
 
     return key ? map[key] : undefined;
 }
@@ -31,27 +32,29 @@ export const fieldUi = (name: string) => entry(modules, `${name}.vue`)?.defaults
 export const utilUi = (name: string) => entry(modules, `Utils/${name}.vue`)?.defaults?.ui;
 
 /** Os `RUtilsX` que aparecem no template do campo, na ordem em que aparecem. */
-export function fieldUtils (name: string): string[] {
+export function fieldUtils(name: string): string[] {
     const source = entry(sources, `${name}.vue`) ?? "";
 
-    return [...new Set([...source.matchAll(/<RUtils([A-Z]\w*)/g)].map(match => match[1] as string))];
+    return [
+        ...new Set([...source.matchAll(/<RUtils([A-Z]\w*)/g)].map((match) => match[1] as string))
+    ];
 }
 
 /** Classe declarada em template literal chega com a indentação do arquivo. */
 const classes = (value: string) => value.replace(/\s+/g, " ").trim();
 
 export type UiNode = {
-    key: string
-    path: string
-    value?: string
-    children?: UiNode[]
+    key: string;
+    path: string;
+    value?: string;
+    children?: UiNode[];
     /** `util` é um `RUtilsX` montado dentro da camada, não uma chave de `ui`. */
-    kind?: "ui" | "util"
+    kind?: "ui" | "util";
     /** Subárvore grande demais para ficar aberta (o ui do Calendar, por exemplo). */
-    collapsed?: boolean
+    collapsed?: boolean;
 };
 
-function nodes (value: unknown, prefix: string): UiNode[] {
+function nodes(value: unknown, prefix: string): UiNode[] {
     if (!value || typeof value !== "object") {
         return [];
     }
@@ -75,13 +78,15 @@ function nodes (value: unknown, prefix: string): UiNode[] {
  * `ui` às vezes é uma string só (Form, RUtilsDescription) — nesse caso a árvore
  * é uma folha única, para o diagrama não sair vazio.
  */
-export function uiNodes (ui: unknown, prefix = ""): UiNode[] {
+export function uiNodes(ui: unknown, prefix = ""): UiNode[] {
     if (typeof ui === "string") {
-        return [{
-            key: prefix.split(".").pop() || "ui",
-            path: prefix || "ui",
-            value: classes(ui)
-        }];
+        return [
+            {
+                key: prefix.split(".").pop() || "ui",
+                path: prefix || "ui",
+                value: classes(ui)
+            }
+        ];
     }
 
     return nodes(ui, prefix);
@@ -92,9 +97,24 @@ const count = (list: UiNode[]): number =>
 
 /* ── posição dos Utils dentro do template ─────────────────────────────────── */
 
-type Placement = { util: string, children: Placement[] };
+type Placement = { util: string; children: Placement[] };
 
-const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
+const VOID = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr"
+]);
 
 const UI_BINDING = /props\.ui\?\.([\w?.]+)/;
 
@@ -107,7 +127,7 @@ const bindingPath = (chunk: string) => UI_BINDING.exec(chunk)?.[1]?.replaceAll("
  * Anda até o `>` que fecha a tag, pulando os que moram dentro de valor de
  * atributo — um `:class` com ternário carrega mais de um.
  */
-function endOfTag (source: string, from: number): number {
+function endOfTag(source: string, from: number): number {
     let quote: string | null = null;
 
     for (let index = from; index < source.length; index++) {
@@ -121,7 +141,7 @@ function endOfTag (source: string, from: number): number {
             continue;
         }
 
-        if (char === "\"" || char === "'") {
+        if (char === '"' || char === "'") {
             quote = char;
             continue;
         }
@@ -135,7 +155,7 @@ function endOfTag (source: string, from: number): number {
 }
 
 /** Só o primeiro bloco `<template>` do SFC — o resto é script e estilo. */
-function templateOf (source: string): string {
+function templateOf(source: string): string {
     const start = source.indexOf("<template>");
     const end = source.lastIndexOf("</template>");
 
@@ -147,7 +167,7 @@ function templateOf (source: string): string {
  * anota o caminho de `ui` do elemento que o envolve. É isso que permite mostrar
  * o Placeholder dentro de `group.field.container` em vez de numa lista solta.
  */
-function placements (component: string): Map<string, Placement[]> {
+function placements(component: string): Map<string, Placement[]> {
     const template = templateOf(entry(sources, `${component}.vue`) ?? "");
     const map = new Map<string, Placement[]>();
 
@@ -159,7 +179,7 @@ function placements (component: string): Map<string, Placement[]> {
         return list;
     };
 
-    type Frame = { path: string, list: Placement[] };
+    type Frame = { path: string; list: Placement[] };
 
     const stack: Frame[] = [];
 
@@ -224,7 +244,7 @@ function placements (component: string): Map<string, Placement[]> {
     return map;
 }
 
-function utilNodes (list: Placement[], prefix: string): UiNode[] {
+function utilNodes(list: Placement[], prefix: string): UiNode[] {
     return list.map((placement) => {
         const own = uiNodes(utilUi(placement.util), `${prefix}.@${placement.util}.ui`);
         const path = `${prefix}.@${placement.util}`;
@@ -240,14 +260,14 @@ function utilNodes (list: Placement[], prefix: string): UiNode[] {
 }
 
 const getIn = (value: unknown, key: string) =>
-    (value && typeof value === "object" ? (value as Record<string, unknown>)[key] : undefined);
+    value && typeof value === "object" ? (value as Record<string, unknown>)[key] : undefined;
 
 /**
  * A árvore do campo com os Utils no lugar onde o template os monta. As chaves de
  * `ui` continuam na forma do objeto (é o que se escreve no defaults); os Utils
  * entram como camada dentro da chave que os envolve no DOM.
  */
-export function fieldTree (component: string): UiNode[] {
+export function fieldTree(component: string): UiNode[] {
     const map = placements(component);
 
     const build = (value: unknown, prefix: string, key: string): UiNode[] => {
@@ -255,9 +275,7 @@ export function fieldTree (component: string): UiNode[] {
 
         return list.map((node) => {
             const inner = key ? `${key}.${node.key}` : node.key;
-            const own = node.children
-                ? build(getIn(value, node.key), node.path, inner)
-                : [];
+            const own = node.children ? build(getIn(value, node.key), node.path, inner) : [];
 
             const mounted = utilNodes(map.get(inner) ?? [], node.path);
 
@@ -279,7 +297,7 @@ export function fieldTree (component: string): UiNode[] {
 
 const IDENTIFIER = /^(?:[A-Za-z_$][\w$]*|\d+)$/;
 
-function serialize (value: unknown, indent: number): string {
+function serialize(value: unknown, indent: number): string {
     const pad = " ".repeat(indent);
 
     if (value && typeof value === "object") {
@@ -311,7 +329,7 @@ function serialize (value: unknown, indent: number): string {
  * O mesmo objeto do diagrama, já no formato de `app/rform/defaults.ts` — é o
  * ponto de partida para sobrescrever qualquer camada.
  */
-export function uiSnippet (name: string): string {
+export function uiSnippet(name: string): string {
     const utils = fieldUtils(name).reduce<Record<string, unknown>>((all, util) => {
         const ui = utilUi(util);
 
@@ -325,16 +343,16 @@ export function uiSnippet (name: string): string {
     }
 
     return [
-        "import { defineFieldDefaults } from \"#rform/utils\";",
+        'import { defineFieldDefaults } from "#rform/utils";',
         "",
         `export default defineFieldDefaults(${serialize(body, 0)});`
     ].join("\n");
 }
 
 export type UiFocus = {
-    path: Ref<string | null>
-    toggle: (path: string) => void
-    state: (path: string) => "active" | "related" | "dimmed" | "idle"
+    path: Ref<string | null>;
+    toggle: (path: string) => void;
+    state: (path: string) => "active" | "related" | "dimmed" | "idle";
 };
 
 export const uiFocusKey = Symbol("ui-focus") as InjectionKey<UiFocus>;

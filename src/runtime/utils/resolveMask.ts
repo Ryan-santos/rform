@@ -10,7 +10,7 @@ export type MaskRef = string | MaskPreset;
  * Resolves a `mask` prop: a preset name wins, anything else goes straight to
  * maska as a raw pattern or options object.
  */
-export default function resolveMask (
+export default function resolveMask(
     ref: MaskRef | null | undefined,
     masks: Masks
 ): MaskRef | undefined {
@@ -23,4 +23,4 @@ export default function resolveMask (
     }
 
     return ref;
-};
+}

@@ -8,7 +8,7 @@
                 :key="index"
             >
                 <input
-                    :ref="el => setBox(index, el)"
+                    :ref="(el) => setBox(index, el)"
                     :type="props.secret ? 'password' : 'text'"
                     :inputmode="charset.inputmode"
                     :value="chars[index] ?? ''"
@@ -17,7 +17,7 @@
                     @keydown="onKeydown(index, $event)"
                     @focus="onFocus(index)"
                     @paste="onPaste(index, $event)"
-                >
+                />
 
                 <span
                     v-if="hasSeparator(index)"
@@ -35,11 +35,12 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
-    import { useInjection } from "#rform/composables";
-    import type Utils from "#rform/types/components/utils/props";
     import { computed, onMounted, ref, watch } from "vue";
+
+    import { useInjection } from "#rform/composables";
+    import type { Element } from "#rform/types";
+    import type Utils from "#rform/types/components/utils/props";
+    import { defineDefaults } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
@@ -55,18 +56,17 @@
         type: "numeric"
     });
 
-    export type Props = Element<typeof defaults, "pin">
-        & Utils["Label"]
-        & Utils["Description"]
-        & Utils["Error"]
-        & Utils["Loading"]
-        & {
-            length?: number
-            type?: "numeric" | "alphanumeric"
-            secret?: boolean
-            autofocus?: boolean
-            separator?: number
-            onComplete?: (value: string) => void
+    export type Props = Element<typeof defaults, "pin"> &
+        Utils["Label"] &
+        Utils["Description"] &
+        Utils["Error"] &
+        Utils["Loading"] & {
+            length?: number;
+            type?: "numeric" | "alphanumeric";
+            secret?: boolean;
+            autofocus?: boolean;
+            separator?: number;
+            onComplete?: (value: string) => void;
         };
 </script>
 
@@ -78,10 +78,7 @@
         autofocus: undefined
     });
 
-    const {
-        model,
-        props
-    } = await useInjection(_props);
+    const { model, props } = await useInjection(_props);
 
     const count = computed(() => props.value.length ?? defaults.length);
 
@@ -93,7 +90,7 @@
      */
     const value = ref("");
 
-    watch(model, current => (value.value = String(current ?? "")), { immediate: true });
+    watch(model, (current) => (value.value = String(current ?? "")), { immediate: true });
 
     const chars = computed(() => value.value.split(""));
 
@@ -103,9 +100,11 @@
         model.value = capped;
     };
 
-    const charset = computed(() => props.value.type === "alphanumeric"
-        ? { inputmode: "text", strip: /[^a-zA-Z0-9]/g, upper: true } as const
-        : { inputmode: "numeric", strip: /[^0-9]/g, upper: false } as const);
+    const charset = computed(() =>
+        props.value.type === "alphanumeric"
+            ? ({ inputmode: "text", strip: /[^a-zA-Z0-9]/g, upper: true } as const)
+            : ({ inputmode: "numeric", strip: /[^0-9]/g, upper: false } as const)
+    );
 
     const clean = (raw: string) => {
         const kept = raw.replace(charset.value.strip, "");

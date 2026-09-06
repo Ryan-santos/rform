@@ -28,12 +28,12 @@ const VIEWPORT = { x: 0, y: 0, width: 1000, height: 800 };
  * onde quem lê a variável é o `w-(--width)` do `ui`.
  */
 type Style = Record<string, string> & {
-    setProperty: (name: string, value: string) => void
+    setProperty: (name: string, value: string) => void;
 };
 
 type Panel = {
-    natural: { width: number, height: number }
-    style: Style
+    natural: { width: number; height: number };
+    style: Style;
 };
 
 const declaration = (): Style => {
@@ -51,8 +51,14 @@ const parse = (value: string | undefined) => {
 };
 
 const platform = {
-    getElementRects: async ({ reference, floating }: { reference: unknown, floating: unknown }) => ({
-        reference: reference as { x: number, y: number, width: number, height: number },
+    getElementRects: async ({
+        reference,
+        floating
+    }: {
+        reference: unknown;
+        floating: unknown;
+    }) => ({
+        reference: reference as { x: number; y: number; width: number; height: number },
         floating: { x: 0, y: 0, ...(await platform.getDimensions(floating as Panel)) }
     }),
     getDimensions: async (panel: Panel) => ({
@@ -62,9 +68,11 @@ const platform = {
     getClippingRect: async () => VIEWPORT,
     getOffsetParent: async () => null,
     getDocumentElement: async () => null,
-    convertOffsetParentRelativeRectToViewportRelativeRect: async (
-        { rect }: { rect: { x: number, y: number, width: number, height: number } }
-    ) => rect,
+    convertOffsetParentRelativeRectToViewportRelativeRect: async ({
+        rect
+    }: {
+        rect: { x: number; y: number; width: number; height: number };
+    }) => rect,
     isElement: async () => true,
     isRTL: async () => false,
     getScale: async () => ({ x: 1, y: 1 })
@@ -77,11 +85,7 @@ const panel = (height: number): Panel => ({
     style: declaration()
 });
 
-const place = (
-    reference: ReturnType<typeof field>,
-    floating: Panel,
-    middleware: Middleware[]
-) => {
+const place = (reference: ReturnType<typeof field>, floating: Panel, middleware: Middleware[]) => {
     return computePosition(reference as never, floating as never, {
         placement: "bottom-start",
         strategy: "fixed",

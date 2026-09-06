@@ -1,11 +1,11 @@
-import type { Base } from "#rform/types";
 import { twMerge } from "tailwind-merge";
 
-export default function mergerUI<
-    T extends (Base["ui"] | undefined)[],
-    I = NonNullable<T[number]>
-> (...objects: T): I | undefined {
-    const validObjects = objects.filter(obj => obj !== undefined);
+import type { Base } from "#rform/types";
+
+export default function mergerUI<T extends (Base["ui"] | undefined)[], I = NonNullable<T[number]>>(
+    ...objects: T
+): I | undefined {
+    const validObjects = objects.filter((obj) => obj !== undefined);
 
     if (validObjects.length === 0) {
         return undefined;
@@ -15,14 +15,11 @@ export default function mergerUI<
         return validObjects[0] as unknown as I;
     }
 
-    if (validObjects.every(obj => typeof obj === "string")) {
+    if (validObjects.every((obj) => typeof obj === "string")) {
         return twMerge(...(validObjects as string[])) as unknown as I;
     }
 
-    const [
-        target,
-        ...sources
-    ] = validObjects as Record<string, unknown>[];
+    const [target, ...sources] = validObjects as Record<string, unknown>[];
 
     const result = { ...target };
 
@@ -31,13 +28,14 @@ export default function mergerUI<
             if (source[key] !== undefined) {
                 if (source[key] !== null) {
                     if (typeof source[key] === "string" || Array.isArray(source[key])) {
-                        result[key] = twMerge((result[key] as string), (source[key] as string));
+                        result[key] = twMerge(result[key] as string, source[key] as string);
+                    } else {
+                        result[key] = mergerUI(
+                            result[key] as Record<string, unknown>,
+                            source[key] as unknown as Record<string, unknown>
+                        );
                     }
-                    else {
-                        result[key] = mergerUI((result[key] as Record<string, unknown>), (source[key] as unknown as Record<string, unknown>));
-                    }
-                }
-                else {
+                } else {
                     result[key] = source[key];
                 }
             }

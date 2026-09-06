@@ -26,7 +26,7 @@
                     type="number"
                     inputmode="numeric"
                     :class="props.ui?.group?.field?.input"
-                >
+                />
             </div>
 
             <button
@@ -53,10 +53,10 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
     import { useInjection } from "#rform/composables";
+    import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
+    import { defineDefaults } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
@@ -94,15 +94,14 @@
         step: 1
     });
 
-    export type Props = Element<typeof defaults, "number", null | number>
-        & Utils["Description"]
-        & Utils["Error"]
-        & Utils["Loading"]
-        & Utils["Placeholder"]
-        & {
-            step?: number
-            min?: number
-            max?: number
+    export type Props = Element<typeof defaults, "number", null | number> &
+        Utils["Description"] &
+        Utils["Error"] &
+        Utils["Loading"] &
+        Utils["Placeholder"] & {
+            step?: number;
+            min?: number;
+            max?: number;
         };
 </script>
 
@@ -112,11 +111,8 @@
         loading: undefined
     });
 
-    const {
-        model,
-        props
-    } = await useInjection(_props, {
-        set (value) {
+    const { model, props } = await useInjection(_props, {
+        set(value) {
             if (typeof value === "string") {
                 return Number.parseInt(value) || null;
             }

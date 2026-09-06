@@ -1,7 +1,5 @@
 <template>
-    <Transition
-        v-bind="props.ui.transition"
-    >
+    <Transition v-bind="props.ui.transition">
         <Icon
             v-if="props.loading"
             name="loading"
@@ -32,13 +30,11 @@
     export const defaults = defineDefaults({ ui });
 
     export type Props = {
-        loading?: boolean
-        ui?: DeepPartial<typeof defaults.ui>
+        loading?: boolean;
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 
 <script setup lang="ts">
-    const {
-        props
-    } = useUtilProps<Props>(defaults);
+    const { props } = useUtilProps<Props>(defaults);
 </script>

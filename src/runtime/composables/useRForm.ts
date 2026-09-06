@@ -1,6 +1,8 @@
 import { ref, type Ref } from "vue";
 import { z, type ZodType, type ZodObject } from "zod";
+
 import type { Schema, FieldConfig, InferData } from "#rform/types/schema";
+
 import resolveRule from "../utils/resolveRule";
 import { isZodType, zodToFn } from "../utils/zod";
 
@@ -8,7 +10,7 @@ import { isZodType, zodToFn } from "../utils/zod";
  * A preset validation may be async, so the aggregated object it produces has to
  * be read with `safeParseAsync`. Zod-only schemas stay synchronous.
  */
-function toZod (rule: unknown): ZodType {
+function toZod(rule: unknown): ZodType {
     if (rule === undefined || rule === null) {
         return z.any();
     }
@@ -47,11 +49,11 @@ function toZod (rule: unknown): ZodType {
  * Only zod schemas need flattening — every other shape is resolved by the field
  * itself, so it must survive untouched.
  */
-function normalizeRule (rule: unknown) {
+function normalizeRule(rule: unknown) {
     return isZodType(rule) ? zodToFn(rule) : rule;
 }
 
-function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
+function aggregateRules(schema: Schema): ZodObject<Record<string, ZodType>> {
     const shape: Record<string, ZodType> = {};
 
     for (const [key, field] of Object.entries(schema)) {
@@ -70,11 +72,9 @@ function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
 
             if ("slot" in child) {
                 shape[key] = z.array(toZod(child.rule));
-            }
-            else if (child.type === "object") {
+            } else if (child.type === "object") {
                 shape[key] = z.array(aggregateRules(child.children));
-            }
-            else {
+            } else {
                 shape[key] = z.array(toZod(child.rule));
             }
 
@@ -89,7 +89,7 @@ function aggregateRules (schema: Schema): ZodObject<Record<string, ZodType>> {
 
 type FieldOrSlot = Schema[string];
 
-function normalizeField (field: FieldOrSlot): FieldOrSlot {
+function normalizeField(field: FieldOrSlot): FieldOrSlot {
     if ("slot" in field) {
         return {
             ...field,
@@ -119,7 +119,7 @@ function normalizeField (field: FieldOrSlot): FieldOrSlot {
     } as FieldConfig;
 }
 
-function normalizeSchema (schema: Schema): Schema {
+function normalizeSchema(schema: Schema): Schema {
     const out: Schema = {};
 
     for (const [key, field] of Object.entries(schema)) {
@@ -129,17 +129,21 @@ function normalizeSchema (schema: Schema): Schema {
     return out;
 }
 
-function useRForm <T>(): { data: Ref<T> };
-function useRForm <Z extends Record<string, ZodType>>(input: Z): {
+function useRForm<T>(): { data: Ref<T> };
+function useRForm<Z extends Record<string, ZodType>>(
+    input: Z
+): {
     data: Ref<{ [K in keyof Z]: z.infer<Z[K]> }>;
     rules: ZodObject<Z>;
 };
-function useRForm <S extends Schema>(input: S): {
+function useRForm<S extends Schema>(
+    input: S
+): {
     data: Ref<InferData<S>>;
     rules: ZodObject<Record<string, ZodType>>;
     schema: S;
 };
-function useRForm (input?: unknown): unknown {
+function useRForm(input?: unknown): unknown {
     if (input === undefined) {
         return { data: ref({}) };
     }

@@ -39,12 +39,12 @@
 </template>
 
 <script lang="ts">
+    import { useInjection } from "#rform/composables";
     import type { Element } from "#rform/types";
+    import type Utils from "#rform/types/components/utils/props";
     import type { Mask } from "#rform/types/presets";
     import { defineDefaults } from "#rform/utils";
-    import { useInjection } from "#rform/composables";
     import { vMask } from "#rform/utils";
-    import type Utils from "#rform/types/components/utils/props";
 
     export const defaults = defineDefaults({
         ui: {
@@ -69,15 +69,14 @@
         rows: 3
     });
 
-    export type Props = Element<typeof defaults, "textarea">
-        & Utils["Description"]
-        & Utils["Error"]
-        & Utils["Loading"]
-        & Utils["Length"]
-        & Utils["Placeholder"]
-        & {
-            mask?: Mask
-            rows?: number
+    export type Props = Element<typeof defaults, "textarea"> &
+        Utils["Description"] &
+        Utils["Error"] &
+        Utils["Loading"] &
+        Utils["Length"] &
+        Utils["Placeholder"] & {
+            mask?: Mask;
+            rows?: number;
         };
 </script>
 
@@ -87,9 +86,5 @@
         loading: undefined
     });
 
-    const {
-        mask,
-        model,
-        props
-    } = await useInjection(_props);
+    const { mask, model, props } = await useInjection(_props);
 </script>

@@ -31,26 +31,26 @@
     export type Props<M extends Mode = "single"> = Omit<
         Element<typeof defaults, "calendar">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & Utils["Label"]
-        & Utils["Error"]
-        & Utils["Calendar"]
-        & {
-            mode?: M
-            default?: ModelType<M>
-            modelValue?: ModelType<M>
-            "onUpdate:modelValue"?: ($event: ModelType<M>) => void
+    > &
+        Utils["Label"] &
+        Utils["Error"] &
+        Utils["Calendar"] & {
+            mode?: M;
+            default?: ModelType<M>;
+            modelValue?: ModelType<M>;
+            "onUpdate:modelValue"?: ($event: ModelType<M>) => void;
         };
 
     type InternalProps = Omit<
         Element<typeof defaults, "calendar">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & Utils["Label"]
-        & Utils["Error"]
-        & Utils["Calendar"]
-        & {
-            mode?: Mode
-            default?: unknown
-            modelValue?: unknown
+    > &
+        Utils["Label"] &
+        Utils["Error"] &
+        Utils["Calendar"] & {
+            mode?: Mode;
+            default?: unknown;
+            modelValue?: unknown;
         };
 </script>
 

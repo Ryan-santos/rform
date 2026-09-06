@@ -1,23 +1,22 @@
 <template>
     <span
         v-if="props.length"
-        :class="[
-            props.ui.container,
-            _class
-        ]"
+        :class="[props.ui.container, _class]"
     >
         {{ valueLength }} / {{ props.length }}
     </span>
 </template>
 
 <script lang="ts">
+    import { computed, watch } from "vue";
+
     import { useUtilProps } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { computed, watch } from "vue";
     import { defineDefaults } from "#rform/utils";
 
     const ui = {
-        container: "absolute right-2 top-0 w-fit -translate-y-1/2 rounded-(--rf-radius-sm) bg-(--rf-color-background-100) text-xs leading-none px-1 py-0.5 font-bold text-(--rf-color-contrast) transition-all duration-300",
+        container:
+            "absolute right-2 top-0 w-fit -translate-y-1/2 rounded-(--rf-radius-sm) bg-(--rf-color-background-100) text-xs leading-none px-1 py-0.5 font-bold text-(--rf-color-contrast) transition-all duration-300",
         percentages: {
             60: "text-(--rf-color-warn)",
             80: "text-(--rf-color-danger)",
@@ -28,16 +27,13 @@
     export const defaults = defineDefaults({ ui });
 
     export type Props = {
-        length?: number | string
-        ui?: DeepPartial<typeof defaults.ui>
+        length?: number | string;
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 
 <script setup lang="ts">
-    const {
-        props,
-        upper
-    } = useUtilProps<Props>(defaults);
+    const { props, upper } = useUtilProps<Props>(defaults);
 
     const max = computed(() => {
         return typeof props.value.length === "string"
@@ -45,24 +41,27 @@
             : props.value.length;
     });
 
-    watch(() => upper.model.value, (value) => {
-        if (max.value === undefined) {
-            return;
-        }
-
-        const inString = String(value);
-
-        if (inString.length >= (max.value + 1)) {
-            const cut = inString.substring(0, max.value);
-
-            if (typeof value === "number") {
-                value = Number.parseInt(cut);
-                return Number.parseInt(cut);
+    watch(
+        () => upper.model.value,
+        (value) => {
+            if (max.value === undefined) {
+                return;
             }
 
-            upper.model.value = cut;
+            const inString = String(value);
+
+            if (inString.length >= max.value + 1) {
+                const cut = inString.substring(0, max.value);
+
+                if (typeof value === "number") {
+                    value = Number.parseInt(cut);
+                    return Number.parseInt(cut);
+                }
+
+                upper.model.value = cut;
+            }
         }
-    });
+    );
 
     const valueLength = computed(() => {
         return String(upper.model.value ?? "").length;
@@ -75,9 +74,8 @@
 
         const currentPercentage = Math.round((valueLength.value / max.value) * 100);
 
-        const percentagesArray = Object
-            .keys(props.value.ui.percentages)
-            .map(v => Number(v))
+        const percentagesArray = Object.keys(props.value.ui.percentages)
+            .map((v) => Number(v))
             .sort((a, b) => b - a);
 
         for (const percentage of percentagesArray) {

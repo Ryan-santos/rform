@@ -17,7 +17,7 @@ const TAG = /<Demo(?=[\s/>])|<\/Demo\s*>/g;
  * Walks to the `>` that closes an opening tag, skipping the ones that live
  * inside attribute values — `:rule="({ value }) => value"` carries two.
  */
-function endOfTag (source: string, from: number): number {
+function endOfTag(source: string, from: number): number {
     let quote: string | null = null;
 
     for (let i = from; i < source.length; i++) {
@@ -31,7 +31,7 @@ function endOfTag (source: string, from: number): number {
             continue;
         }
 
-        if (char === "\"" || char === "'") {
+        if (char === '"' || char === "'") {
             quote = char;
             continue;
         }
@@ -44,7 +44,7 @@ function endOfTag (source: string, from: number): number {
     return -1;
 }
 
-function dedent (block: string): string {
+function dedent(block: string): string {
     const lines = block.split("\n");
 
     while (lines.length > 0 && !lines[0]?.trim()) {
@@ -56,7 +56,7 @@ function dedent (block: string): string {
     }
 
     const indent = lines
-        .filter(line => line.trim())
+        .filter((line) => line.trim())
         .reduce(
             (min, line) => Math.min(min, line.length - line.trimStart().length),
             Number.POSITIVE_INFINITY
@@ -64,7 +64,7 @@ function dedent (block: string): string {
 
     const strip = Number.isFinite(indent) ? indent : 0;
 
-    return lines.map(line => line.slice(strip)).join("\n");
+    return lines.map((line) => line.slice(strip)).join("\n");
 }
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -74,7 +74,7 @@ const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * The markers are the ones the editor already folds on, so they earn their keep
  * even when nobody is reading the rendered page.
  */
-export function extractRegion (source: string, id: string): string {
+export function extractRegion(source: string, id: string): string {
     if (!source) {
         return "";
     }
@@ -102,12 +102,12 @@ export function extractRegion (source: string, id: string): string {
  * is by depth over the token stream rather than by regex, so a `<Demo>` nested
  * inside another one closes the right tag.
  */
-export function extractDemo (source: string, id: string): string {
+export function extractDemo(source: string, id: string): string {
     if (!source) {
         return "";
     }
 
-    const tokens: { start: number, end: number, open: boolean }[] = [];
+    const tokens: { start: number; end: number; open: boolean }[] = [];
 
     TAG.lastIndex = 0;
 
@@ -123,7 +123,7 @@ export function extractDemo (source: string, id: string): string {
         match = TAG.exec(source);
     }
 
-    const selfClosing = (token: { start: number, end: number }) => {
+    const selfClosing = (token: { start: number; end: number }) => {
         const tagEnd = endOfTag(source, token.end);
         return tagEnd !== -1 && source[tagEnd - 1] === "/";
     };

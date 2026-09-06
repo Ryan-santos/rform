@@ -3,42 +3,22 @@
         :is="href ? NuxtLink : 'button'"
         ref="button"
         :href="href"
-        class="
-            group/button
-            inline-flex
-            select-none
-            flex-row
-            items-center
-            justify-center
-            gap-2
-            overflow-hidden
-            rounded-full
-            border
-            border-transparent
-            text-center
-            font-medium
-            tracking-wide
-            !transition-all
-
-            !duration-500
-
-            disabled:pointer-events-none
-            disabled:cursor-not-allowed
-
-            activated:cursor-not-allowed
-            activated:shadow-none
-        "
-        :class="[
-            _color,
-            _size,
-            {'activated': props.activated || _loading}
-        ]"
+        class="group/button inline-flex select-none flex-row items-center justify-center gap-2 overflow-hidden rounded-full border border-transparent text-center font-medium tracking-wide !transition-all !duration-500 disabled:pointer-events-none disabled:cursor-not-allowed activated:cursor-not-allowed activated:shadow-none"
+        :class="[_color, _size, { activated: props.activated || _loading }]"
         :disabled="_loading"
         @click="click"
     >
         <TransitionTranslateY>
-            <Icon v-if="_loading" name="loading" class="pointer-events-none" />
-            <span v-else class="pointer-events-none inline-flex w-full items-center justify-center gap-2" :class="props.addClass">
+            <Icon
+                v-if="_loading"
+                name="loading"
+                class="pointer-events-none"
+            />
+            <span
+                v-else
+                class="pointer-events-none inline-flex w-full items-center justify-center gap-2"
+                :class="props.addClass"
+            >
                 <slot />
             </span>
         </TransitionTranslateY>
@@ -142,31 +122,34 @@
     };
 
     export declare namespace Button {
-        export type Color = keyof typeof colors
-        export type Variant = keyof typeof base
-        export type Size = keyof typeof sizes
+        export type Color = keyof typeof colors;
+        export type Variant = keyof typeof base;
+        export type Size = keyof typeof sizes;
     }
 
-    const props = withDefaults(defineProps<{
-        href?: string
-        color?: Button.Color
-        variant?: Button.Variant
-        size?: Button.Size
-        addClass?: string
-        activated?: boolean
-        loading?: boolean
-        action?:() => Promise<any>
-    }>(), {
-        href: undefined,
-        color: "primary",
-        variant: "solid",
-        size: "md",
-        addClass: undefined,
-        action: undefined
-    });
+    const props = withDefaults(
+        defineProps<{
+            href?: string;
+            color?: Button.Color;
+            variant?: Button.Variant;
+            size?: Button.Size;
+            addClass?: string;
+            activated?: boolean;
+            loading?: boolean;
+            action?: () => Promise<any>;
+        }>(),
+        {
+            href: undefined,
+            color: "primary",
+            variant: "solid",
+            size: "md",
+            addClass: undefined,
+            action: undefined
+        }
+    );
 
     const emit = defineEmits<{
-        finally: []
+        finally: [];
     }>();
 
     const _color = computed(() => {
@@ -187,11 +170,10 @@
         if (props.action) {
             loadingAction.value = true;
 
-            await props.action()
-                .finally(() => {
-                    loadingAction.value = false;
-                    emit("finally");
-                });
+            await props.action().finally(() => {
+                loadingAction.value = false;
+                emit("finally");
+            });
         }
     };
 
@@ -205,7 +187,7 @@
 
                 if (!add) {
                     // um pequeno delay para o botão não tirar o width original antes da transição
-                    await new Promise(resolve => setTimeout(resolve, 600));
+                    await new Promise((resolve) => setTimeout(resolve, 600));
                 }
 
                 button.value.style.width = add;

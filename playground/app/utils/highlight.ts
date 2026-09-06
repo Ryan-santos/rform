@@ -12,19 +12,20 @@ const ENTITIES: Record<string, string> = {
     ">": "&gt;"
 };
 
-export const escapeHtml = (value: string) => value.replace(/[&<>]/g, char => ENTITIES[char] as string);
+export const escapeHtml = (value: string) =>
+    value.replace(/[&<>]/g, (char) => ENTITIES[char] as string);
 
 /**
  * As regras são regex de verdade, não string de regex: o `source` é lido na hora
  * de montar a alternância, e assim nenhuma barra invertida precisa ser dobrada.
  */
-type Grammar = { token: string, re: RegExp }[];
+type Grammar = { token: string; re: RegExp }[];
 
 /**
  * Uma passada só, com todas as regras num único regex: a alternância é ordenada,
  * então comentário e string vêm primeiro e nada casa dentro deles.
  */
-function paint (source: string, grammar: Grammar): string {
+function paint(source: string, grammar: Grammar): string {
     if (!source) {
         return "";
     }
@@ -73,9 +74,7 @@ const json: Grammar = [
     { token: "punct", re: /[{}[\],:]/ }
 ];
 
-const text: Grammar = [
-    { token: "interp", re: /\{\{.*?\}\}/ }
-];
+const text: Grammar = [{ token: "interp", re: /\{\{.*?\}\}/ }];
 
 const TAG_NAME = /^<\/?[A-Za-z][\w.-]*/;
 
@@ -85,13 +84,13 @@ const BOUND = /^[@:]|^v-/;
 
 /** `>` e `/>` do gap entre atributos, já sobre o texto escapado. */
 const closers = (value: string) =>
-    escapeHtml(value).replace(/\/?&gt;/g, match => `<span class="tok-punct">${match}</span>`);
+    escapeHtml(value).replace(/\/?&gt;/g, (match) => `<span class="tok-punct">${match}</span>`);
 
 /**
  * Anda até o `>` que fecha a tag, pulando os que moram dentro de valor de
  * atributo — `:rule="({ value }) => value"` carrega dois.
  */
-function endOfTag (source: string, from: number): number {
+function endOfTag(source: string, from: number): number {
     let quote: string | null = null;
 
     for (let index = from; index < source.length; index++) {
@@ -105,7 +104,7 @@ function endOfTag (source: string, from: number): number {
             continue;
         }
 
-        if (char === "\"" || char === "'") {
+        if (char === '"' || char === "'") {
             quote = char;
             continue;
         }
@@ -118,7 +117,7 @@ function endOfTag (source: string, from: number): number {
     return -1;
 }
 
-function paintTag (chunk: string): string {
+function paintTag(chunk: string): string {
     const name = TAG_NAME.exec(chunk);
 
     if (!name) {
@@ -154,8 +153,7 @@ function paintTag (chunk: string): string {
                 html += `<span class="tok-string">${quote}</span>`;
                 html += paint(inner, ts);
                 html += `<span class="tok-string">${quote}</span>`;
-            }
-            else {
+            } else {
                 html += `<span class="tok-string">${escapeHtml(raw)}</span>`;
             }
         }
@@ -170,7 +168,7 @@ function paintTag (chunk: string): string {
  * Template Vue é varrido à mão em vez de por regex: assim um nome de atributo
  * nunca é confundido com uma palavra qualquer do texto entre as tags.
  */
-function paintVue (source: string): string {
+function paintVue(source: string): string {
     let html = "";
     let index = 0;
 
@@ -209,7 +207,7 @@ function paintVue (source: string): string {
     return html;
 }
 
-export function highlight (code: string, lang: Lang = "ts"): string {
+export function highlight(code: string, lang: Lang = "ts"): string {
     if (lang === "vue") {
         return paintVue(code);
     }

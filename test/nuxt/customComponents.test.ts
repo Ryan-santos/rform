@@ -1,21 +1,22 @@
-// @vitest-environment nuxt
-import { describe, expect, it } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+
+import { mountSuspended } from "@nuxt/test-utils/runtime";
+// @vitest-environment nuxt
+import { describe, expect, it } from "vitest";
+
+import useInjection from "../../src/runtime/composables/useInjection";
+import useUtilProps from "../../src/runtime/composables/useUtilProps";
 // By path, not `#components`: these live in the fixture, and the module's own
 // type-check resolves `#components` against the module's generated types.
 import RRating from "../fixtures/basic/rform/fields/Rating.vue";
 import RSwitch from "../fixtures/basic/rform/fields/Switch.vue";
-import useInjection from "../../src/runtime/composables/useInjection";
-import useUtilProps from "../../src/runtime/composables/useUtilProps";
 
 // Vite rewrites `new URL(<template literal>, import.meta.url)`, so paths are
 // built from the repo root instead.
 const root = process.cwd();
 
-const read = (path: string) =>
-    readFile(join(root, "test/fixtures/basic/.nuxt", path), "utf8");
+const read = (path: string) => readFile(join(root, "test/fixtures/basic/.nuxt", path), "utf8");
 
 /**
  * The fixture ships `rform/fields/Rating.vue` (a field the module does not
@@ -120,7 +121,7 @@ describe("the generated artifacts", () => {
         const components = await read("components.d.ts");
         const line = components
             .split("\n")
-            .find(entry => entry.startsWith("export const RSwitch:"));
+            .find((entry) => entry.startsWith("export const RSwitch:"));
 
         expect(line).toContain("rform/fields/Switch.vue");
         expect(line).not.toContain("src/runtime/components");
@@ -151,8 +152,7 @@ describe("an unresolvable component name", () => {
     it("fails loudly in useInjection instead of borrowing Text's defaults", async () => {
         await expect(useInjection({})).rejects.toThrow(/could not resolve a component name/);
 
-        await expect(useInjection({}, undefined, "Nope" as never))
-            .rejects.toThrow(/got "Nope"/);
+        await expect(useInjection({}, undefined, "Nope" as never)).rejects.toThrow(/got "Nope"/);
     });
 
     /**

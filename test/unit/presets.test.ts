@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { collectPresets, presetName } from "../../src/presets";
 
 describe("presetName", () => {
@@ -39,11 +40,10 @@ describe("collectPresets", () => {
     });
 
     it("ignores files that are not typescript or javascript modules", () => {
-        expect(collectPresets(["cpf.ts", "notes.md", "types.d.ts", "legacy.js"]))
-            .toEqual([
-                { name: "cpf", file: "cpf.ts" },
-                { name: "legacy", file: "legacy.js" }
-            ]);
+        expect(collectPresets(["cpf.ts", "notes.md", "types.d.ts", "legacy.js"])).toEqual([
+            { name: "cpf", file: "cpf.ts" },
+            { name: "legacy", file: "legacy.js" }
+        ]);
     });
 
     it("returns an empty list when there are no files", () => {
@@ -51,7 +51,8 @@ describe("collectPresets", () => {
     });
 
     it("throws naming both files when two paths collapse to the same name", () => {
-        expect(() => collectPresets(["br/cpf.ts", "brCpf.ts"]))
-            .toThrowError(/brCpf.*br\/cpf\.ts.*brCpf\.ts/s);
+        expect(() => collectPresets(["br/cpf.ts", "brCpf.ts"])).toThrowError(
+            /brCpf.*br\/cpf\.ts.*brCpf\.ts/s
+        );
     });
 });

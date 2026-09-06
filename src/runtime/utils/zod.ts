@@ -3,14 +3,18 @@
  * come from a different copy of zod than the one this module resolves, and
  * `instanceof` would say no to a perfectly good schema.
  */
-export const isZodType = (value: unknown): value is { safeParse: (input: unknown) => {
-    success: boolean
-    error?: { issues: Array<{ message: string }> }
-} } =>
-    !!value
-    && typeof value === "object"
-    && "safeParse" in value
-    && typeof (value as { safeParse: unknown }).safeParse === "function";
+export const isZodType = (
+    value: unknown
+): value is {
+    safeParse: (input: unknown) => {
+        success: boolean;
+        error?: { issues: Array<{ message: string }> };
+    };
+} =>
+    !!value &&
+    typeof value === "object" &&
+    "safeParse" in value &&
+    typeof (value as { safeParse: unknown }).safeParse === "function";
 
 export const zodToFn = (schema: unknown) => {
     if (!isZodType(schema)) {

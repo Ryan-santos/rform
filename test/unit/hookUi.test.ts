@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import hookUi from "../../src/runtime/utils/hookUi";
 
 /**
@@ -9,13 +10,15 @@ import hookUi from "../../src/runtime/utils/hookUi";
  */
 describe("hookUi", () => {
     it("prepends to the top-most entry", () => {
-        expect(hookUi({ container: "flex gap-1", group: { input: "p-2" } }, "RField RText"))
-            .toEqual({ container: "RField RText flex gap-1", group: { input: "p-2" } });
+        expect(
+            hookUi({ container: "flex gap-1", group: { input: "p-2" } }, "RField RText")
+        ).toEqual({ container: "RField RText flex gap-1", group: { input: "p-2" } });
     });
 
     it("prepends to a bare string ui", () => {
-        expect(hookUi("ml-1 text-sm", "RUtil RUtilsDescription"))
-            .toBe("RUtil RUtilsDescription ml-1 text-sm");
+        expect(hookUi("ml-1 text-sm", "RUtil RUtilsDescription")).toBe(
+            "RUtil RUtilsDescription ml-1 text-sm"
+        );
     });
 
     it("stands alone when there is nothing to prepend to", () => {
@@ -29,8 +32,10 @@ describe("hookUi", () => {
      * "clear this key", so a hook sitting in the defaults would leave with it.
      */
     it("survives a top-most entry the app cleared", () => {
-        expect(hookUi({ container: null, group: "grid" }, "RField RText"))
-            .toEqual({ container: "RField RText", group: "grid" });
+        expect(hookUi({ container: null, group: "grid" }, "RField RText")).toEqual({
+            container: "RField RText",
+            group: "grid"
+        });
     });
 
     /**
@@ -38,8 +43,10 @@ describe("hookUi", () => {
      * group of transition names rather than a class list.
      */
     it("skips a nested group to reach the first class list", () => {
-        expect(hookUi({ transition: { name: "" }, icon: "m-3" }, "RUtil RUtilsLoading"))
-            .toEqual({ transition: { name: "" }, icon: "RUtil RUtilsLoading m-3" });
+        expect(hookUi({ transition: { name: "" }, icon: "m-3" }, "RUtil RUtilsLoading")).toEqual({
+            transition: { name: "" },
+            icon: "RUtil RUtilsLoading m-3"
+        });
     });
 
     it("leaves an all-groups ui alone", () => {

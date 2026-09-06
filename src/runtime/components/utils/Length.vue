@@ -10,7 +10,7 @@
 <script lang="ts">
     import { computed, watch } from "vue";
 
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
@@ -33,7 +33,7 @@
 </script>
 
 <script setup lang="ts">
-    const { props, upper } = useUtilProps<Props>(defaults);
+    const { props, upper } = useUtil<Props>(defaults);
 
     const max = computed(() => {
         return typeof props.value.length === "string"

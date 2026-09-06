@@ -53,7 +53,7 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
     // with the wrong defaults and never says so.
     if (!componentName || !(componentName in registry)) {
         throw new Error(
-            `[rform] useInjection could not resolve a component name${componentName ? ` (got "${componentName}")` : ""}. A field has to live in the module's own components directory or in app/rform/fields for the build to inject it.`
+            `[rform] useField could not resolve a component name${componentName ? ` (got "${componentName}")` : ""}. A field has to live in the module's own components directory or in app/rform/fields for the build to inject it.`
         );
     }
 

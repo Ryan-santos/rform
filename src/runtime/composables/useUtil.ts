@@ -7,8 +7,8 @@ import type Utils from "#rform/types/components/utils";
 import { hookUi, merger, prefixText } from "#rform/utils";
 
 import type { Tr } from "../utils/i18n";
-import type { ValueProp } from "./useInjection";
-import { keyProp } from "./useInjection";
+import type { ValueProp } from "./useField";
+import { keyProp } from "./useField";
 import useTranslate from "./useTranslate";
 
 /**
@@ -32,7 +32,7 @@ const assertName: (name?: keyof Utils) => asserts name is keyof Utils = (name) =
     // wrong defaults and never says so.
     if (!name || !(name in registry)) {
         throw new Error(
-            `[rform] useUtilProps could not resolve a component name${name ? ` (got "${name}")` : ""}. A util has to live in the module's own components/utils directory or in app/rform/utils for the build to inject it.`
+            `[rform] useUtil could not resolve a component name${name ? ` (got "${name}")` : ""}. A util has to live in the module's own components/utils directory or in app/rform/utils for the build to inject it.`
         );
     }
 };
@@ -85,17 +85,17 @@ const build = <P extends Record<string, unknown>>(
  * The no-argument form still resolves through the registry and still returns a
  * promise, because a util written before this existed calls it that way.
  */
-export default function useUtilProps<P extends Record<string, unknown>>(
+export default function useUtil<P extends Record<string, unknown>>(
     defaults: WithTextSource<P>,
     componentName?: keyof Utils
 ): UtilContext<P>;
 
-export default function useUtilProps<P extends Record<string, unknown>>(
+export default function useUtil<P extends Record<string, unknown>>(
     defaults?: undefined,
     componentName?: keyof Utils
 ): Promise<UtilContext<P>>;
 
-export default function useUtilProps<P extends Record<string, unknown>>(
+export default function useUtil<P extends Record<string, unknown>>(
     defaults?: WithTextSource<P>,
     /**
      * Injected by the vite plugin from the component's own file name.

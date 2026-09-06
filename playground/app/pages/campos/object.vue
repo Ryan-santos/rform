@@ -113,7 +113,7 @@
         <Demo
             id="default"
             title="default"
-            description="O default de um objeto é clonado por instância — o useInjection faz structuredClone justamente para um filho não escrever no objeto que o componente declarou no escopo do módulo."
+            description="O default de um objeto é clonado por instância — o useField faz structuredClone justamente para um filho não escrever no objeto que o componente declarou no escopo do módulo."
         >
             <RObject
                 name="preferencias"

@@ -8,7 +8,7 @@ const normalize = (path: string) => path.split("\\").join("/");
 
 /**
  * An optional type-argument list, captured so the rewrite can put it back.
- * Running before the Vue plugin means seeing `useUtilProps<Props>()` with the
+ * Running before the Vue plugin means seeing `useUtil<Props>()` with the
  * generic still on it — a pattern that demanded `(` right after the name found
  * nothing to rewrite. One level of nesting covers `<Props<M>>`.
  */
@@ -18,7 +18,7 @@ const GENERIC = String.raw`\s*(<[^<>]*(?:<[^<>]*>[^<>]*)*>)?\s*`;
 const ARGS = String.raw`\(([^()]*(?:\([^()]*\)[^()]*)*)\)`;
 
 /**
- * Rewrites `useInjection(props)` into `useInjection(props, undefined, "Text")`,
+ * Rewrites `useField(props)` into `useField(props, undefined, "Text")`,
  * so a component learns its own name without repeating it in the file.
  *
  * @param roots Directories whose `.vue` files get the name injected — the
@@ -52,7 +52,7 @@ export default (roots: string[]): Plugin => {
                 // Global on purpose: a second, unrewritten call would silently
                 // fall through to another component's defaults.
                 .replace(
-                    new RegExp(`\\buseInjection${GENERIC}${ARGS}`, "g"),
+                    new RegExp(`\\buseField${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {
                         const paramCount = params.trim()
                             ? (params.match(/,(?![^()]*\))/g) || []).length + 1
@@ -60,9 +60,9 @@ export default (roots: string[]): Plugin => {
 
                         switch (paramCount) {
                             case 1:
-                                return `useInjection${generic}(${params}, undefined, "${fileName}")`;
+                                return `useField${generic}(${params}, undefined, "${fileName}")`;
                             case 2:
-                                return `useInjection${generic}(${params}, "${fileName}")`;
+                                return `useField${generic}(${params}, "${fileName}")`;
                             default:
                                 return match;
                         }
@@ -75,7 +75,7 @@ export default (roots: string[]): Plugin => {
                  * object the caller already had — asynchronously.
                  */
                 .replace(
-                    new RegExp(`\\buseUtilProps${GENERIC}${ARGS}`, "g"),
+                    new RegExp(`\\buseUtil${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {
                         const paramCount = params.trim()
                             ? (params.match(/,(?![^()]*\))/g) || []).length + 1
@@ -83,9 +83,9 @@ export default (roots: string[]): Plugin => {
 
                         switch (paramCount) {
                             case 0:
-                                return `useUtilProps${generic}(undefined, "${fileName}")`;
+                                return `useUtil${generic}(undefined, "${fileName}")`;
                             case 1:
-                                return `useUtilProps${generic}(${params}, "${fileName}")`;
+                                return `useUtil${generic}(${params}, "${fileName}")`;
                             default:
                                 return match;
                         }

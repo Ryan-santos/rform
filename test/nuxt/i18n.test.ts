@@ -108,7 +108,7 @@ describe("the text prop and its provenance", () => {
 
 /**
  * A field only registers its validator when a Form provides the rules list, so
- * this goes through the real chain: useInjection → resolveRule → validation.
+ * this goes through the real chain: useField → resolveRule → validation.
  */
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     let scope: { validate: () => Promise<void> } | undefined;

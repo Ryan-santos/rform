@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-    import { useInjection, useProvide } from "#rform/composables";
+    import { useField, useProvide } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -31,7 +31,7 @@
         loading: undefined
     });
 
-    const { id, model, props } = await useInjection(_props);
+    const { id, model, props } = await useField(_props);
 
     useProvide({
         id,

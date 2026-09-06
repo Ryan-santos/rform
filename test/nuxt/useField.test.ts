@@ -5,7 +5,7 @@ import { defineComponent, h, provide, ref } from "vue";
 
 import type { Element } from "#rform/types";
 
-import useInjection, { key } from "../../src/runtime/composables/useInjection";
+import useField, { key } from "../../src/runtime/composables/useField";
 
 const Harness = defineComponent({
     props: {
@@ -13,7 +13,7 @@ const Harness = defineComponent({
         modelValue: { type: null, default: undefined }
     },
     async setup(props) {
-        const ctx = await useInjection(props.sourceProps as Element, undefined, "Text");
+        const ctx = await useField(props.sourceProps as Element, undefined, "Text");
         return () =>
             h(
                 "pre",
@@ -28,7 +28,7 @@ const Harness = defineComponent({
     }
 });
 
-describe("useInjection", () => {
+describe("useField", () => {
     it("loads component defaults and merges over source props", async () => {
         const wrapper = await mountSuspended(Harness, {
             props: { sourceProps: { name: "field-a" } }
@@ -56,7 +56,7 @@ describe("useInjection", () => {
                 modelValue: { type: null, default: undefined }
             },
             async setup() {
-                const ctx = await useInjection(
+                const ctx = await useField(
                     { name: "child", modelValue: undefined } as never,
                     undefined,
                     "Text"

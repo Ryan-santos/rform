@@ -18,7 +18,7 @@
     // Replaces the built-in Switch, reusing its defaults through the escape
     // hatch rather than restating them.
     import { defaults as builtin } from "#rform/builtin/fields/Switch.vue";
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -41,5 +41,5 @@
         loading: undefined
     });
 
-    const { model, props } = await useInjection(_props);
+    const { model, props } = await useField(_props);
 </script>

@@ -5,7 +5,7 @@ import { useTr } from "#rform/translate";
 import type { Tr } from "../utils/i18n";
 
 /**
- * `{ tr, locale }` for every field and util — `useInjection` and `useUtilProps`
+ * `{ tr, locale }` for every field and util — `useField` and `useUtil`
  * call this, so no component writes an import for it.
  *
  * Which engine answers is decided at build time by `module.ts`, through the

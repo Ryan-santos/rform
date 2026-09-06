@@ -23,7 +23,7 @@ src/runtime/components/
 Todo componente em `components/fields/*.vue` e `components/utils/*.vue` — embutido **ou** do usuário — segue o mesmo formato:
 
 1. **`<script lang="ts">`** — exporta `defaults` (via `defineDefaults`) e o tipo `Props`. Campo monta `Props` a partir de `Element<typeof defaults, "<tipo>">` (de `src/type.d.ts`) interseccionado com `Utils["..."]` (de `#rform/types/components/utils/props`), `TextProp<typeof defaults.text>` quando há texto, e props específicas; util escreve `Props` à mão e referencia `DeepPartial<typeof defaults.ui>` (mais `TextProp<typeof defaults.text>`, no mesmo caso).
-2. **`<script setup lang="ts">`** — campo chama `await useInjection(_props)` para obter `{ id, model, props, tr, locale }`; util chama `await useUtilProps<Props>()`, que devolve `{ props, upper, tr, locale }`. Containers (Form, Array, Object) também chamam `useProvide({ id, model })`.
+2. **`<script setup lang="ts">`** — campo chama `await useField(_props)` para obter `{ id, model, props, tr, locale }`; util chama `await useUtil<Props>()`, que devolve `{ props, upper, tr, locale }`. Containers (Form, Array, Object) também chamam `useProvide({ id, model })`.
 3. **`defaults`** sempre define `ui` (classes Tailwind); campo também define `default` (valor inicial do model); quem tem texto define `text`, um **objeto aninhado** de chaves de tradução do módulo — é o marcador que autoriza o auto-prefixo `rform.<fields|utils>.<componente>.`, e a árvore mantém a forma até o template: `text: { button: "add" }` lê `tr(props.text?.button)`, nunca uma prop `buttonText` de nível superior. Outros campos (`keyValue`, `keyLabel` no Select, `max` num Rating) também viram defaults mesclados via `merger` — e ficam fora do `text` justamente porque não são texto. `label` e `placeholder` são as duas exceções: moram no topo por contrato (um app os passa direto), mas ainda são `TrInput` e ainda são prefixados quando o valor vem do próprio `defaults` do componente.
 
 `Base["default"]` é **opcional** justamente para o item 1 valer nos dois: um util tem `ui` mas não tem model. Antes os utils usavam um par `defaultUi` + `defaults: Props` que não passava por `defineDefaults` — eram duas convenções, e só uma estava documentada.
@@ -48,12 +48,12 @@ Esse alias é registrado **antes** de `#rform`: o Vite casa aliases na ordem de 
 
 Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compiler-sfc` resolve import relativo com `fs` puro, e manda qualquer outra coisa para a resolução de módulos do TypeScript, que sozinha não resolve um specifier `.vue`.
 
-### useInjection (`src/runtime/composables/useInjection.ts`)
+### useField (`src/runtime/composables/useField.ts`)
 
 - Lê o pai (Form) via `inject(key)`. Quando há pai e `props.name` está definido, `model.value` lê/escreve diretamente em `upper.model.value[name]` — é por isso que mutações em arrays no model do filho refletem no Form.
 - Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger` — depois de passar o `defaults` do componente pelo `prefixText`, que é o que dá procedência de graça ao texto (ver `defaults.text`, na seção de i18n).
-- Carrega os defaults do componente pelo `#rform/registry` gerado (`nome → () => import(path)`). **Não** pode ser `import('../components/${name}.vue')`: o Vite compila isso num glob ancorado no arquivo da composable, e um campo em `app/rform/fields` não faz parte dele. As entradas são thunks, então o ciclo `Text.vue → useInjection → registry → Text.vue` não fecha em tempo de carga.
-- `componentName` vem do `src/vite.plugin.ts`. Nome ausente ou fora do registry **lança**. Havia um fallback `"Text"` (e `"Label"` no `useUtilProps`) que renderizava o campo com os defaults de outro componente sem dizer nada.
+- Carrega os defaults do componente pelo `#rform/registry` gerado (`nome → () => import(path)`). **Não** pode ser `import('../components/${name}.vue')`: o Vite compila isso num glob ancorado no arquivo da composable, e um campo em `app/rform/fields` não faz parte dele. As entradas são thunks, então o ciclo `Text.vue → useField → registry → Text.vue` não fecha em tempo de carga.
+- `componentName` vem do `src/vite.plugin.ts`. Nome ausente ou fora do registry **lança**. Havia um fallback `"Text"` (e `"Label"` no `useUtil`) que renderizava o campo com os defaults de outro componente sem dizer nada.
 
 ### Defaults do usuário (`app/rform/defaults.ts`)
 
@@ -68,7 +68,7 @@ export default defineFieldDefaults({
 });
 ```
 
-Entra no `merger` entre o `defaults` do componente e as props do call site, então **prop no campo sempre ganha**. `useInjection` lê `userDefaults[componentName]`; `useUtilProps` lê `userDefaults.Utils?.[componentName]`.
+Entra no `merger` entre o `defaults` do componente e as props do call site, então **prop no campo sempre ganha**. `useField` lê `userDefaults[componentName]`; `useUtil` lê `userDefaults.Utils?.[componentName]`.
 
 `src/module.ts` gera `#rform/defaults.ts`: reexporta o arquivo do usuário quando ele existe, senão emite `const defaults = {}`. Nos dois casos o template existe, então as composables importam sem guarda. O `builder:watch` cobre o caminho `<srcDir>/rform/defaults` (sem extensão, pra pegar `.ts` e `.js`), pra criar o arquivo depois regenerar o template.
 
@@ -154,7 +154,7 @@ Um arquivo = um preset. O nome vem do caminho relativo em camelCase (`br/insc-es
 
 Dois caminhos que colapsam no mesmo nome (`br/cpf.ts` + `brCpf.ts`) fazem os dois templates falharem, com `ERROR [rform] duplicate preset name` nomeando os dois arquivos. O Nuxt rebaixa falha de template a warning, então o `prepare` ainda sai com 0 — o sintoma é `#rform/presets` sumir, não o build parar.
 
-Resolução em runtime é ponto único: `resolveRule` / `resolveMask` (`src/runtime/utils/`), chamados por `useInjection`. `rule` aceita nome, `{ name, ...args }`, função, `ZodType` ou array; `mask` procura o preset primeiro e cai pra pattern maska cru. O `form` das validations vem de `defineFormRoot` (`composables/formRoot.ts`), provido **só** pelo Form — Array/Object não sobrescrevem, então campo aninhado enxerga o form inteiro.
+Resolução em runtime é ponto único: `resolveRule` / `resolveMask` (`src/runtime/utils/`), chamados por `useField`. `rule` aceita nome, `{ name, ...args }`, função, `ZodType` ou array; `mask` procura o preset primeiro e cai pra pattern maska cru. O `form` das validations vem de `defineFormRoot` (`composables/formRoot.ts`), provido **só** pelo Form — Array/Object não sobrescrevem, então campo aninhado enxerga o form inteiro.
 
 #### Um objeto só: `{ value, form, ...args }`
 
@@ -198,7 +198,7 @@ tr("~~Nome")                                 // literal explícito
 As camadas:
 
 - **Packs** — `src/runtime/locales/<code>.ts`, objeto aninhado com `export default`. `pt-BR` é o de referência (é o `typeof` dele que vira `Messages`) e `en.ts` é tipado *contra* ele, então uma chave nova sem tradução é erro de compilação. Sintaxe do vue-i18n: interpolação `{param}` **e** plural `a | b`, que agora rendem o mesmo nos dois motores.
-- **`tr`** — `useTranslate()` (composable) devolve `{ tr, locale }` delegando a `#rform/translate`; `useInjection` e `useUtilProps` o chamam, então **todo** campo e util — inclusive os de `app/rform/{fields,utils}` — ganham `tr` sem escrever import, do mesmo jeito que já ganham `mask`. Fora de componente, `tr` e `trRule` saem de `#rform/utils`.
+- **`tr`** — `useTranslate()` (composable) devolve `{ tr, locale }` delegando a `#rform/translate`; `useField` e `useUtil` o chamam, então **todo** campo e util — inclusive os de `app/rform/{fields,utils}` — ganham `tr` sem escrever import, do mesmo jeito que já ganham `mask`. Fora de componente, `tr` e `trRule` saem de `#rform/utils`.
 - **Datas** — `dateFormat(pattern)` (`utils/dateFormat.ts`, puro) deriva de `formats.date` a máscara maska, o regex de parse e a formatação de exibição, que antes eram três literais `dd/mm/yyyy` em dois arquivos. Quem lê o pattern é `tr("rform.formats.date")`.
 
 `app/rform/locales/<code>.ts` é o pack do usuário, escaneado como os presets. **Mesmo code mescla** (via `merger`), não substitui — diferente de campo, util e preset, onde mesmo nome troca o arquivo inteiro. É o que permite um pack de três chaves continuar completo. Um code novo (`es`) simplesmente entra, e o que faltar cai no `fallbackLocale`, que é o pack default.
@@ -270,7 +270,7 @@ export const defaults = defineDefaults({
 
 `Base` reserva `ui`, `default`, `text` e as duas que moram fora dele por contrato — `label` e `placeholder`, adiante. `text` é `TextSource` (`src/type.d.ts`): um objeto aninhado, `{ [key]: string | TextSource }`, e continua aninhado o caminho inteiro — nada é achatado para o topo. Um template lê `tr(props.text?.button)`, nunca uma prop de nível superior tipo `buttonText`. Sem esse marcador a regra "prefixa toda string do `defaults`" transformaria `Select.keyValue: "id"` em `"rform.fields.select.id"`, e o Select passaria a procurar `option["rform.fields.select.id"]` — quebra calada em três lugares hoje (`Select.keyValue`, `Select.keyLabel`, `Pin.type`) e armadilha permanente para campo de usuário.
 
-Quem prefixa é `prefixText` (`utils/prefixText.ts`, puro), chamado por `useInjection` (com `scope: "fields"`) e por `useUtilProps` (com `scope: "utils"`) sobre o `defaults` do componente, **antes** do `merger`:
+Quem prefixa é `prefixText` (`utils/prefixText.ts`, puro), chamado por `useField` (com `scope: "fields"`) e por `useUtil` (com `scope: "utils"`) sobre o `defaults` do componente, **antes** do `merger`:
 
 ```
 defaults.text = { button: "add", bytes: { kb: "kb" } }
@@ -294,7 +294,7 @@ defineFieldDefaults({ Array: { text: { button: "meu.add" } } })    → "meu.add"
 
 **`label` e `placeholder` são as duas exceções — sempre fora de `text`, no topo**, por contrato: um app os passa direto (`<RText label="Nome" />`), então não podem morar dentro de uma árvore que o app não escreve por inteiro. Continuam sendo `TrInput`, e `prefixText` prefixa os dois quando o valor veio dos defaults do próprio componente e não é uma string vazia — é o `placeholder: "placeholder"` do `File`, que sai como `rform.fields.file.placeholder`. A string vazia é deixada em paz: é o sentinela de "não renderiza nada", e `rform.fields.file.` sozinho nunca é uma chave a resolver por engano.
 
-No `useUtilProps` o `prefixText` roda **uma vez, fora do `computed`**: ele copia, e o objeto `defaults` do componente é compartilhado por todas as instâncias.
+No `useUtil` o `prefixText` roda **uma vez, fora do `computed`**: ele copia, e o objeto `defaults` do componente é compartilhado por todas as instâncias.
 
 **Isso já foi achatamento, e a colisão que ele arriscava já foi resolvida por guarda em vez de por forma.** `defaults.text` costumava virar props de nível superior — `text: { buttonText: "add" }` produzia `props.buttonText` — e `defineDefaults` recusava em tempo de tipo qualquer chave de `text` que colidisse com uma chave do topo (`NoTextCollision`), porque o achatamento a sobrescreveria calado. A armadilha real, e ela mordeu de verdade: `utils/Calendar.vue` chegou a declarar `timeLabel` em vez de `time`, porque `time` já era o booleano que decide se o relógio aparece, e uma chave achatada ali seria *truthy* para sempre — o painel de hora abriria e nunca mais fecharia. Com `text` aninhado, `props.text.time` e `props.time` são caminhos diferentes e não podem colidir; a chave voltou a ser `time`, e o guard `NoTextCollision` não existe mais — nada precisa recusar o que não pode acontecer. A lição que fica, mesmo sem o mecanismo que a forçava: não dar a uma chave de `text` o nome de uma prop que o componente testa por veracidade.
 
@@ -322,9 +322,9 @@ O que o compiler-sfc aceita aqui e recusa na forma ingênua é que **a chave `te
 
 #### `WithTextSource<P>`: o mesmo componente, visto do lado errado
 
-`useUtilProps<Props>(defaults)` (a forma síncrona, com os próprios `defaults` do componente em mão) não pode receber `defaults` tipado como `Props`: em `Props`, `text` é `TextTree<...>` — folhas `TrInput` — mas o objeto que o componente de fato declara em `defaults.text` ainda não passou por `prefixText`, e suas folhas são só o **sufixo** cru (`"start"`, não um `TrInput` resolvido). Num app com `@nuxtjs/i18n`, `TrInput` estreita para `ModuleKey | Literal` — nenhum sufixo solto como `"start"` é `ModuleKey` nem começa com `~~` — então os dois tipos genuinamente divergem, e não é um detalhe de nomenclatura.
+`useUtil<Props>(defaults)` (a forma síncrona, com os próprios `defaults` do componente em mão) não pode receber `defaults` tipado como `Props`: em `Props`, `text` é `TextTree<...>` — folhas `TrInput` — mas o objeto que o componente de fato declara em `defaults.text` ainda não passou por `prefixText`, e suas folhas são só o **sufixo** cru (`"start"`, não um `TrInput` resolvido). Num app com `@nuxtjs/i18n`, `TrInput` estreita para `ModuleKey | Literal` — nenhum sufixo solto como `"start"` é `ModuleKey` nem começa com `~~` — então os dois tipos genuinamente divergem, e não é um detalhe de nomenclatura.
 
-`WithTextSource<P>` (`src/type.d.ts`) existe para isso: `Omit<P, "text"> & { text?: TextSource }` — o mesmo `Props`, com `text` trocado de volta para a forma de autoria. `useUtilProps` aceita `WithTextSource<P>` e não `P` na sobrecarga síncrona precisamente porque `defaults` está do lado de cá do prefixo; quem chama `useUtilProps<Props>()` sem argumento (a forma assíncrona, que busca os defaults pelo registry) não precisa dele — ali quem já prefixou é o próprio `useUtilProps`, por dentro.
+`WithTextSource<P>` (`src/type.d.ts`) existe para isso: `Omit<P, "text"> & { text?: TextSource }` — o mesmo `Props`, com `text` trocado de volta para a forma de autoria. `useUtil` aceita `WithTextSource<P>` e não `P` na sobrecarga síncrona precisamente porque `defaults` está do lado de cá do prefixo; quem chama `useUtil<Props>()` sem argumento (a forma assíncrona, que busca os defaults pelo registry) não precisa dele — ali quem já prefixou é o próprio `useUtil`, por dentro.
 
 #### O plural é o **quarto** argumento
 
@@ -353,7 +353,7 @@ trRule({ key: "min.number", params: { min } });
 
 `#rform/utils` exporta os dois: `tr` (caminho completo, sem prefixo — para o `tr("rform.formats.date")` do `Date.vue` e para um preset de usuário que queira mensagem do **app**) e `trRule` (o açúcar que prefixa `rform.presets.rules.`).
 
-Por tabela, nada disso existe: `resolveRule` não tem parâmetro de tradutor, `BaseContext` é `{ value, form }`, `fromPreset` não injeta nada além dos args, e `useInjection` não repassa tradutor nenhum para a validação. `RuleContext<T>` é `{ value, form } & T`.
+Por tabela, nada disso existe: `resolveRule` não tem parâmetro de tradutor, `BaseContext` é `{ value, form }`, `fromPreset` não injeta nada além dos args, e `useField` não repassa tradutor nenhum para a validação. `RuleContext<T>` é `{ value, form } & T`.
 
 **A rota sem build é o alias.** `resolveRule` não importa mais nada de tradução; quem precisa é a rule, e ela chega no motor por `#rform/translate` — que o `vitest.config.ts` aliasa para `runtime/translate/standalone.ts` no projeto `unit`. É a propriedade que o antigo `defaultT` carregava e que não pode se perder: `test/unit/presetsBuiltin.test.ts` continua chamando `preset.validation({ value })` **direto**, sem app, sem build e com a mensagem em pt-BR. `useRForm`, que agrega as rules num `z.any().superRefine`, é a mesma rota.
 
@@ -375,7 +375,7 @@ rform.
     date                        ← compartilhado; escrito por extenso: tr("rform.formats.date")
 ```
 
-O topo tem exatamente as quatro raízes que o mecanismo de prefixo consegue produzir: `fields.*` e `utils.*` são o `scope` que `useInjection`/`useUtilProps` passam para `prefixText`; `presets.*` e `formats.*` são espaços compartilhados que nada prefixa, escritos por extenso nos call sites (`trRule`, `tr("rform.formats.date")`). Quem guarda essa forma é `test/unit/i18n.test.ts` — `keeps the top level to the four namespaces the prefix can produce` — que também asserta que os dois packs concordam em toda chave, para nenhum locale cair no fallback calado.
+O topo tem exatamente as quatro raízes que o mecanismo de prefixo consegue produzir: `fields.*` e `utils.*` são o `scope` que `useField`/`useUtil` passam para `prefixText`; `presets.*` e `formats.*` são espaços compartilhados que nada prefixa, escritos por extenso nos call sites (`trRule`, `tr("rform.formats.date")`). Quem guarda essa forma é `test/unit/i18n.test.ts` — `keeps the top level to the four namespaces the prefix can produce` — que também asserta que os dois packs concordam em toda chave, para nenhum locale cair no fallback calado.
 
 `fields.*`/`utils.*` é o que dissolve a antiga preocupação de um campo e um util de mesmo nome disputarem chave: `Calendar` é os dois hoje, e cada um tem a própria raiz — `rform.fields.calendar.*` contra `rform.utils.calendar.*`. Isso já foi um espaço plano só, com os dois lados no mesmo nível e um teste dedicado só para provar que não colidiam; a separação por `scope` torna a colisão impossível em vez de meramente ausente.
 
@@ -481,7 +481,7 @@ Passar o mouse sobre uma sugestão do preenchedor do browser pinta o valor no `i
 
 Daí o par: o `Placeholder.vue` emite `data-floating` quando virou label flutuante, e o `style.css` faz `.RField :has(:-webkit-autofill) > .RUtilsPlaceholder:not([data-floating]) { opacity: 0 }`. O `>` é o que limita ao placeholder cujo pai contém o input — sem ele o `:has()` casaria todo ancestral dentro do campo. O `:not([data-floating])` preserva o caso sem `label`, em que depois do autofill comitado é o próprio placeholder que rotula o valor lá em cima.
 
-**Ancorar em `.RForm` não serve, e é o motivo de as classes-gancho existirem.** O autofill não depende de `<form>`: o Chrome agrupa campos soltos ("unowned form fields") por heurística de DOM desde a v91, e `useInjection` faz `inject(key, undefined)` — campo sem `RForm` pai é caso suportado.
+**Ancorar em `.RForm` não serve, e é o motivo de as classes-gancho existirem.** O autofill não depende de `<form>`: o Chrome agrupa campos soltos ("unowned form fields") por heurística de DOM desde a v91, e `useField` faz `inject(key, undefined)` — campo sem `RForm` pai é caso suportado.
 
 Nenhuma utility do Tailwind declara `opacity: 1` no estado base, então a regra vence independentemente da ordem de layer — não precisa de `!important` como o `[data-autocompleted]`.
 
@@ -544,9 +544,9 @@ Vue compila `defineProps<{ multiple?: Multiple }>()` (onde `Multiple extends boo
 
 Confirmação: olhar o bundle servido pelo dev server (`curl /_nuxt/@fs/.../Select.vue | grep "multiple:"`).
 
-### "Union type too complex" em useInjection
+### "Union type too complex" em useField
 
-Generics com conditional types nas `Props` (ex.: `Multiple extends true ? T[] : T` no slot) cascateiam complexidade quando passados para `useInjection<T extends Element>`. **Solução:** declarar um tipo `InternalProps` simples (sem generics) e castear na chamada — `await useInjection(_props as unknown as InternalProps)`. Mantém o tipo público rico sem estourar o type-checker.
+Generics com conditional types nas `Props` (ex.: `Multiple extends true ? T[] : T` no slot) cascateiam complexidade quando passados para `useField<T extends Element>`. **Solução:** declarar um tipo `InternalProps` simples (sem generics) e castear na chamada — `await useField(_props as unknown as InternalProps)`. Mantém o tipo público rico sem estourar o type-checker.
 
 Quando o slot precisa expor um tipo conditional (`Multiple extends true ? Item[] : Item`), criar helpers em script (`fieldSlot()`, `rowSlot(option)`) que retornam `as Selected` — o template não suporta cast `as` direto em expressões.
 
@@ -560,7 +560,7 @@ O scanner do Nuxt guarda cada diretório já varrido e pula todo arquivo sob ele
 
 Com `enforce: "pre"` o plugin vê o SFC cru; sem ele, o id `.vue` já foi compilado para um `import` de `?vue&type=script&setup=true`, a chamada da composable está nesse sub-request, e reescrever o que sobrou não muda nada. Rodando depois, a injeção de nome **não funcionava em build de produção** — e ninguém via, porque o fallback `"Text"`/`"Label"` cobria calado.
 
-A consequência é que a regex passa a ver TypeScript cru: `useUtilProps<Props>()`, com o genérico entre o nome e o `(`. As regexes aceitam e **preservam** a lista de tipos.
+A consequência é que a regex passa a ver TypeScript cru: `useUtil<Props>()`, com o genérico entre o nome e o `(`. As regexes aceitam e **preservam** a lista de tipos.
 
 ### As classes-gancho (`RField` / `RUtil`) entram pelo `ui`
 
@@ -573,7 +573,7 @@ Todo campo e todo util — embutido **e** do usuário — carrega duas classes n
 
 A específica espelha a tag que o app escreve (`<RText>` → `.RText`), porque os prefixos são os mesmos que o `addComponentsDir` registra. É isso que dá ao `style.css` um alvo, sem que campo nenhum precise repetir a classe e **sem depender de `RForm` no ancestral**.
 
-Quem escreve é `hookUi` (`src/runtime/utils/hookUi.ts`), chamado por `useInjection` e por `useUtilProps` **depois** do `merger`, sobre a **entrada mais alta** do `ui`: `container` num campo, `default` no `Placeholder`, o próprio `ui` onde ele é string. Não é o primeiro par qualquer — é a primeira entrada que guarda classes em vez de um grupo aninhado, porque o `RUtilsLoading` abre num `<Transition>` cujo `ui.transition` são nomes de transição, não classe. Componente sem nenhuma entrada de classe (`RUtilsDropdown` é `<slot>` + `<Transition>`) fica sem gancho, e não tem reset a perder.
+Quem escreve é `hookUi` (`src/runtime/utils/hookUi.ts`), chamado por `useField` e por `useUtil` **depois** do `merger`, sobre a **entrada mais alta** do `ui`: `container` num campo, `default` no `Placeholder`, o próprio `ui` onde ele é string. Não é o primeiro par qualquer — é a primeira entrada que guarda classes em vez de um grupo aninhado, porque o `RUtilsLoading` abre num `<Transition>` cujo `ui.transition` são nomes de transição, não classe. Componente sem nenhuma entrada de classe (`RUtilsDropdown` é `<slot>` + `<Transition>`) fica sem gancho, e não tem reset a perder.
 
 **Depois do merge, e não dentro do `defaults`.** `ui` é sobrescrevível por contrato e o `mergerUI` lê `null` como "zera esta chave": um gancho declarado nos defaults iria embora junto com um `ui: { container: null }`, e um `container` apenas reescrito ficaria à mercê do que o `twMerge` decide descartar num namespace que não é do Tailwind — medido, `{container:"RField flex grow"} + {container:"RFieldset grid"}` dá `"RField grow RFieldset grid"`. Prependendo depois, nenhum dos dois toca no gancho. Ordem de chave sobrevive ao merge: o `merger` semeia o resultado a partir do `defaults` do componente e o `mergerUI` copia com spread.
 

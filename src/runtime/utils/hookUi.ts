@@ -6,7 +6,7 @@ type UI = Base["ui"] | undefined;
  * Prepends a component's hook class (`RField RText`, `RUtil RUtilsPlaceholder`)
  * to the top-most entry of its already merged `ui`, which is what gives the
  * resets in `src/runtime/style.css` something to select — on every field and
- * util, including one used **without** an `RForm` around it: `useInjection`
+ * util, including one used **without** an `RForm` around it: `useField`
  * reads the parent with `inject(key, undefined)`, so a loose field is a
  * supported case, and the browser's autofill does not depend on `<form>`
  * either.

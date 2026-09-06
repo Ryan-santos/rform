@@ -10,7 +10,7 @@ import RRating from "../fixtures/basic/rform/fields/Rating.vue";
 
 /**
  * The class each field and util carries on its root, prepended to the top-most
- * `ui` entry by `useInjection` / `useUtilProps` from the map the module
+ * `ui` entry by `useField` / `useUtil` from the map the module
  * generates into `#rform/registry`. It is the only target the resets in
  * `src/runtime/style.css` have — the spinner reset, the two autofill tricks,
  * and the placeholder hidden under the browser's autofill preview.
@@ -68,7 +68,7 @@ describe("classes-gancho na raiz", () => {
 
     /**
      * O caso que ancorar em `.RForm` perdia: o autofill do browser não depende
-     * de `<form>`, e `useInjection` lê o pai com `inject(key, undefined)`.
+     * de `<form>`, e `useField` lê o pai com `inject(key, undefined)`.
      */
     it("marca um campo usado sem RForm em volta", async () => {
         const solto = await mountSuspended(RText);

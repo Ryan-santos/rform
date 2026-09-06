@@ -98,7 +98,7 @@
 <script lang="ts">
     import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from "vue";
 
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -175,7 +175,7 @@
         loading: undefined
     });
 
-    const { model, props } = await useInjection(_props);
+    const { model, props } = await useField(_props);
 
     const hexToRgb = (hex: string): [number, number, number] | null => {
         const match = /^#?([a-f\d]{6})$/i.exec(hex);

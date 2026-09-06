@@ -106,7 +106,7 @@
 <script lang="ts">
     import { computed, ref } from "vue";
 
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults, dropdownFit } from "#rform/utils";
@@ -241,7 +241,7 @@
         trailing(): void;
     }>();
 
-    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useField(_props as unknown as InternalProps);
 
     const isRecord = (value: unknown): value is Record<string, unknown> => {
         return typeof value === "object" && value !== null;

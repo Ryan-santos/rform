@@ -7,7 +7,7 @@ export type RuleMessage = { key: string; params?: TrParams };
 
 /**
  * The whole translator, by full path. A component gets the same function from
- * `useInjection` / `useUtilProps` — this export is for the two places that
+ * `useField` / `useUtil` — this export is for the two places that
  * cannot call a composable: a rule preset, and a module component reaching for
  * a shared key like `tr("rform.formats.date")`.
  */

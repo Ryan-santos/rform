@@ -26,7 +26,7 @@
         <Demo
             id="util-novo"
             title="Um util que o módulo não tem"
-            description="app/rform/utils/Hint.vue vira RUtilsHint e enxerga as props do campo pai pelo useUtilProps, igual ao RUtilsError e ao RUtilsLabel. O Rating acima o renderiza, então a prop hint passa a existir em qualquer campo que o inclua."
+            description="app/rform/utils/Hint.vue vira RUtilsHint e enxerga as props do campo pai pelo useUtil, igual ao RUtilsError e ao RUtilsLabel. O Rating acima o renderiza, então a prop hint passa a existir em qualquer campo que o inclua."
         >
             <RRating
                 name="comHint"

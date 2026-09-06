@@ -156,7 +156,7 @@
 <script lang="ts">
     import { computed, ref, watch } from "vue";
 
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { DeepPartial, TextProp } from "#rform/types";
     import { dateFormat, defineDefaults, vMask } from "#rform/utils";
 
@@ -351,7 +351,7 @@
 </script>
 
 <script setup lang="ts">
-    const { props, upper, tr, locale } = useUtilProps<Props>(defaults);
+    const { props, upper, tr, locale } = useUtil<Props>(defaults);
 
     const mode = computed<Mode>(() => props.value.mode ?? "single");
 

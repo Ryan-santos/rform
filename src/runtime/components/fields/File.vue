@@ -130,7 +130,7 @@
 <script lang="ts">
     import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element, TextProp, TrInput } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -204,7 +204,7 @@
         };
 
     /**
-     * Generic-free mirror of `Props` for `useInjection`, as in Select.vue: the
+     * Generic-free mirror of `Props` for `useField`, as in Select.vue: the
      * conditional model type cascades into a union the checker cannot represent.
      */
     type InternalProps = Omit<
@@ -226,7 +226,7 @@
 <script setup lang="ts" generic="Multiple extends boolean = false">
     const _props = defineProps<Props<Multiple>>();
 
-    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useField(_props as unknown as InternalProps);
 
     const loading = ref(false);
     const acceptSplit = props.value.accept?.replaceAll(/[.\s]/g, "").split(",") ?? [];

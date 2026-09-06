@@ -9,7 +9,7 @@ Ao definir o objeto `ui` (classes Tailwind) de um componente, o usuário exige d
 
 1. **Hierarquia, não prefixo achatado.** Chaves relacionadas viram objetos aninhados. Em vez de `dayToday`, `dayOutside`, `daySelected`, `monthCell`, `titleButton` + `titleButtonActive`, usar `day: { container, today, outside, selected }`, `months: { grid, cell }`, `title: { container, button: { container, active } }`. A chave base do grupo é `container`.
 
-2. **Fonte única de verdade via `defaultUi`.** Nos componentes `Utils/*` que escrevem `Props` manualmente (usam `useUtilProps<Props>()`), NÃO duplicar a forma do `ui` no tipo. Extrair um `export const defaultUi = { ... }`, tipar `ui?: DeepPartial<typeof defaultUi>` e declarar `export const defaults: Props = { ui: defaultUi, ...outros }`. Importar `DeepPartial` de `#rform/types`.
+2. **Fonte única de verdade via `defaultUi`.** Nos componentes `Utils/*` que escrevem `Props` manualmente (usam `useUtil<Props>()`), NÃO duplicar a forma do `ui` no tipo. Extrair um `export const defaultUi = { ... }`, tipar `ui?: DeepPartial<typeof defaultUi>` e declarar `export const defaults: Props = { ui: defaultUi, ...outros }`. Importar `DeepPartial` de `#rform/types`.
 
 **Why:** O `ui` do `Utils/Calendar.vue` estava achatado (`dayToday`, etc.) e o tipo `Props.ui` reescrevia toda a estrutura à mão, duplicando o `defaults`. O usuário pediu hierarquia e depois a extração do `defaultUi` para eliminar a duplicação tipo↔valor.
 

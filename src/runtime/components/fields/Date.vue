@@ -105,7 +105,7 @@
 <script lang="ts">
     import { computed, ref, useTemplateRef, watch } from "vue";
 
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { vMask } from "#rform/utils";
@@ -208,7 +208,7 @@
         loading: undefined
     });
 
-    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useField(_props as unknown as InternalProps);
 
     /**
      * Máscara, regex de parse e formatação de exibição saem todas do mesmo

@@ -42,7 +42,7 @@
 <script lang="ts">
     import { computed, defineComponent, useSlots } from "vue";
 
-    import { useInjection, useProvide } from "#rform/composables";
+    import { useField, useProvide } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -99,7 +99,7 @@
         loading: undefined
     });
 
-    const { id, model, props, tr } = await useInjection(_props);
+    const { id, model, props, tr } = await useField(_props);
 
     useProvide({ id, model });
 

@@ -20,7 +20,7 @@
 <script lang="ts">
     import { computed } from "vue";
 
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { DeepPartial, TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
@@ -49,7 +49,7 @@
         focused?: boolean;
     }>();
 
-    const { props, upper, tr } = useUtilProps<Props>(defaults);
+    const { props, upper, tr } = useUtil<Props>(defaults);
 
     const modelFilled = computed(() => {
         return !!String(upper.model.value ?? "").length;

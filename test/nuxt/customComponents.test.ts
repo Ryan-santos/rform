@@ -5,8 +5,8 @@ import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it } from "vitest";
 
-import useInjection from "../../src/runtime/composables/useInjection";
-import useUtilProps from "../../src/runtime/composables/useUtilProps";
+import useField from "../../src/runtime/composables/useField";
+import useUtil from "../../src/runtime/composables/useUtil";
 // By path, not `#components`: these live in the fixture, and the module's own
 // type-check resolves `#components` against the module's generated types.
 import RRating from "../fixtures/basic/rform/fields/Rating.vue";
@@ -149,10 +149,10 @@ describe("the generated artifacts", () => {
 });
 
 describe("an unresolvable component name", () => {
-    it("fails loudly in useInjection instead of borrowing Text's defaults", async () => {
-        await expect(useInjection({})).rejects.toThrow(/could not resolve a component name/);
+    it("fails loudly in useField instead of borrowing Text's defaults", async () => {
+        await expect(useField({})).rejects.toThrow(/could not resolve a component name/);
 
-        await expect(useInjection({}, undefined, "Nope" as never)).rejects.toThrow(/got "Nope"/);
+        await expect(useField({}, undefined, "Nope" as never)).rejects.toThrow(/got "Nope"/);
     });
 
     /**
@@ -160,9 +160,9 @@ describe("an unresolvable component name", () => {
      * a missing one is a build fault and there is nothing to await before
      * saying so.
      */
-    it("fails loudly in useUtilProps instead of borrowing Label's defaults", () => {
-        expect(() => useUtilProps()).toThrow(/could not resolve a component name/);
+    it("fails loudly in useUtil instead of borrowing Label's defaults", () => {
+        expect(() => useUtil()).toThrow(/could not resolve a component name/);
 
-        expect(() => useUtilProps(undefined, "Nope" as never)).toThrow(/got "Nope"/);
+        expect(() => useUtil(undefined, "Nope" as never)).toThrow(/got "Nope"/);
     });
 });

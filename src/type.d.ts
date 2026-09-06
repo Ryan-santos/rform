@@ -94,7 +94,7 @@ export type TextProp<T> = {
  * key suffixes `prefixText` has yet to expand — `"start"`, not a `TrInput`. In
  * an app with `@nuxtjs/i18n` those two are genuinely different types (`TrInput`
  * narrows to `ModuleKey | Literal` there), so a util handing its `defaults` to
- * `useUtilProps<Props>` has to say which of the two it is holding.
+ * `useUtil<Props>` has to say which of the two it is holding.
  */
 export type WithTextSource<P> = Omit<P, "text"> & { text?: TextSource };
 

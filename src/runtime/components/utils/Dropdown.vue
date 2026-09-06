@@ -44,7 +44,7 @@
         type ComponentPublicInstance
     } from "vue";
 
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults, dropdownMiddleware } from "#rform/utils";
 
@@ -187,7 +187,7 @@
 
     const open = defineModel<boolean>("open", { default: false });
 
-    const { props } = useUtilProps<Props>(defaults);
+    const { props } = useUtil<Props>(defaults);
 
     /**
      * The popover element itself stays in the tree — `useFloating` needs the

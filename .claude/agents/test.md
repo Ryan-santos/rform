@@ -35,7 +35,7 @@ If `.nuxt/rform/*` is missing (first run, or after changing the module setup), r
 2. Map each change to the relevant test files:
    - `src/runtime/utils/*` → `test/unit/<name>.test.ts`
    - `src/runtime/composables/useRForm.ts` → `test/unit/useRForm.test.ts`
-   - `src/runtime/composables/useInjection.ts` (or any file touching Vue inject/provide) → `test/nuxt/useInjection.test.ts`
+   - `src/runtime/composables/useField.ts` (or any file touching Vue inject/provide) → `test/nuxt/useField.test.ts`
    - `src/runtime/components/*.vue` → `test/nuxt/<ComponentName>.test.ts`
    - `src/module.ts`, `src/vite.plugin.ts`, fixture changes → `test/e2e/basic.test.ts`
 3. Run the smallest scoped subset that proves the change is correct (`pnpm exec vitest run <files>`). Only run `pnpm test` (full suite) at the end if multiple areas were touched.

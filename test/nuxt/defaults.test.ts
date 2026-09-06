@@ -5,8 +5,8 @@ import { computed, defineComponent, h, provide, ref } from "vue";
 
 import { RArray } from "#components";
 
-import useInjection, { keyProp } from "../../src/runtime/composables/useInjection";
-import useUtilProps from "../../src/runtime/composables/useUtilProps";
+import useField, { keyProp } from "../../src/runtime/composables/useField";
+import useUtil from "../../src/runtime/composables/useUtil";
 
 vi.mock("#rform/defaults", () => ({
     default: {
@@ -51,7 +51,7 @@ const sourceProps = { type: Object, required: true } as const;
 const TextField = defineComponent({
     props: { sourceProps },
     async setup(props) {
-        const ctx = await useInjection(props.sourceProps as never, undefined, "Text");
+        const ctx = await useField(props.sourceProps as never, undefined, "Text");
         return () => render(ctx.props.value as Rendered);
     }
 });
@@ -59,7 +59,7 @@ const TextField = defineComponent({
 const NumberField = defineComponent({
     props: { sourceProps },
     async setup(props) {
-        const ctx = await useInjection(props.sourceProps as never, undefined, "Number");
+        const ctx = await useField(props.sourceProps as never, undefined, "Number");
         return () => render(ctx.props.value as Rendered);
     }
 });
@@ -114,7 +114,7 @@ const Util = defineComponent({
     async setup() {
         // No `defaults` argument: the registry path, which a util written
         // before the synchronous form still takes.
-        const { props } = await useUtilProps(undefined, "Placeholder");
+        const { props } = await useUtil(undefined, "Placeholder");
 
         return () =>
             h(

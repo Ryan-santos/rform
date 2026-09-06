@@ -76,7 +76,7 @@
  * mais alta do `ui` de todo campo — embutido e do usuário — para que nenhum deles
  * precise repetir isto, e para que valham também num campo usado **sem** `RForm` em
  * volta:
- * `useInjection` lê o pai com `inject(key, undefined)`, então campo solto é caso
+ * `useField` lê o pai com `inject(key, undefined)`, então campo solto é caso
  * suportado, e o autofill do browser não depende de `<form>` (o Chrome agrupa campos
  * soltos por heurística de DOM desde a v91).
  *

@@ -43,7 +43,7 @@
         <Demo
             id="default"
             title="default"
-            description="Semeado pelo useInjection no mount, então já sai no model antes de qualquer digitação."
+            description="Semeado pelo useField no mount, então já sai no model antes de qualquer digitação."
         >
             <RText
                 name="comDefault"

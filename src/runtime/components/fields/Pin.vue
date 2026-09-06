@@ -37,7 +37,7 @@
 <script lang="ts">
     import { computed, onMounted, ref, watch } from "vue";
 
-    import { useInjection } from "#rform/composables";
+    import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
@@ -78,7 +78,7 @@
         autofocus: undefined
     });
 
-    const { model, props } = await useInjection(_props);
+    const { model, props } = await useField(_props);
 
     const count = computed(() => props.value.length ?? defaults.length);
 

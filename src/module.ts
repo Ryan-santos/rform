@@ -249,12 +249,12 @@ export default defineNuxtModule<ModuleOptions>({
         });
 
         /**
-         * Name -> module, resolved across both roots. `useInjection` reads a
+         * Name -> module, resolved across both roots. `useField` reads a
          * component's own `defaults` through this: a relative dynamic import
          * inside the composable compiles to a glob rooted at the module, which
          * a component under `app/rform` would never be part of.
          *
-         * The entries are thunks, so `Text.vue -> useInjection -> registry ->
+         * The entries are thunks, so `Text.vue -> useField -> registry ->
          * Text.vue` never closes at load time.
          */
         addTemplate({

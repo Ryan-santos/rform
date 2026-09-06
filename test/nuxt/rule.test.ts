@@ -7,7 +7,7 @@ import { RForm, RText } from "#components";
 
 /**
  * A field only registers its validator when a Form provides the rules list, so
- * every case here goes through the real chain: useInjection → resolveRule →
+ * every case here goes through the real chain: useField → resolveRule →
  * preset validation.
  */
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {

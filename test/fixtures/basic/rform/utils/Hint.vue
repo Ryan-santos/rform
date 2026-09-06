@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
@@ -27,5 +27,5 @@
 </script>
 
 <script setup lang="ts">
-    const { props } = await useUtilProps<Props>();
+    const { props } = await useUtil<Props>();
 </script>

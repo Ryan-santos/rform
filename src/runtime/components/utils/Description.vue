@@ -8,7 +8,7 @@
 </template>
 
 <script lang="ts">
-    import { useUtilProps } from "#rform/composables";
+    import { useUtil } from "#rform/composables";
     import type { TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
@@ -24,5 +24,5 @@
 </script>
 
 <script setup lang="ts">
-    const { props, tr } = useUtilProps<Props>(defaults);
+    const { props, tr } = useUtil<Props>(defaults);
 </script>

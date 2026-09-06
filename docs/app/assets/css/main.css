@@ -1,0 +1,345 @@
+@import "tailwindcss";
+@import "#rform/tailwindcss";
+
+@theme static {
+    --font-sans: "Be Vietnam Pro", sans-serif;
+
+    --breakpoint-xs: 29rem;
+
+    --color-light: #ffffff;
+    --color-dark: #09090b;
+
+    --color-background: light-dark(var(--color-light), var(--color-dark));
+    --color-background-50: color-mix(in oklab, var(--color-background), var(--color-contrast) 5%);
+    --color-background-100: color-mix(in oklab, var(--color-background), var(--color-contrast) 10%);
+    --color-background-200: color-mix(in oklab, var(--color-background), var(--color-contrast) 15%);
+    --color-background-300: color-mix(in oklab, var(--color-background), var(--color-contrast) 20%);
+    --color-background-400: color-mix(in oklab, var(--color-background), var(--color-contrast) 25%);
+    --color-background-500: color-mix(in oklab, var(--color-background), var(--color-contrast) 30%);
+    --color-background-600: color-mix(in oklab, var(--color-background), var(--color-contrast) 35%);
+    --color-background-700: color-mix(in oklab, var(--color-background), var(--color-contrast) 40%);
+    --color-background-800: color-mix(in oklab, var(--color-background), var(--color-contrast) 45%);
+    --color-background-900: color-mix(in oklab, var(--color-background), var(--color-contrast) 50%);
+
+    --color-contrast: light-dark(var(--color-dark), var(--color-light));
+    --color-contrast-50: color-mix(in oklab, var(--color-contrast), var(--color-background) 5%);
+    --color-contrast-100: color-mix(in oklab, var(--color-contrast), var(--color-background) 10%);
+    --color-contrast-200: color-mix(in oklab, var(--color-contrast), var(--color-background) 15%);
+    --color-contrast-300: color-mix(in oklab, var(--color-contrast), var(--color-background) 20%);
+    --color-contrast-400: color-mix(in oklab, var(--color-contrast), var(--color-background) 25%);
+    --color-contrast-500: color-mix(in oklab, var(--color-contrast), var(--color-background) 30%);
+    --color-contrast-600: color-mix(in oklab, var(--color-contrast), var(--color-background) 35%);
+    --color-contrast-700: color-mix(in oklab, var(--color-contrast), var(--color-background) 40%);
+    --color-contrast-800: color-mix(in oklab, var(--color-contrast), var(--color-background) 45%);
+    --color-contrast-900: color-mix(in oklab, var(--color-contrast), var(--color-background) 50%);
+
+    --color-primary: #005bdf;
+    --color-primary-50: color-mix(in oklab, var(--color-primary), var(--color-background) 5%);
+    --color-primary-100: color-mix(in oklab, var(--color-primary), var(--color-background) 10%);
+    --color-primary-200: color-mix(in oklab, var(--color-primary), var(--color-background) 15%);
+    --color-primary-300: color-mix(in oklab, var(--color-primary), var(--color-background) 20%);
+    --color-primary-400: color-mix(in oklab, var(--color-primary), var(--color-background) 25%);
+    --color-primary-500: color-mix(in oklab, var(--color-primary), var(--color-background) 30%);
+    --color-primary-600: color-mix(in oklab, var(--color-primary), var(--color-background) 35%);
+    --color-primary-700: color-mix(in oklab, var(--color-primary), var(--color-background) 40%);
+    --color-primary-800: color-mix(in oklab, var(--color-primary), var(--color-background) 45%);
+    --color-primary-900: color-mix(in oklab, var(--color-primary), var(--color-background) 50%);
+
+    --color-secondary: #00cf6c;
+    --color-secondary-50: color-mix(in oklab, var(--color-secondary), var(--color-background) 5%);
+    --color-secondary-100: color-mix(in oklab, var(--color-secondary), var(--color-background) 10%);
+    --color-secondary-200: color-mix(in oklab, var(--color-secondary), var(--color-background) 15%);
+    --color-secondary-300: color-mix(in oklab, var(--color-secondary), var(--color-background) 20%);
+    --color-secondary-400: color-mix(in oklab, var(--color-secondary), var(--color-background) 25%);
+    --color-secondary-500: color-mix(in oklab, var(--color-secondary), var(--color-background) 30%);
+    --color-secondary-600: color-mix(in oklab, var(--color-secondary), var(--color-background) 35%);
+    --color-secondary-700: color-mix(in oklab, var(--color-secondary), var(--color-background) 40%);
+    --color-secondary-800: color-mix(in oklab, var(--color-secondary), var(--color-background) 45%);
+    --color-secondary-900: color-mix(in oklab, var(--color-secondary), var(--color-background) 50%);
+
+    --color-success: var(--color-green-500);
+    --color-success-50: color-mix(in oklab, var(--color-success), var(--color-background) 5%);
+    --color-success-100: color-mix(in oklab, var(--color-success), var(--color-background) 10%);
+    --color-success-200: color-mix(in oklab, var(--color-success), var(--color-background) 15%);
+    --color-success-300: color-mix(in oklab, var(--color-success), var(--color-background) 20%);
+    --color-success-400: color-mix(in oklab, var(--color-success), var(--color-background) 25%);
+    --color-success-500: color-mix(in oklab, var(--color-success), var(--color-background) 30%);
+    --color-success-600: color-mix(in oklab, var(--color-success), var(--color-background) 35%);
+    --color-success-700: color-mix(in oklab, var(--color-success), var(--color-background) 40%);
+    --color-success-800: color-mix(in oklab, var(--color-success), var(--color-background) 45%);
+    --color-success-900: color-mix(in oklab, var(--color-success), var(--color-background) 50%);
+
+    --color-warn: var(--color-yellow-500);
+    --color-warn-50: color-mix(in oklab, var(--color-warn), var(--color-background) 5%);
+    --color-warn-100: color-mix(in oklab, var(--color-warn), var(--color-background) 10%);
+    --color-warn-200: color-mix(in oklab, var(--color-warn), var(--color-background) 15%);
+    --color-warn-300: color-mix(in oklab, var(--color-warn), var(--color-background) 20%);
+    --color-warn-400: color-mix(in oklab, var(--color-warn), var(--color-background) 25%);
+    --color-warn-500: color-mix(in oklab, var(--color-warn), var(--color-background) 30%);
+    --color-warn-600: color-mix(in oklab, var(--color-warn), var(--color-background) 35%);
+    --color-warn-700: color-mix(in oklab, var(--color-warn), var(--color-background) 40%);
+    --color-warn-800: color-mix(in oklab, var(--color-warn), var(--color-background) 45%);
+    --color-warn-900: color-mix(in oklab, var(--color-warn), var(--color-background) 50%);
+
+    --color-danger: var(--color-red-500);
+    --color-danger-50: color-mix(in oklab, var(--color-danger), var(--color-background) 5%);
+    --color-danger-100: color-mix(in oklab, var(--color-danger), var(--color-background) 10%);
+    --color-danger-200: color-mix(in oklab, var(--color-danger), var(--color-background) 15%);
+    --color-danger-300: color-mix(in oklab, var(--color-danger), var(--color-background) 20%);
+    --color-danger-400: color-mix(in oklab, var(--color-danger), var(--color-background) 25%);
+    --color-danger-500: color-mix(in oklab, var(--color-danger), var(--color-background) 30%);
+    --color-danger-600: color-mix(in oklab, var(--color-danger), var(--color-background) 35%);
+    --color-danger-700: color-mix(in oklab, var(--color-danger), var(--color-background) 40%);
+    --color-danger-800: color-mix(in oklab, var(--color-danger), var(--color-background) 45%);
+    --color-danger-900: color-mix(in oklab, var(--color-danger), var(--color-background) 50%);
+
+    --default-transition-duration: 0.5s;
+}
+
+@layer base {
+    :root {
+        --scrollbar-color-thumb: var(--color-contrast-500);
+        --scrollbar-color-track: var(--color-background-500);
+        --scrollbar-width: thin;
+        --scrollbar-radius: 0.3125rem;
+        --scrollbar-size: 0.625rem;
+
+        color-scheme: light;
+
+        &.dark {
+            color-scheme: dark;
+        }
+    }
+
+    *::selection {
+        @apply bg-secondary text-primary;
+    }
+
+    @supports (scrollbar-width: auto) {
+        * {
+            scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+            scrollbar-width: var(--scrollbar-width);
+        }
+    }
+
+    @supports selector(::-webkit-scrollbar) {
+        *::-webkit-scrollbar {
+            width: var(--scrollbar-size);
+        }
+
+        *::-webkit-scrollbar-track {
+            background-color: var(--scrollbar-color-track);
+            border-radius: var(--scrollbar-radius);
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-color-thumb);
+            border-radius: var(--scrollbar-radius);
+        }
+    }
+
+    body {
+        @apply transition-colors bg-background text-contrast;
+    }
+
+    hr {
+        @apply h-px bg-current/20 border-0 w-full flex-none;
+    }
+
+    h1 {
+        @apply text-4xl;
+    }
+
+    h2 {
+        @apply text-3xl;
+    }
+
+    h3 {
+        @apply text-2xl;
+    }
+
+    h4 {
+        @apply text-xl;
+    }
+
+    h5 {
+        @apply text-lg;
+    }
+
+    h6 {
+        @apply text-base;
+    }
+
+    p {
+        @apply text-base;
+    }
+
+    .page-enter-active,
+    .page-leave-active,
+    .layout-enter-active,
+    .layout-leave-active {
+        @apply transition-all duration-500 ease-in-out;
+    }
+
+    .page-enter-from,
+    .page-leave-to,
+    .layout-enter-from,
+    .layout-leave-to {
+        @apply blur-sm opacity-0;
+    }
+}
+
+@utility container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@utility mask-transparent-border {
+    --size: 1rem;
+
+    mask-image: linear-gradient(
+        var(--deg),
+        transparent 0%,
+        #000 var(--size),
+        #000 calc(100% - var(--size)),
+        transparent 100%
+    );
+}
+
+@utility mask-transparent-border-y {
+    --deg: 180deg;
+
+    @apply mask-transparent-border;
+}
+
+@utility mask-transparent-border-x {
+    --deg: 90deg;
+
+    @apply mask-transparent-border;
+}
+
+/**
+ * Bloco de código tem fundo próprio, escuro nos dois temas: é um pedaço de editor
+ * dentro da página, não um parágrafo. Por isso as cores dos tokens são fixas — sem
+ * light-dark() — e o texto do painel nasce claro.
+ */
+@theme static {
+    --color-code: #171b2c;
+    --color-code-head: #12162a;
+    --color-code-line: #2b3355;
+    --color-code-text: #e6e9f5;
+}
+
+/**
+ * A paleta dos tokens vive aqui, e não em classes do Tailwind, porque quem emite
+ * as classes é o highlight.ts — string montada em runtime não passa pelo scanner.
+ */
+@layer base {
+    .tok-tag {
+        color: #7deba0;
+    }
+    .tok-attr {
+        color: #8be9fd;
+        font-style: italic;
+    }
+    .tok-string {
+        color: #f5f0a0;
+    }
+    .tok-keyword {
+        color: #ff7b9c;
+    }
+    .tok-literal {
+        color: #c3a6ff;
+    }
+    .tok-number {
+        color: #c3a6ff;
+    }
+    .tok-key {
+        color: #8be9fd;
+    }
+    .tok-fn {
+        color: #7deba0;
+    }
+    .tok-prop {
+        color: #8be9fd;
+    }
+    .tok-interp {
+        color: #ffb86c;
+    }
+    .tok-comment {
+        color: #7683b8;
+        font-style: italic;
+    }
+    .tok-punct {
+        color: #ff9ec4;
+    }
+}
+/**
+ * A prosa do `@nuxt/content` sai como HTML nu — os estilos abaixo são o que
+ * transforma o markdown renderizado em página. Ficam numa classe (`.prose`) em
+ * vez de em `@layer base`, para não pintar o cabeçalho e a barra lateral.
+ */
+@layer components {
+    .prose {
+        @apply flex flex-col gap-5 text-contrast/80;
+    }
+
+    .prose > h2 {
+        @apply mt-6 scroll-mt-24 border-b border-contrast/10 pb-2 text-2xl font-bold tracking-tight;
+    }
+
+    .prose > h3 {
+        @apply mt-4 scroll-mt-24 text-xl font-semibold tracking-tight;
+    }
+
+    .prose > h4 {
+        @apply mt-2 scroll-mt-24 text-lg font-semibold;
+    }
+
+    .prose > p {
+        @apply max-w-prose leading-relaxed;
+    }
+
+    .prose a {
+        @apply text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary;
+    }
+
+    .prose > ul {
+        @apply flex max-w-prose list-disc flex-col gap-2 pl-6 leading-relaxed marker:text-primary/60;
+    }
+
+    .prose > ol {
+        @apply flex max-w-prose list-decimal flex-col gap-2 pl-6 leading-relaxed marker:text-primary/60;
+    }
+
+    .prose li > ul,
+    .prose li > ol {
+        @apply mt-2 flex list-disc flex-col gap-1 pl-6;
+    }
+
+    .prose :not(pre) > code {
+        @apply rounded-md bg-primary/10 px-1.5 py-0.5 font-mono text-[0.85em] text-primary;
+    }
+
+    .prose > blockquote {
+        @apply max-w-prose border-l-2 border-primary/40 bg-primary/5 py-3 pr-4 pl-4 text-contrast/70 italic;
+    }
+
+    .prose table {
+        @apply w-full border-collapse text-left text-sm;
+    }
+
+    .prose th {
+        @apply border-b border-contrast/15 px-3 py-2 text-xs font-bold tracking-widest text-contrast/50 uppercase;
+    }
+
+    .prose td {
+        @apply border-b border-contrast/5 px-3 py-2 align-top;
+    }
+
+    .prose hr {
+        @apply my-2 h-px border-0 bg-contrast/10;
+    }
+}

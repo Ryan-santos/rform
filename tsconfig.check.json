@@ -3,7 +3,8 @@
     "//2": "`customComponents.test.ts` e `hookClasses.test.ts` importam componentes da fixture: checá-los aqui arrastaria `test/fixtures` de volta para dentro do programa, porque `exclude` não impede que um import puxe o arquivo. Quem cobre esses arquivos é o `-p test/fixtures/basic/.nuxt/tsconfig.app.json`, onde valem os tipos gerados da fixture.",
     "extends": "./.nuxt/tsconfig.app.json",
     "exclude": [
-        "playground",
+        "playgrounds",
+        "docs",
         "test/fixtures",
         "test/nuxt/customComponents.test.ts",
         "test/nuxt/hookClasses.test.ts",

@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "#rform/tailwindcss";
+
+@theme static {
+    --font-sans: "Be Vietnam Pro", sans-serif;
+
+    --color-light: #ffffff;
+    --color-dark: #09090b;
+
+    --color-background: light-dark(var(--color-light), var(--color-dark));
+    --color-background-50: color-mix(in oklab, var(--color-background), var(--color-contrast) 5%);
+    --color-background-100: color-mix(in oklab, var(--color-background), var(--color-contrast) 10%);
+    --color-background-200: color-mix(in oklab, var(--color-background), var(--color-contrast) 15%);
+
+    --color-contrast: light-dark(var(--color-dark), var(--color-light));
+
+    --color-primary: #005bdf;
+    --color-secondary: #00cf6c;
+    --color-success: var(--color-green-500);
+    --color-warn: var(--color-yellow-500);
+    --color-danger: var(--color-red-500);
+
+    --color-code: #171b2c;
+    --color-code-head: #12162a;
+    --color-code-line: #2b3355;
+    --color-code-text: #e6e9f5;
+}
+
+@layer base {
+    :root {
+        color-scheme: light;
+
+        &.dark {
+            color-scheme: dark;
+        }
+    }
+
+    body {
+        @apply bg-background text-contrast transition-colors;
+    }
+}

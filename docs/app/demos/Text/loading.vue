@@ -1,0 +1,12 @@
+<template>
+    <RText
+        name="carregando"
+        label="demo.text.carregando"
+        loading
+    />
+    <RText
+        name="comErro"
+        label="demo.text.erroManual"
+        :error="$t('demo.text.erroMensagem')"
+    />
+</template>

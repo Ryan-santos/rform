@@ -1,5 +1,12 @@
 packages:
-    - playground
+    - docs
+    - playgrounds/*
 
+# Toda entrada é obrigatória mesmo dizendo `false`: sem uma decisão explícita o
+# pnpm 11 sai com código 1 (`ERR_PNPM_IGNORED_BUILDS`) num clone novo.
+#
+# `esbuild: false` — o binário chega pronto pelo optional dep de plataforma.
+# `better-sqlite3: true` — o `@nuxt/content` do docs precisa do binding nativo.
 allowBuilds:
     esbuild: false
+    better-sqlite3: true

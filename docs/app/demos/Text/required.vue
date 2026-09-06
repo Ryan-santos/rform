@@ -1,0 +1,13 @@
+<template>
+    <RText
+        name="required"
+        label="demo.text.asterisco"
+        required
+    />
+    <RText
+        name="requiredRule"
+        label="demo.text.asteriscoValidado"
+        required
+        rule="required"
+    />
+</template>

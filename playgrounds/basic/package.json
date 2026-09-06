@@ -1,0 +1,27 @@
+{
+    "name": "rform-playground-basic",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "nuxi build",
+        "dev": "nuxi dev",
+        "generate": "nuxi generate",
+        "preview": "nuxi preview",
+        "postinstall": "nuxi prepare"
+    },
+    "devDependencies": {
+        "@iconify-json/eos-icons": "^1.2.0",
+        "@iconify-json/fa6-regular": "^1.2.0",
+        "@iconify-json/fa6-solid": "^1.2.0",
+        "@iconify-json/mi": "^1.2.0",
+        "@iconify-json/ooui": "^1.2.0",
+        "@nuxt/fonts": "^0.14.0",
+        "@nuxt/icon": "^2.2.2",
+        "@nuxtjs/color-mode": "^4.0.0",
+        "@nuxtjs/i18n": "^10.6.0",
+        "@tailwindcss/vite": "^4.3.0",
+        "nuxt": "^4.4.2",
+        "tailwindcss": "^4.1.17"
+    }
+}

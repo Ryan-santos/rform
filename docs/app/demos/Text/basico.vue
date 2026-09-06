@@ -1,0 +1,12 @@
+<template>
+    <RText
+        name="basico"
+        label="demo.text.nome"
+        placeholder="demo.text.nomePlaceholder"
+        description="demo.text.nomeDescricao"
+    />
+    <RText
+        label="demo.text.semName"
+        placeholder="demo.text.semNamePlaceholder"
+    />
+</template>

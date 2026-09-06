@@ -1,0 +1,27 @@
+<template>
+    <RText
+        name="maskCpf"
+        label="~~brCpf"
+        mask="brCpf"
+    />
+    <RText
+        name="maskCnpj"
+        label="~~brCnpj"
+        mask="brCnpj"
+    />
+    <RText
+        name="maskCep"
+        label="~~brCep"
+        mask="brCep"
+    />
+    <RText
+        name="maskCpfCnpj"
+        label="~~brCpfCnpj"
+        mask="brCpfCnpj"
+    />
+    <RText
+        name="maskPlaca"
+        label="~~brPlaca"
+        mask="brPlaca"
+    />
+</template>

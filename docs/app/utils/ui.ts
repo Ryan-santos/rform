@@ -27,13 +27,20 @@ function entry<T>(map: Record<string, T>, path: string): T | undefined {
     return key ? map[key] : undefined;
 }
 
-export const fieldUi = (name: string) => entry(modules, `${name}.vue`)?.defaults?.ui;
+/**
+ * Campo mora em `components/fields/`; `Form` e `Dynamic`, na raiz de
+ * `components/` — nenhum dos dois é campo, mas os dois têm `ui` para mostrar.
+ */
+const field = <T>(map: Record<string, T>, name: string) =>
+    entry(map, `fields/${name}.vue`) ?? entry(map, `${name}.vue`);
 
-export const utilUi = (name: string) => entry(modules, `Utils/${name}.vue`)?.defaults?.ui;
+export const fieldUi = (name: string) => field(modules, name)?.defaults?.ui;
+
+export const utilUi = (name: string) => entry(modules, `utils/${name}.vue`)?.defaults?.ui;
 
 /** Os `RUtilsX` que aparecem no template do campo, na ordem em que aparecem. */
 export function fieldUtils(name: string): string[] {
-    const source = entry(sources, `${name}.vue`) ?? "";
+    const source = field(sources, name) ?? "";
 
     return [
         ...new Set([...source.matchAll(/<RUtils([A-Z]\w*)/g)].map((match) => match[1] as string))
@@ -168,7 +175,7 @@ function templateOf(source: string): string {
  * o Placeholder dentro de `group.field.container` em vez de numa lista solta.
  */
 function placements(component: string): Map<string, Placement[]> {
-    const template = templateOf(entry(sources, `${component}.vue`) ?? "");
+    const template = templateOf(field(sources, component) ?? "");
     const map = new Map<string, Placement[]>();
 
     const at = (path: string) => {

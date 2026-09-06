@@ -1,0 +1,18 @@
+<template>
+    <RText
+        name="ruleEmail"
+        label="~~email"
+        rule="email"
+    />
+    <RText
+        name="ruleUrl"
+        label="~~url"
+        rule="url"
+    />
+    <RText
+        name="ruleCpf"
+        label="~~brCpf"
+        mask="brCpf"
+        rule="brCpf"
+    />
+</template>

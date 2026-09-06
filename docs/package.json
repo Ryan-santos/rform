@@ -1,0 +1,37 @@
+{
+    "name": "rform-docs",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "api": "node --experimental-strip-types scripts/api.ts",
+        "dev": "nuxi dev",
+        "build": "nuxi build",
+        "generate": "nuxi generate",
+        "preview": "nuxi preview",
+        "predev": "pnpm run api",
+        "prebuild": "pnpm run api",
+        "pregenerate": "pnpm run api",
+        "postinstall": "nuxi prepare"
+    },
+    "devDependencies": {
+        "@iconify-json/eos-icons": "^1.2.0",
+        "@iconify-json/fa6-regular": "^1.2.0",
+        "@iconify-json/fa6-solid": "^1.2.0",
+        "@iconify-json/logos": "^1.2.0",
+        "@iconify-json/mi": "^1.2.0",
+        "@iconify-json/ooui": "^1.2.0",
+        "@iconify-json/twemoji": "^1.2.0",
+        "@nuxt/content": "^3.7.1",
+        "@nuxt/fonts": "^0.14.0",
+        "@nuxt/icon": "^2.2.2",
+        "@nuxtjs/color-mode": "^4.0.0",
+        "@nuxtjs/i18n": "^10.6.0",
+        "@tailwindcss/vite": "^4.3.0",
+        "better-sqlite3": "^12.2.0",
+        "nuxt": "^4.4.2",
+        "tailwindcss": "^4.1.17",
+        "vue-component-meta": "^3.3.11",
+        "zod": "^4.5.4"
+    }
+}

@@ -11,7 +11,7 @@
     />
     <RText
         name="obrigatorio"
-        label="~~rule=&quot;required&quot;"
+        label='~~rule="required"'
         rule="required"
     />
 

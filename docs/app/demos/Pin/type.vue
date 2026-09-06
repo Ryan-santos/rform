@@ -1,12 +1,12 @@
 <template>
     <RPin
         name="numerico"
-        label="~~type=&quot;numeric&quot;"
+        label='~~type="numeric"'
         type="numeric"
     />
     <RPin
         name="alfanumerico"
-        label="~~type=&quot;alphanumeric&quot;"
+        label='~~type="alphanumeric"'
         type="alphanumeric"
         :length="5"
     />

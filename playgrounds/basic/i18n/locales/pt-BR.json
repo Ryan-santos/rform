@@ -34,5 +34,19 @@
         "titular": "Nome do titular",
         "ajudaMax": "No máximo {n} caracteres",
         "socios": "Sócios"
+    },
+    "checkout": {
+        "aceite": "É preciso aceitar os termos.",
+        "enviando": "enviando…",
+        "reset": "descartar",
+        "cpfDuplicado": "Esse CPF já está cadastrado.",
+        "recusado": "o servidor recusou — veja o erro no campo CPF",
+        "aceito": "aceito pelo servidor"
+    },
+    "editar": {
+        "descartar": "descartar alterações",
+        "sujo": "dirty",
+        "limpo": "limpo",
+        "original": "registro original"
     }
 }

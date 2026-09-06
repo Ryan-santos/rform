@@ -34,5 +34,19 @@
         "titular": "Account holder name",
         "ajudaMax": "At most {n} characters",
         "socios": "Partners"
+    },
+    "checkout": {
+        "aceite": "You must accept the terms.",
+        "enviando": "sending…",
+        "reset": "discard",
+        "cpfDuplicado": "This CPF is already registered.",
+        "recusado": "the server refused — see the error on the CPF field",
+        "aceito": "accepted by the server"
+    },
+    "editar": {
+        "descartar": "discard changes",
+        "sujo": "dirty",
+        "limpo": "clean",
+        "original": "original record"
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <RText
         name="dinheiro"
-        label="~~mask=&quot;dinheiro&quot;"
+        label='~~mask="dinheiro"'
         mask="dinheiro"
     />
     <RText

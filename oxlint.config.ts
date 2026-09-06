@@ -33,7 +33,7 @@ export default defineConfig({
     jsPlugins: ["eslint-plugin-better-tailwindcss"],
     settings: {
         "better-tailwindcss": {
-            entryPoint: "playground/app/assets/css/main.css",
+            entryPoint: "playgrounds/i18n/app/assets/css/main.css",
             selectors: [
                 {
                     kind: "attribute",

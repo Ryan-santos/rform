@@ -34,16 +34,37 @@ describe("helpers de preset", () => {
 });
 
 describe("barrel #rform/utils", () => {
+    const names = async () =>
+        (await readdir(join(root, "src/runtime/utils")))
+            .filter((file) => file.endsWith(".ts"))
+            .map((file) => file.slice(0, -".ts".length));
+
     it("reexporta os exports nomeados de cada util, não só o default", async () => {
         const utils = await read("rform/utils.ts");
-        const files = (await readdir(join(root, "src/runtime/utils"))).filter((file) =>
-            file.endsWith(".ts")
-        );
 
-        for (const file of files) {
+        for (const name of await names()) {
+            // Sem extensão de propósito: com `.ts` no specifier o TS exigiria
+            // `allowImportingTsExtensions` do app consumidor.
             expect(utils).toContain(`export * from "`);
-            expect(utils).toContain(file);
+            expect(utils).toMatch(new RegExp(`export \\* from "[^"]*/utils/${name}"`));
         }
+    });
+
+    it("não nomeia o default de um util que não tem default", async () => {
+        const utils = await read("rform/utils.ts");
+
+        // `tr.ts` exporta `tr` — o nome do próprio arquivo. Um `import tr from …`
+        // seguido de `export { tr }` sombrearia o `export *`, e o barrel entregaria
+        // o objeto default no lugar da função.
+        expect(utils).not.toContain("import tr from");
+        expect(utils).not.toMatch(/^ {3}tr,?$/m);
+    });
+
+    it("entrega `tr` como função, não como o objeto default do arquivo", async () => {
+        const { tr, trRule } = await import("#rform/utils");
+
+        expect(typeof tr).toBe("function");
+        expect(typeof trRule).toBe("function");
     });
 });
 

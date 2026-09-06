@@ -54,7 +54,11 @@ const defaultOf = (value: unknown) => {
     return text && text !== "undefined" ? text : undefined;
 };
 
-function meta(checker: ReturnType<typeof createChecker>, file: string, kind: ComponentMeta["kind"]) {
+function meta(
+    checker: ReturnType<typeof createChecker>,
+    file: string,
+    kind: ComponentMeta["kind"]
+) {
     const info = checker.getComponentMeta(file);
 
     // O checker lista todo emit também como prop `onXxx`; aqui o evento é o
@@ -112,4 +116,7 @@ const out = join(docs, "app", "generated", "api.json");
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, `${JSON.stringify(all, null, 4)}\n`, "utf8");
 
-console.log(`[rform-docs] api.json — ${all.length} componentes, ${all.reduce((n, c) => n + c.props.length, 0)} props`);
+// oxlint-disable-next-line no-console -- script de CLI: a linha de resumo é a saída dele
+console.log(
+    `[rform-docs] api.json — ${all.length} componentes, ${all.reduce((n, c) => n + c.props.length, 0)} props`
+);

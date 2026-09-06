@@ -56,9 +56,7 @@
     const { data: page } = await useAsyncData(
         () => `page-${locale.value}-${path.value}`,
         async () => {
-            const own = await queryCollection(collectionOf(locale.value))
-                .path(path.value)
-                .first();
+            const own = await queryCollection(collectionOf(locale.value)).path(path.value).first();
 
             return own ?? (await queryCollection("content_pt").path(path.value).first());
         },

@@ -1,12 +1,12 @@
 <template>
     <RPin
         name="comSeparador"
-        label="~~:separator=&quot;3&quot;"
+        label='~~:separator="3"'
         :separator="3"
     />
     <RPin
         name="separadorDois"
-        label="~~:length=&quot;8&quot; :separator=&quot;2&quot;"
+        label='~~:length="8" :separator="2"'
         :length="8"
         :separator="2"
     />

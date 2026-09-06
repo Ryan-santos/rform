@@ -1,7 +1,7 @@
 <template>
     <RHour
         name="comDefault"
-        label="~~default=&quot;08:30&quot;"
+        label='~~default="08:30"'
         default="08:30"
     />
     <RHour

@@ -6,7 +6,7 @@
     />
     <RSwitch
         name="iconCustom"
-        placeholder="~~:icon=&quot;{ true, false }&quot;"
+        placeholder='~~:icon="{ true, false }"'
         :icon="{
             true: 'twemoji:check-mark-button',
             false: 'twemoji:cross-mark'

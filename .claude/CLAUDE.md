@@ -103,7 +103,7 @@ São 16 variáveis, declaradas em `src/runtime/style.css`: `--rf-color-{backgrou
 
 O `background-200` é o único declarado sem nenhum `ui` embutido lendo: a escala é oferecida inteira ao app. Por isso ele está na lista `orphans` de `test/unit/theme.test.ts` — que também asserta o contrário, então no dia que um `ui` passar a usá-lo o teste manda tirar dali.
 
-**Isso já foi token do playground.** Os `ui` usavam `bg-background-100`, `text-contrast/50`, `outline-primary`, que só existem no `@theme` de `playground/app/assets/css/main.css`. Instalado em qualquer outro app, todo campo renderizava transparente. A lint não pegava porque `oxlint.config.ts` aponta o `entryPoint` do `better-tailwindcss` para o CSS **do playground**.
+**Isso já foi token do playground.** Os `ui` usavam `bg-background-100`, `text-contrast/50`, `outline-primary`, que só existem no `@theme` de `playgrounds/i18n/app/assets/css/main.css`. Instalado em qualquer outro app, todo campo renderizava transparente. A lint não pegava porque `oxlint.config.ts` aponta o `entryPoint` do `better-tailwindcss` para o CSS **do playground**.
 
 #### A linha que o app escreve
 
@@ -126,9 +126,9 @@ Uma linha só, e ela traz as duas coisas: o `@source` dos componentes (o Tailwin
 
 As três de baixo são imunes à ordem, cada uma por um motivo diferente: mesma layer resolve por ordem de declaração (e o app vem depois); declaração fora de layer ganha de toda layer de autor; e `--color-primary` o módulo **nunca** declara, então não há conflito para resolver — é só o `var(--color-primary, …)` do default encontrando um valor.
 
-Ou seja: as duas formas naturais de fato usadas — encadear pelo tema do app, ou declarar `--rf-*` dentro de `@layer rform` — funcionam nas duas ordens. Quem quebra é declarar `--rf-*` **fora** da `@layer rform`, e aí quebra calado. `#rform` antes faz as cinco funcionarem, e por isso é a recomendação; o playground usa depois, com o override em `@layer rform` (`playground/app/assets/css/main.css:99`).
+Ou seja: as duas formas naturais de fato usadas — encadear pelo tema do app, ou declarar `--rf-*` dentro de `@layer rform` — funcionam nas duas ordens. Quem quebra é declarar `--rf-*` **fora** da `@layer rform`, e aí quebra calado. `#rform` antes faz as cinco funcionarem, e por isso é a recomendação; os playgrounds usam depois, com o override em `@layer rform` (`playgrounds/ui/app/assets/css/main.css`).
 
-É **template** gerado pelo `module.ts`, não um `.css` do `dist`, e o `@source` sai com caminho **absoluto**. Um `@source` relativo dentro de um arquivo publicado só funcionaria com o pacote instalado em `node_modules` — e o playground carrega o módulo por caminho relativo (`"../src/module"`), sem `rform` nas dependências e sem `node_modules/rform`. Com o template, a mesma linha vale para pacote instalado, link de workspace e caminho relativo.
+É **template** gerado pelo `module.ts`, não um `.css` do `dist`, e o `@source` sai com caminho **absoluto**. Um `@source` relativo dentro de um arquivo publicado só funcionaria com o pacote instalado em `node_modules` — e os playgrounds carregam o módulo por caminho relativo (`"../../src/module"`), sem `rform` nas dependências e sem `node_modules/rform`. Com o template, a mesma linha vale para pacote instalado, link de workspace e caminho relativo.
 
 Tem de ser `@import` do entry do app, nunca `nuxt.options.css`: num arquivo que o Tailwind não trata como parte de um entry, `@source` é ignorado e a at-rule **vaza crua** para o browser. Já foi `nuxt.options.css.unshift(style.css)` + um segundo arquivo só com o `@source`; virou um arquivo só a pedido.
 
@@ -439,7 +439,7 @@ Quem escolhe o motor é o build; quem acha o `$i18n` é o runtime. O `bridge.ts`
 
 **Quem manda na lista de codes é o app, e a ponte só responde.** O merge do i18n é por code exato — um app com `locales: ["pt"]` não veria um pack registrado só como `pt-BR` — mas registrar `pt` na marra tem preço: o `mergeConfigLocales` do i18n junta *todos* os configs num `Map` por code, então **um code que só a ponte cita entra na lista de locales do app**, e de lá sai no seletor de idioma dele, no `localeCodes` e no prerender.
 
-Medido no playground com `locales: ["pt", "es"]`: registrando os codes dos packs, o app passa a ter `["pt", "es", "en", "pt-BR"]`. Uma tabela de apelidos (`pt-BR` → `pt`, `en` → `en-US`/`en-GB`…) só piora — são mais codes inventados.
+Medido no playground `i18n` com `locales: ["pt", "es"]`: registrando os codes dos packs, o app passa a ter `["pt", "es", "en", "pt-BR"]`. Uma tabela de apelidos (`pt-BR` → `pt`, `en` → `en-US`/`en-GB`…) só piora — são mais codes inventados.
 
 Então o `module.ts` lê os codes que o app declarou (`nuxt.options.i18n.locales` mais as opções inline do `modules:`) e registra **sob esses**, escolhendo o pack por code exato e, na falta, por língua. O app de `pt` + `es` continua com `["pt", "es"]`: o `pt` recebe o pack `pt-BR`, o `es` não recebe nada e cai no `fallbackLocale` do vue-i18n, que é a precedência normal dele. Sem code legível (config de i18n num layer) cada pack entra sob o próprio code — o mínimo que faz a ponte funcionar, e são os codes do módulo, não apelidos.
 
@@ -465,6 +465,22 @@ Cuidado com esse parâmetro: `arr.map(parseIncoming)` passaria o **índice** com
 ### `#rform/utils` é o barrel público
 
 O template de `utils.ts` emite `import X from "<path>"` (default, virando `export { X }`) **e** `export * from "<path>"` para cada arquivo de `src/runtime/utils`. É o `export *` que faz `import { defineRule } from "#rform/utils"` funcionar. De lá saem também `tr` e `trRule`, `defineLocale` e `prefixText`.
+
+#### Só quem tem `export default` é nomeado
+
+O template emite `import <basename> from` e a entrada no `export { }` **apenas**
+para o helper que de fato tem `export default`. Um export explícito **sombreia** o
+`export *` do mesmo arquivo, então um helper cujo default tem o nome de um export
+nomeado seu entregaria o objeto errado.
+
+É o caso do `tr.ts`, e ele mordeu de verdade: com `export default { tr, trRule }`,
+`import { tr } from "#rform/utils"` devolvia **o objeto**, não a função — e o
+sintoma era `This expression is not callable` no primeiro app fora do módulo que
+tentou usar o que o próprio `.claude/CLAUDE.md` documenta. O default saiu do
+`tr.ts`, e `hasDefaultExport` no `module.ts` é o que impede a classe inteira de
+voltar.
+
+#### Os specifiers saem sem extensão
 
 Os specifiers do `export *` passam por `specifier()` e saem **sem extensão**. Com `.ts` no caminho, o TS precisa de `allowImportingTsExtensions` e um app consumidor normalmente não liga — o sintoma é `TS2614: Module '#rform/utils' has no exported member 'defineRule'`, como se o barrel não exportasse nada nomeado.
 
@@ -492,7 +508,7 @@ Ordenar em vez de contar com o `readdir` (que hoje põe `i18n.ts`, dono do `defi
 
 ### Um `@` literal numa mensagem precisa ser `{'@'}`
 
-`@:chave` é a sintaxe de mensagem ligada (*linked message*) do vue-i18n, e ela não pede opt-in — um `@` cru em qualquer pack, do módulo ou do app, é interpretado como o início de uma. Um e-mail (`"Fale com a gente: contato@empresa.com"`) já derrubou uma mensagem do playground assim: em runtime, `"Invalid linked format (error code: 10)"`, nomeando o caminho da mensagem quebrada — não o `@`, então o sintoma não aponta pro problema.
+`@:chave` é a sintaxe de mensagem ligada (*linked message*) do vue-i18n, e ela não pede opt-in — um `@` cru em qualquer pack, do módulo ou do app, é interpretado como o início de uma. Um e-mail (`"Fale com a gente: contato@empresa.com"`) já derrubou uma mensagem de playground assim: em runtime, `"Invalid linked format (error code: 10)"`, nomeando o caminho da mensagem quebrada — não o `@`, então o sintoma não aponta pro problema.
 
 A saída é escrever o `@` como interpolação literal, `{'@'}` — a mesma sintaxe que já escapa `{'{{...}}'}` para um par de chaves cru. E o gerador de `TrInput` (`src/appMessages.ts`, `messageParams`) já conta com isso: ele **remove** todo `{'…'}` antes de procurar `{param}`, então escapar o `@` não inventa um param fantasma — o comportamento é o mesmo que já existe para chaves literais, só que aplicado ao caso que ninguém tinha testado até morder.
 
@@ -528,7 +544,7 @@ Nada disso aparece em teste de componente: jsdom e happy-dom não têm layout, t
 
 O `apply` do `dropdownFit` escreve a largura da referência como `--width` no painel, por `setProperty` — custom property atribuída num `CSSStyleDeclaration` vira propriedade JS comum e nunca chega ao CSS. Quem lê é o `w-(--width)` do **default do `RUtilsDropdown`**, ao lado do `z-999` que os três campos repetiam.
 
-O motivo de a largura ser classe e não `width` inline é precedência: inline ganha de qualquer classe, então um `ui: { Utils: { Dropdown: { popover: "w-80" } } }` não tinha como vencer e perdia calado (é o caso do `playground/app/components/Locale.vue`). Como classe, o override é o `twMerge` de sempre: `w-80` substitui `w-(--width)`, e a medida do `size` deixa de ser lida — o `reset: { rects: true }` continua acontecendo, porque a largura renderizada muda do mesmo jeito.
+O motivo de a largura ser classe e não `width` inline é precedência: inline ganha de qualquer classe, então um `ui: { Utils: { Dropdown: { popover: "w-80" } } }` não tinha como vencer e perdia calado (é o caso do `playgrounds/i18n/app/components/Locale.vue`). Como classe, o override é o `twMerge` de sempre: `w-80` substitui `w-(--width)`, e a medida do `size` deixa de ser lida — o `reset: { rects: true }` continua acontecendo, porque a largura renderizada muda do mesmo jeito.
 
 **Toda aparência de painel mora em `ui.Utils.Dropdown.popover`, nunca num `class` no template do campo**, e é isso que faz os três campos conviverem:
 
@@ -611,11 +627,15 @@ O par nome→classe é **gerado**, em `#rform/registry` (`hooks.fields` / `hooks
 
 `tsconfig.json` só referencia `.nuxt/tsconfig.*.json`. Sem rodar `nuxi prepare` (ou o `dev`) primeiro, `vue-tsc -p .nuxt/tsconfig.app.json --noEmit` falha.
 
-São **três** apps Nuxt, cada um com o próprio `.nuxt` e o próprio `#rform` — checar um não cobre o outro, e é por isso que o `test:types` roda os três:
+São **sete** apps Nuxt, cada um com o próprio `.nuxt` e o próprio `#rform` — checar um não cobre o outro, e é por isso que o `test:types` roda os sete:
 
 ```
 vue-tsc -p tsconfig.check.json                        # o módulo
-vue-tsc -p playground/.nuxt/tsconfig.app.json         # o playground
+vue-tsc -p docs/.nuxt/tsconfig.app.json               # o site
+vue-tsc -p playgrounds/i18n/.nuxt/tsconfig.app.json
+vue-tsc -p playgrounds/basic/.nuxt/tsconfig.app.json
+vue-tsc -p playgrounds/standalone/.nuxt/tsconfig.app.json
+vue-tsc -p playgrounds/ui/.nuxt/tsconfig.app.json
 vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json # a fixture (campos/utils de usuário)
 ```
 
@@ -628,21 +648,25 @@ vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json # a fixture (campos/utils
 
 O gerenciador de pacotes é o **pnpm** (`pnpm-lock.yaml`, só na raiz). O runtime continua sendo o Node — `pnpm run` só orquestra; vitest, vue-tsc, nuxi e unbuild rodam em Node como sempre.
 
-- `pnpm install` — instala **os dois** projetos de uma vez (ver workspace abaixo).
-- `pnpm --filter rform-playground dev` (ou `cd playground && pnpm dev`) — sobe o playground na porta 3000 com o módulo em watch.
+- `pnpm install` — instala **os seis** projetos de uma vez (ver workspace abaixo).
+- `pnpm docs` — sobe o site de documentação na porta 3000.
+- `pnpm play` / `play:basic` / `play:standalone` / `play:ui` — os quatro playgrounds, nas portas 3030 a 3033.
 - `pnpm exec oxlint <arquivo>` — lint (config em `oxlint.config.ts`, plugin tailwind ativo).
-- `pnpm test:types` — type-check dos três apps (precisa dos três `.nuxt` populados).
+- `pnpm test:types` — type-check dos sete apps (precisa dos sete `.nuxt` populados).
+- `pnpm --filter rform-docs api` — regenera a tabela de props do site.
 - `pnpm exec nuxi prepare test/fixtures/basic` — regenera os tipos da fixture depois de mexer no `module.ts` ou em `test/fixtures/basic/rform/`.
 
 ### O `pnpm-workspace.yaml` não é opcional
 
-No pnpm 11 o campo `pnpm` do `package.json` **não é mais lido** (ele avisa e ignora), e `pnpm-workspace.yaml` é a casa de toda configuração. Só que criar esse arquivo torna o repo um workspace root — e aí `pnpm install` dentro de `playground/` para de instalar o playground: ele resolve para a raiz e responde "Already up to date" sem criar `playground/node_modules`, em 30ms e com exit 0. **Falha em silêncio.**
+No pnpm 11 o campo `pnpm` do `package.json` **não é mais lido** (ele avisa e ignora), e `pnpm-workspace.yaml` é a casa de toda configuração. Só que criar esse arquivo torna o repo um workspace root — e aí `pnpm install` dentro de um subprojeto para de instalá-lo: ele resolve para a raiz e responde "Already up to date" sem criar o `node_modules` de lá, em 30ms e com exit 0. **Falha em silêncio.**
 
-Por isso o `playground` está em `packages:`. Um `pnpm install` na raiz cobre os dois, há um lockfile só, e o `postinstall` (`nuxi prepare`) do playground roda junto.
+Por isso `docs` e `playgrounds/*` estão em `packages:`. Um `pnpm install` na raiz cobre os seis projetos, há um lockfile só, e o `postinstall` (`nuxi prepare`) de cada um roda junto.
 
 `allowBuilds` no mesmo arquivo é o outro requisito, e a entrada é **obrigatória mesmo dizendo `false`**: o pnpm bloqueia build script de dependência por padrão e, num install do zero, **sai com código 1** (`ERR_PNPM_IGNORED_BUILDS`) até haver uma decisão explícita — apagar a entrada faz ele reescrever o arquivo com `esbuild: set this to true or false`. (Com `node_modules` já populado ele nem checa, então o erro só aparece em clone novo ou CI.) Escrever `onlyBuiltDependencies` não resolve no 11.
 
-Aqui está `false`: o binário do esbuild chega pronto pelo optional dep de plataforma (`@esbuild/win32-x64` e irmãos, que estão no lockfile), e o postinstall dele não faz falta. Medido com `node_modules` apagado: install exit 0, suíte 29/297, e o `nuxi build` do playground completo (client + SSR + Nitro).
+São duas entradas hoje: `esbuild: false` e `better-sqlite3: true` — esta última porque o `@nuxt/content` do `docs` precisa do binding nativo, e sem ela o site não sobe nem gera.
+
+`esbuild` está `false`: o binário chega pronto pelo optional dep de plataforma (`@esbuild/win32-x64` e irmãos, que estão no lockfile), e o postinstall dele não faz falta. Medido com `node_modules` apagado: install exit 0, suíte 29/297, e o `nuxi build` de um playground completo (client + SSR + Nitro).
 
 ### As três deps que o pnpm revelou
 
@@ -660,14 +684,159 @@ Publica no npm normalmente (`📦 rform@0.0.0 → https://registry.npmjs.org/`),
 
 O `prepack` roda **duas vezes** no `release`: uma explícita na cadeia, outra pelo lifecycle do `pnpm publish`. É desperdício de segundos, não erro — e o segundo serve de guarda de que o `dist` bate com o fonte.
 
-## Playground
+## Playgrounds
 
-`playground/app/pages/form.vue` é o smoke test visual de todos os componentes. Cenários do `RSelect` cobrem: array primitivo, multi+modelFull, single+modelFull com slot custom, e objeto `{key: label}`. Útil para validar mudanças que afetem inferência de tipos do slot.
+Quatro apps Nuxt de rascunho, um por eixo. Nenhum deles é documentação — isso é o
+`docs/`, adiante.
 
-`playground/app/pages/customizados.vue` cobre campo e util do usuário, com `playground/app/rform/fields/Rating.vue` e `playground/app/rform/utils/Hint.vue`. São eles que dão cobertura de type-check a um componente escrito **como usuário** — o `src/` não exercita esse caminho.
+| app | porta | eixo |
+|---|---|---|
+| `playgrounds/i18n` | 3030 | `@nuxtjs/i18n` em foco: troca de idioma, packs do usuário, `tr`/`trRule`, `RDate` reformatando ao trocar de locale |
+| `playgrounds/basic` | 3031 | app comum **com** i18n: cadastro de ponta a ponta, `RDynamic` vindo de rota do Nitro, tela de edição/CRUD |
+| `playgrounds/standalone` | 3032 | **sem** `@nuxtjs/i18n`: o motor próprio, packs em `app/rform/locales`, a assimetria do `~~` |
+| `playgrounds/ui` | 3033 | tokens `--rf-*`, `defineFieldDefaults`, `ui` por campo, `popover` do Dropdown |
 
-**O playground é o único lugar que exercita a ponte com o @nuxtjs/i18n** — ele está no `playground/package.json` com `pt-BR`/`en` e `strategy: "no_prefix"`, e o seletor (`app/components/Locale.vue`) mora no rodapé do `Default.vue`, ao lado do de tema. Por tabela, é ele que dá cobertura de `vue-tsc` à ponte.
+`standalone` e `ui` **não podem** ganhar `@nuxtjs/i18n`, e por motivos diferentes:
+o primeiro é o único lugar que exercita o motor próprio; o segundo ficaria ilegível,
+porque com i18n toda label vira chave e chave é ruído quando o assunto é classe.
 
-E ao gerador estrito: ele declara `langDir: "locales"` com `i18n/locales/{pt-BR,en}.json` de verdade, então o `TrInput` dele é a união completa e **todo literal solto numa prop de texto das páginas é erro de `vue-tsc`** — parte dos labels virou chave, parte virou `~~`. É o custo da decisão em forma de trabalho real. A fixture, sem i18n, é a cobertura do outro extremo: `TrInput = string`, `tr` identidade e `~~Nome` impresso com os til.
+`playgrounds/i18n` é o que era o `playground/`, com o histórico preservado. Ele
+mantém o sistema de demo antigo (`DemoPage`/`Demo`, recorte por regex do fonte da
+página) — o `docs/` substituiu isso por arquivos `.vue` de verdade, e o playground
+não foi migrado porque ali o recorte ainda serve como rascunho.
 
-A fixture (`test/fixtures/basic/rform/`) tem os três casos de componente que os testes cobrem — `fields/Rating.vue` (campo novo), `fields/Switch.vue` (substitui um embutido via `#rform/builtin`) e `utils/Hint.vue` (util novo) — mais `locales/pt-BR.ts`, um pack de usuário com uma chave sobrescrita. Ela fica **sem** @nuxtjs/i18n de propósito: é ela que cobre o resolvedor próprio.
+`playgrounds/i18n/app/pages/form.vue` é o smoke test visual de todos os
+componentes. Cenários do `RSelect` cobrem: array primitivo, multi+modelFull,
+single+modelFull com slot custom, e objeto `{key: label}`. Útil para validar
+mudanças que afetem inferência de tipos do slot.
+
+`playgrounds/i18n/app/pages/customizados.vue` cobre campo e util do usuário, com
+`app/rform/fields/Rating.vue` e `app/rform/utils/Hint.vue`. São eles que dão
+cobertura de type-check a um componente escrito **como usuário** — o `src/` não
+exercita esse caminho. O `docs/` tem cópia dos dois, pelo mesmo motivo.
+
+A fixture (`test/fixtures/basic/rform/`) tem os três casos de componente que os
+testes cobrem — `fields/Rating.vue` (campo novo), `fields/Switch.vue` (substitui um
+embutido via `#rform/builtin`) e `utils/Hint.vue` (util novo) — mais
+`locales/pt-BR.ts`, um pack de usuário com uma chave sobrescrita. Ela fica **sem**
+@nuxtjs/i18n de propósito: é ela que cobre o resolvedor próprio no teste.
+
+## O site (`docs/`)
+
+App Nuxt com `@nuxt/content`, `@nuxtjs/i18n`, e o módulo por caminho relativo. É o
+produto para quem instala do npm — prosa, referência gerada e demos vivos.
+
+### Duas collections espelhadas
+
+`content.config.ts` declara `content_pt` e `content_en`, as duas com
+`prefix: ""` — então o **caminho da página é o mesmo nos dois idiomas**
+(`/fields/text`), e trocar de idioma é trocar o prefixo da rota. O
+`app/pages/[...slug].vue` resolve a collection pelo `locale` e **cai no
+`content_pt`** quando a página não existe no locale ativo: uma tradução faltando
+mostra o texto em pt, não um 404.
+
+Os slugs não traduzem de propósito — as duas árvores são espelho arquivo a
+arquivo, e `test/unit/docs.test.ts` cobra isso.
+
+O locale é `pt`, e não `pt-BR`: o `packFor` do `module.ts` escolhe o pack por code
+exato e, na falta, **por língua** — então `pt` recebe o pack `pt-BR` do módulo sem
+inventar code nenhum na lista de locales do site.
+
+A ordem da sidebar sai dos prefixos numéricos dos arquivos, via
+`queryCollectionNavigation()`; o título de cada seção vem do `.navigation.yml` do
+diretório, um por idioma.
+
+### `TrInput` estreita lá dentro, e isso é a feature
+
+O docs declara `langDir` com JSON real, então **todo literal solto numa prop de
+texto é erro de `vue-tsc`**. É o comportamento documentado em "O mapa de chaves do
+app", e aqui ele força cada demo a ter as duas traduções.
+
+A convenção: chave `demo.<componente>.<coisa>` para texto que uma pessoa lê, e
+`~~` quando o label *é* o código demonstrado (`~~:length="4"`, `~~brCpf`). São 172
+chaves hoje, as mesmas nos dois packs.
+
+Cada página de campo abre com um `::callout` dizendo isso, e linkando a página de
+tradução — senão o leitor copia `label="demo.text.nome"` para um app sem i18n.
+
+### Os demos são arquivos `.vue`
+
+`docs/app/demos/<Componente>/<id>.vue`, montados por `::demo{src="Text/basico"}`.
+Dois `import.meta.glob` sobre a mesma pasta dão o componente e o texto cru, então
+o código na tela é literalmente o que rodou — e **passa por `vue-tsc`**, que é o
+ganho sobre o recorte por regex do playground.
+
+`demoSource()` (`app/utils/demos.ts`) tira o `<template>` externo e desindenta
+quando o arquivo não tem `<script setup>` — o caso comum. Com script, mostra o
+arquivo inteiro.
+
+O `RForm` e o painel de model são do `<Demo>`, não do arquivo de demo;
+`:form="false"` desliga os dois.
+
+**Um demo novo exige reiniciar o dev server.** O `import.meta.glob` é resolvido na
+transformação, e um arquivo criado com o servidor no ar não entra nele — o sintoma
+é o `<Demo>` renderizar o aviso de "não existe em app/demos".
+
+**Todo bloco MDC precisa do `::` de fechamento.** Um `::props-table{…}` sem ele
+engole o resto do documento: o MDC trata o bloco como aberto e o conteúdo seguinte
+vira filho dele. A página termina cedo, sem erro nenhum.
+
+### A tabela de props é gerada
+
+`docs/scripts/api.ts` roda `vue-component-meta` sobre
+`src/runtime/components/{fields,utils}` mais `Form.vue` e `Dynamic.vue`, e escreve
+`app/generated/api.json`. Ligado ao `predev`/`prebuild`/`pregenerate`.
+
+O checker roda contra **`docs/.nuxt/tsconfig.app.json`**, não contra o
+`tsconfig.check.json` da raiz: é ali que `#rform/*` resolve com os tipos gerados
+daquele app. Depende de `nuxi prepare docs` ter rodado.
+
+Ele **aguenta o `RSelect`** — o caso difícil, com `Multiple extends boolean` e o
+`Opts` genérico, que é o mesmo lugar que já rendeu o "Union type too complex". 18
+props, sem erro. Medido antes de escrever as páginas, exatamente para não descobrir
+tarde.
+
+Os tipos do módulo vêm de interseção, então o checker devolve a lista achatada e
+completa mas **sem descrição** — não há JSDoc por prop pra ele ler. A divisão que
+decorre disso é a certa: a tabela gerada é a verdade exaustiva
+(nome/tipo/obrigatoriedade/default) e nunca desatualiza; a prosa ao lado explica as
+props que precisam de explicação, e é opcional por prop.
+
+O checker lista todo emit também como prop `onXxx`; o `api.ts` os move para
+`events`, senão `onUpdate:modelValue` apareceria como prop escrevível.
+
+### A árvore de camadas lê o `defaults` do módulo
+
+`docs/app/utils/ui.ts` (portado do playground) lê `defaults.ui` por
+`import.meta.glob` e parseia o template pra saber onde cada `RUtils` entra. Nenhum
+build step.
+
+**Ele estava quebrado no playground desde o refactor para `fields/`/`utils/`**: a
+busca era por `components/<Nome>.vue` e `components/Utils/<Nome>.vue`, caminhos que
+não existem mais. A árvore vinha vazia, calada. Hoje há um `field()` que tenta
+`fields/<Nome>.vue` e cai em `<Nome>.vue` — o segundo é o `Form` e o `Dynamic`, que
+não são campos mas têm `ui` a mostrar.
+
+### As guardas
+
+`test/unit/docs.test.ts`, projeto `unit`, sem app:
+
+1. `demoSourceOf()` — desembrulha o `<template>`, preserva indentação relativa,
+   devolve o arquivo inteiro quando há script, e não engole um `</template>` de
+   slot no meio.
+2. **Paridade** — todo `content/pt/**/*.md` tem irmão em `content/en/**`, e
+   vice-versa, mais as seções.
+3. **Demos resolvem** — todo `::demo{src}` aponta para um arquivo que existe, e
+   todo demo é citado por alguma página. É o apodrecimento mais provável.
+
+O scanner tira bloco cercado e código inline antes de casar `::demo` — a própria
+página de contribuição mostra a sintaxe como exemplo.
+
+### Deploy
+
+`.github/workflows/docs.yml`: `pnpm install` → stub do módulo → `nuxi prepare docs`
+→ `pnpm --filter rform-docs generate` (que dispara o `api.ts` pelo `pregenerate`) →
+`cloudflare/wrangler-action` com `pages deploy docs/.output/public`.
+
+Precisa dos secrets `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID` no
+repositório, e do projeto `rform-docs` criado no painel da Cloudflare.

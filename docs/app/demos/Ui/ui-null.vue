@@ -12,8 +12,7 @@
         :ui="{
             group: {
                 wrapper: {
-                    container:
-                        'flex flex-row items-center rounded-none border-b-2 border-secondary'
+                    container: 'flex flex-row items-center rounded-none border-b-2 border-secondary'
                 }
             }
         }"

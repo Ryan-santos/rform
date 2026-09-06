@@ -1,12 +1,12 @@
 <template>
     <RFile
         name="somenteImagem"
-        label="~~accept=&quot;png, jpg, webp&quot;"
+        label='~~accept="png, jpg, webp"'
         accept="png, jpg, webp"
     />
     <RFile
         name="somenteDocumento"
-        label="~~accept=&quot;pdf, doc, docx&quot;"
+        label='~~accept="pdf, doc, docx"'
         accept="pdf, doc, docx"
     />
 </template>

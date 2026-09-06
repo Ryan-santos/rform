@@ -1,7 +1,7 @@
 <template>
     <RNumber
         name="comDefault"
-        label="~~:default=&quot;42&quot;"
+        label='~~:default="42"'
         :default="42"
     />
 </template>

@@ -1,12 +1,12 @@
 <template>
     <RPin
         name="curto"
-        label="~~:length=&quot;4&quot;"
+        label='~~:length="4"'
         :length="4"
     />
     <RPin
         name="longo"
-        label="~~:length=&quot;8&quot;"
+        label='~~:length="8"'
         :length="8"
     />
 </template>

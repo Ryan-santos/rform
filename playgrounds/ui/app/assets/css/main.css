@@ -39,3 +39,15 @@
         @apply bg-background text-contrast transition-colors;
     }
 }
+
+/**
+ * O override de tema do módulo, em `@layer rform` — a forma imune à ordem dos
+ * dois `@import`. Declarar `--rf-*` fora dessa layer, com o `#rform` importado
+ * depois, é o único jeito de o override ser ignorado **calado**.
+ */
+@layer rform {
+    :root {
+        --rf-radius-xl: 0.75rem;
+        --rf-color-primary: var(--color-primary);
+    }
+}

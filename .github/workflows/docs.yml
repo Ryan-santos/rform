@@ -1,0 +1,52 @@
+name: docs
+
+on:
+    push:
+        branches: [develop, main]
+        paths:
+            - "docs/**"
+            - "src/**"
+            - "pnpm-lock.yaml"
+            - ".github/workflows/docs.yml"
+    workflow_dispatch:
+
+concurrency:
+    group: docs-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            # `--frozen-lockfile` é o default no CI, e é o que se quer: o postinstall
+            # de cada subprojeto roda `nuxi prepare`, então este passo já popula os
+            # `.nuxt` de que os seguintes dependem.
+            - run: pnpm install
+
+            # O checker do `scripts/api.ts` roda contra `docs/.nuxt/tsconfig.app.json`,
+            # então o prepare do docs tem de ter acontecido — o `pregenerate` do
+            # `docs/package.json` chama o script sozinho, mas o stub do módulo não.
+            - run: pnpm exec nuxt-module-build build --stub && pnpm exec nuxt-module-build prepare
+
+            - run: pnpm exec nuxi prepare docs
+
+            - run: pnpm --filter rform-docs generate
+
+            - uses: cloudflare/wrangler-action@v3
+              with:
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  command: pages deploy docs/.output/public --project-name=rform-docs

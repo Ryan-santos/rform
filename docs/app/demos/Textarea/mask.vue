@@ -1,13 +1,13 @@
 <template>
     <RTextarea
         name="dinheiroArea"
-        label="~~mask=&quot;dinheiro&quot;"
+        label='~~mask="dinheiro"'
         mask="dinheiro"
         :rows="2"
     />
     <RTextarea
         name="cpfArea"
-        label="~~mask=&quot;brCpf&quot;"
+        label='~~mask="brCpf"'
         mask="brCpf"
         :rows="2"
     />

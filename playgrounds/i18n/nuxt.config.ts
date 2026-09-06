@@ -1,7 +1,13 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-    modules: ["@nuxtjs/color-mode", "@nuxt/icon", "@nuxt/fonts", "@nuxtjs/i18n", "../../src/module"],
+    modules: [
+        "@nuxtjs/color-mode",
+        "@nuxt/icon",
+        "@nuxt/fonts",
+        "@nuxtjs/i18n",
+        "../../src/module"
+    ],
 
     i18n: {
         strategy: "no_prefix",

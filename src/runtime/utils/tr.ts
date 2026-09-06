@@ -25,5 +25,3 @@ export const trRule = (ref: string | RuleMessage): string => {
 
     return tr({ key: `rform.presets.rules.${key}`, params });
 };
-
-export default { tr, trRule };

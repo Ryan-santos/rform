@@ -1194,7 +1194,7 @@
             },
             {
                 "name": "schema",
-                "type": "FieldArray | FieldCalendar | FieldColor | FieldDate | FieldFile | FieldHour | FieldNumber | FieldObject | FieldSelect | FieldSwitch | FieldText | FieldTextarea | Schema",
+                "type": "FieldArray | FieldCalendar | FieldColor | FieldDate | FieldFile | FieldHour | FieldNumber | FieldObject | FieldRating | FieldSelect | FieldSwitch | FieldText | FieldTextarea | Schema",
                 "required": true
             }
         ],

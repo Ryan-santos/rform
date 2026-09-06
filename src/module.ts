@@ -51,6 +51,14 @@ const importsRformValue = (source: string) =>
     });
 
 /**
+ * Verdadeiro quando o fonte tem `export default`. O barrel só nomeia o default de
+ * quem tem um: um helper sem default renderizaria `import x from …` para nada — e,
+ * pior, um `export { x }` explícito sombrearia o `export *` do mesmo arquivo. É o
+ * caso do `tr.ts`, cujo export nomeado `tr` tem o nome do próprio arquivo.
+ */
+const hasDefaultExport = (source: string) => /^export default\b/m.test(source);
+
+/**
  * Com barra normal: este caminho é escrito em fonte gerado, onde barra invertida é
  * escape, e entregue ao `addComponent`, que — ao contrário do `addComponentsDir` —
  * não normaliza antes de virar import.
@@ -815,13 +823,15 @@ export default defineNuxtModule<ModuleOptions>({
         const helpers = await Promise.all(
             (await readdir(utilsPath)).map(async (file) => {
                 const path = resolve(utilsPath, file);
+                const source = await readFile(path, "utf8");
 
                 return {
                     name: basename(file, ".ts"),
                     path,
                     // O que a intercalação do template abaixo usa, e não sorte
                     // alfabética.
-                    reentrant: importsRformValue(await readFile(path, "utf8"))
+                    reentrant: importsRformValue(source),
+                    default: hasDefaultExport(source)
                 };
             })
         );
@@ -838,6 +848,8 @@ export default defineNuxtModule<ModuleOptions>({
                     (a, b) => Number(a.reentrant) - Number(b.reentrant)
                 );
 
+                const defaults = helpers.filter((helper) => helper.default).map(({ name }) => name);
+
                 return [
                     // O `export *` é o que faz `import { defineRule } from
                     // "#rform/utils"` funcionar, e ele passa pelo `specifier()` para
@@ -846,18 +858,22 @@ export default defineNuxtModule<ModuleOptions>({
                     // colado ao `export *` do mesmo arquivo, e não em dois blocos —
                     // ver `ordered`, acima.
                     ordered
-                        .map(
-                            ({ name, path }) =>
-                                `import ${name} from "${path}"\nexport * from ${specifier(path)}`
+                        .map(({ name, path, default: own }) =>
+                            [
+                                own ? `import ${name} from "${path}"` : undefined,
+                                `export * from ${specifier(path)}`
+                            ]
+                                .filter(Boolean)
+                                .join("\n")
                         )
                         .join("\n"),
                     "",
                     "export {",
-                    `   ${helpers.map(({ name }) => name).join(",\n   ")}`,
+                    `   ${defaults.join(",\n   ")}`,
                     "}",
                     "",
                     "export default {",
-                    `   ${helpers.map(({ name }) => name).join(",\n   ")}`,
+                    `   ${defaults.join(",\n   ")}`,
                     "}"
                 ].join("\n");
             }

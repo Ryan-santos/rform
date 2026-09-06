@@ -25,7 +25,7 @@ You are responsible for the test suite of the `rform` Nuxt module. You **run**, 
 - With coverage: `pnpm test --coverage` (output in `coverage/`)
 - Type-check tests: `pnpm test:types`
 
-The package manager is **pnpm**, with a workspace (`pnpm-workspace.yaml`) whose members are the root and `playground`. There is one `pnpm-lock.yaml`, at the root. Run `pnpm install` from the root — running it inside `playground/` silently installs nothing.
+The package manager is **pnpm**, with a workspace (`pnpm-workspace.yaml`) whose members are the root, `docs` and `playgrounds/*`. There is one `pnpm-lock.yaml`, at the root. Run `pnpm install` from the root — running it inside a subproject silently installs nothing.
 
 If `.nuxt/rform/*` is missing (first run, or after changing the module setup), run `pnpm dev:prepare` once — the `nuxt` project needs the alias map to resolve `#rform`.
 

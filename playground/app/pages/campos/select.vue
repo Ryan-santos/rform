@@ -12,13 +12,13 @@
         >
             <RSelect
                 name="primitivo"
-                placeholder="selecione"
+                placeholder="~~selecione"
                 :options="[1, 2, 3]"
             />
             <RSelect
                 name="primitivoTexto"
-                label="Strings"
-                placeholder="selecione"
+                label="~~Strings"
+                placeholder="~~selecione"
                 :options="['pequeno', 'médio', 'grande']"
             />
         </Demo>
@@ -31,7 +31,7 @@
             <RSelect
                 v-slot="{ selected }"
                 name="cor"
-                placeholder="Cor"
+                placeholder="~~Cor"
                 :options="{
                     blue: 'azul',
                     red: 'vermelho',
@@ -53,8 +53,8 @@
         >
             <RSelect
                 name="usuario"
-                label="Funcionário"
-                placeholder="selecione"
+                label="~~Funcionário"
+                placeholder="~~selecione"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -68,8 +68,8 @@
         >
             <RSelect
                 name="usuarioValor"
-                label="Sem modelFull"
-                placeholder="só o id vai pro model"
+                label="~~Sem modelFull"
+                placeholder="~~só o id vai pro model"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -77,8 +77,8 @@
             <RSelect
                 v-slot="{ selected }"
                 name="usuarioFull"
-                label="Com modelFull"
-                placeholder="o objeto inteiro vai pro model"
+                label="~~Com modelFull"
+                placeholder="~~o objeto inteiro vai pro model"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -99,8 +99,8 @@
         >
             <RSelect
                 name="multiplo"
-                label="Vários ids"
-                placeholder="Funcionários"
+                label="~~Vários ids"
+                placeholder="~~Funcionários"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -109,8 +109,8 @@
             <RSelect
                 v-slot="{ selected, list }"
                 name="multiploFull"
-                label="Vários objetos, com slot"
-                placeholder="Funcionários"
+                label="~~Vários objetos, com slot"
+                placeholder="~~Funcionários"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -140,8 +140,8 @@
             <RSelect
                 v-slot="{ selected, list }"
                 name="comSlot"
-                label="Funcionário"
-                placeholder="selecione"
+                label="~~Funcionário"
+                placeholder="~~selecione"
                 :options="users"
                 key-value="id"
                 key-label="name"
@@ -169,7 +169,7 @@
             <RSelect
                 v-slot="{ selected }"
                 name="comDefault"
-                label="Já vem escolhido"
+                label="~~Já vem escolhido"
                 :options="users"
                 :default="users[1]"
                 key-value="id"
@@ -190,23 +190,23 @@
         >
             <RSelect
                 name="obrigatorio"
-                label="Obrigatório"
-                placeholder="selecione"
+                label="~~Obrigatório"
+                placeholder="~~selecione"
                 :options="['a', 'b']"
                 required
                 rule="required"
             />
             <RSelect
                 name="carregando"
-                label="Carregando"
-                placeholder="selecione"
+                label="~~Carregando"
+                placeholder="~~selecione"
                 :options="['a', 'b']"
                 loading
             />
             <RSelect
                 name="comErro"
-                label="Erro manual"
-                placeholder="selecione"
+                label="~~Erro manual"
+                placeholder="~~selecione"
                 :options="['a', 'b']"
                 error="Essa opção saiu do catálogo."
             />
@@ -222,10 +222,35 @@
     import source from "./select.vue?raw";
 
     const users = [
-        { id: 1, name: "João Silva", role: "Suporte", picture: "https://randomuser.me/api/portraits/men/1.jpg" },
-        { id: 2, name: "Maria Souza", role: "Financeiro", picture: "https://randomuser.me/api/portraits/women/2.jpg" },
-        { id: 3, name: "Pedro Santos", role: "Comercial", picture: "https://randomuser.me/api/portraits/men/3.jpg" },
-        { id: 4, name: "Ana Oliveira", role: "Diretoria", picture: "https://randomuser.me/api/portraits/women/4.jpg" },
-        { id: 5, name: "Carlos Ferreira", role: "Logística", picture: "https://randomuser.me/api/portraits/men/5.jpg" }
+        {
+            id: 1,
+            name: "João Silva",
+            role: "Suporte",
+            picture: "https://randomuser.me/api/portraits/men/1.jpg"
+        },
+        {
+            id: 2,
+            name: "Maria Souza",
+            role: "Financeiro",
+            picture: "https://randomuser.me/api/portraits/women/2.jpg"
+        },
+        {
+            id: 3,
+            name: "Pedro Santos",
+            role: "Comercial",
+            picture: "https://randomuser.me/api/portraits/men/3.jpg"
+        },
+        {
+            id: 4,
+            name: "Ana Oliveira",
+            role: "Diretoria",
+            picture: "https://randomuser.me/api/portraits/women/4.jpg"
+        },
+        {
+            id: 5,
+            name: "Carlos Ferreira",
+            role: "Logística",
+            picture: "https://randomuser.me/api/portraits/men/5.jpg"
+        }
     ];
 </script>

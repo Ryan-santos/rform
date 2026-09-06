@@ -1,17 +1,18 @@
-// @vitest-environment nuxt
-import { describe, expect, it } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import type { DOMWrapper } from "@vue/test-utils";
+// @vitest-environment nuxt
+import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
+
 import { RCalendar } from "#components";
 
-const findDayButton = (
-    wrapper: Awaited<ReturnType<typeof mountSuspended>>,
-    day: number
-) => {
+const findDayButton = (wrapper: Awaited<ReturnType<typeof mountSuspended>>, day: number) => {
     return wrapper
         .findAll("button")
-        .find((b: DOMWrapper<HTMLButtonElement>) => b.text() === String(day) && !b.attributes("disabled"));
+        .find(
+            (b: DOMWrapper<HTMLButtonElement>) =>
+                b.text() === String(day) && !b.attributes("disabled")
+        );
 };
 
 describe("RCalendar", () => {
@@ -94,9 +95,7 @@ describe("RCalendar", () => {
         });
 
         // Day 5 is before May 10 → disabled.
-        const day5 = wrapper
-            .findAll("button")
-            .find(b => b.text() === "5");
+        const day5 = wrapper.findAll("button").find((b) => b.text() === "5");
         expect(day5?.attributes("disabled")).toBeDefined();
     });
 
@@ -108,9 +107,7 @@ describe("RCalendar", () => {
             } as never
         });
 
-        const day25 = wrapper
-            .findAll("button")
-            .find(b => b.text() === "25");
+        const day25 = wrapper.findAll("button").find((b) => b.text() === "25");
         expect(day25?.attributes("disabled")).toBeDefined();
         await day25!.trigger("click");
         await nextTick();
@@ -132,7 +129,7 @@ describe("RCalendar", () => {
         expect(weekdaysBefore.exists()).toBe(true);
 
         // The month-title button (capitalized "Maio") opens the months view.
-        const titleButtons = wrapper.findAll("button").filter(b => {
+        const titleButtons = wrapper.findAll("button").filter((b) => {
             const text = b.text();
             return text.length > 2 && /^[A-Z]/.test(text);
         });
@@ -151,7 +148,7 @@ describe("RCalendar", () => {
             props: { modelValue: "2026-05-15" } as never
         });
 
-        const yearTitle = wrapper.findAll("button").find(b => b.text() === "2026");
+        const yearTitle = wrapper.findAll("button").find((b) => b.text() === "2026");
         expect(yearTitle).toBeDefined();
         await yearTitle!.trigger("click");
         await nextTick();
@@ -159,7 +156,43 @@ describe("RCalendar", () => {
         const yearsGrid = wrapper.find('[class*="grid-cols-3"]');
         expect(yearsGrid.exists()).toBe(true);
         // 12-year window centered on view.year should render multiple years.
-        const yearButtons = wrapper.findAll("button").filter(b => /^\d{4}$/.test(b.text()));
+        const yearButtons = wrapper.findAll("button").filter((b) => /^\d{4}$/.test(b.text()));
         expect(yearButtons.length).toBeGreaterThanOrEqual(12);
+    });
+
+    /**
+     * The clock panel is gated on `props.time`, a boolean the parent field
+     * passes down, while its label is `props.text.time`. The two share a name
+     * and cannot collide: `text` stays a nested object, so nothing prefixed
+     * ever lands on the boolean. These two are the guard.
+     */
+    it("shows the clock, labelled from the pack, when time is on", async () => {
+        const wrapper = await mountSuspended(RCalendar, {
+            props: { modelValue: "2026-05-15", time: true } as never
+        });
+
+        expect(wrapper.text()).toContain("Hora");
+    });
+
+    it("keeps the clock out when time is off", async () => {
+        const wrapper = await mountSuspended(RCalendar, {
+            props: { modelValue: "2026-05-15" } as never
+        });
+
+        expect(wrapper.text()).not.toContain("Hora");
+        expect(wrapper.text()).not.toContain("rform.utils.calendar");
+    });
+
+    it("takes the label from the nested text prop", async () => {
+        const wrapper = await mountSuspended(RCalendar, {
+            props: {
+                modelValue: "2026-05-15",
+                time: true,
+                text: { time: "~~Quando" }
+            } as never
+        });
+
+        expect(wrapper.text()).toContain("Quando");
+        expect(wrapper.text()).not.toContain("Hora");
     });
 });

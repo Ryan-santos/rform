@@ -12,8 +12,8 @@
         >
             <RDate
                 name="nascimento"
-                label="Aniversário"
-                placeholder="quando você nasceu"
+                label="~~Aniversário"
+                placeholder="~~quando você nasceu"
             />
         </Demo>
 
@@ -24,8 +24,8 @@
         >
             <RDate
                 name="periodo"
-                label="Período"
-                placeholder="data de execução"
+                label="~~Período"
+                placeholder="~~data de execução"
                 mode="range"
             />
         </Demo>
@@ -37,8 +37,8 @@
         >
             <RDate
                 name="avulsas"
-                label="Datas avulsas"
-                placeholder="escolha quantas quiser"
+                label="~~Datas avulsas"
+                placeholder="~~escolha quantas quiser"
                 mode="multiple"
             />
         </Demo>
@@ -50,14 +50,14 @@
         >
             <RDate
                 name="agendamento"
-                label="Agendamento"
-                placeholder="dia e hora"
+                label="~~Agendamento"
+                placeholder="~~dia e hora"
                 time
             />
             <RDate
                 name="janela"
-                label="Janela de execução"
-                placeholder="de quando até quando"
+                label="~~Janela de execução"
+                placeholder="~~de quando até quando"
                 mode="range"
                 time
             />
@@ -69,7 +69,7 @@
         >
             <RDate
                 name="comDefault"
-                label="Já vem preenchida"
+                label="~~Já vem preenchida"
                 default="2003-11-24"
             />
         </Demo>
@@ -81,8 +81,8 @@
         >
             <RDate
                 name="somenteEsteAno"
-                label="Só em 2026"
-                placeholder="dentro do ano"
+                label="~~Só em 2026"
+                placeholder="~~dentro do ano"
                 :disable="{
                     before: '2026-01-01',
                     after: '2026-12-31'
@@ -97,8 +97,8 @@
         >
             <RDate
                 name="semFeriado"
-                label="Evitando feriados"
-                placeholder="dia útil"
+                label="~~Evitando feriados"
+                placeholder="~~dia útil"
                 :disable="{
                     before: '2026-01-01',
                     after: '2026-12-31',
@@ -114,8 +114,8 @@
         >
             <RDate
                 name="semRecesso"
-                label="Evitando o recesso"
-                placeholder="antes ou depois das festas"
+                label="~~Evitando o recesso"
+                placeholder="~~antes ou depois das festas"
                 mode="range"
                 :disable="{
                     between: ['2026-12-20', '2026-12-31']
@@ -129,18 +129,18 @@
         >
             <RDate
                 name="obrigatoria"
-                label="Obrigatória"
+                label="~~Obrigatória"
                 required
                 rule="required"
             />
             <RDate
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
             />
             <RDate
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Data fora do período de inscrição."
             />
         </Demo>

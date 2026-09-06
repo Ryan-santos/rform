@@ -12,7 +12,7 @@
         >
             <RColor
                 name="basico"
-                placeholder="Destaque"
+                placeholder="~~Destaque"
             />
         </Demo>
 
@@ -22,9 +22,9 @@
         >
             <RColor
                 name="marca"
-                label="Cor da marca"
-                placeholder="clique para escolher"
-                description="Usada nos botões e links do painel."
+                label="~~Cor da marca"
+                placeholder="~~clique para escolher"
+                description="~~Usada nos botões e links do painel."
             />
         </Demo>
 
@@ -35,12 +35,12 @@
         >
             <RColor
                 name="primaria"
-                label="Primária"
+                label="~~Primária"
                 :default="'#005BDF'"
             />
             <RColor
                 name="secundaria"
-                label="Secundária"
+                label="~~Secundária"
                 :default="'#00CF6C'"
             />
         </Demo>
@@ -51,18 +51,18 @@
         >
             <RColor
                 name="obrigatoria"
-                label="Obrigatória"
+                label="~~Obrigatória"
                 required
                 rule="required"
             />
             <RColor
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
             />
             <RColor
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Contraste insuficiente para texto."
             />
         </Demo>
@@ -74,7 +74,7 @@
         >
             <RColor
                 name="ruleFn"
-                label="Não pode ser preto"
+                label="~~Não pode ser preto"
                 :rule="({ value }) => (value === '#000000' ? 'Escolha uma cor.' : undefined)"
             />
         </Demo>

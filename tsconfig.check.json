@@ -1,11 +1,12 @@
 {
     "//": "Type-check do módulo. Estende o tsconfig gerado pelo Nuxt, que inclui `../**/*` e por isso engoliria o playground e a fixture — cada um é outro app Nuxt, com o próprio .nuxt, os próprios auto-imports e o próprio `#rform` (a fixture tem campos e utils de usuário que só existem nos tipos gerados dela). Cada um é checado pelo próprio tsconfig no `test:types`.",
-    "//2": "`customComponents.test.ts` importa componentes da fixture: checá-lo aqui arrastaria `test/fixtures` de volta para dentro do programa, porque `exclude` não impede que um import puxe o arquivo. Quem cobre esses arquivos é o `-p test/fixtures/basic/.nuxt/tsconfig.app.json`, onde valem os tipos gerados da fixture.",
+    "//2": "`customComponents.test.ts` e `hookClasses.test.ts` importam componentes da fixture: checá-los aqui arrastaria `test/fixtures` de volta para dentro do programa, porque `exclude` não impede que um import puxe o arquivo. Quem cobre esses arquivos é o `-p test/fixtures/basic/.nuxt/tsconfig.app.json`, onde valem os tipos gerados da fixture.",
     "extends": "./.nuxt/tsconfig.app.json",
     "exclude": [
         "playground",
         "test/fixtures",
         "test/nuxt/customComponents.test.ts",
+        "test/nuxt/hookClasses.test.ts",
         "node_modules",
         "dist",
         ".data",

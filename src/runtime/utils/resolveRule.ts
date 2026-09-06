@@ -4,14 +4,17 @@ import { isZodType, zodToFn } from "./zod";
  * Every validator takes a single object: `value`, `form`, and the preset's own
  * named arguments alongside them. `never` keeps any concrete context shape
  * assignable here.
+ *
+ * The translator is **not** here: a rule reaches the active locale through the
+ * imported `trRule`, which keeps the context to what the field actually holds.
  */
-export type BaseContext = { value: unknown, form: unknown };
+export type BaseContext = { value: unknown; form: unknown };
 
 type Validation = (context: never) => string | void | Promise<string | void>;
 
 export type RulePreset = {
-    available?: readonly string[]
-    validation: Validation
+    available?: readonly string[];
+    validation: Validation;
 };
 
 export type Rules = Record<string, RulePreset>;
@@ -20,24 +23,18 @@ export type RuleFn = Validation;
 
 export type RuleArgs = Record<string, unknown>;
 
-export type RuleRef =
-    | string
-    | ({ name: string } & RuleArgs)
-    | RuleFn
-    | object;
+export type RuleRef = string | ({ name: string } & RuleArgs) | RuleFn | object;
 
 export type Resolved = (value: unknown, form: unknown) => Promise<string | void>;
 
-const call = (
-    fn: Validation,
-    context: RuleArgs
-) => (fn as (c: RuleArgs) => string | void | Promise<string | void>)(context);
+const call = (fn: Validation, context: RuleArgs) =>
+    (fn as (c: RuleArgs) => string | void | Promise<string | void>)(context);
 
 const fromPreset = (
     name: string,
     args: RuleArgs,
     rules: Rules,
-    field?: string
+    field: string | undefined
 ): Resolved => {
     const preset = rules[name];
 
@@ -53,12 +50,12 @@ const fromPreset = (
         );
     }
 
-    // `value` and `form` last: an argument named after either one cannot shadow
-    // what the field actually holds.
+    // `value` and `form` last: an argument named after either of them cannot
+    // shadow what the field actually holds.
     return async (value, form) => call(preset.validation, { ...args, value, form });
 };
 
-const single = (ref: RuleRef, rules: Rules, field?: string): Resolved => {
+const single = (ref: RuleRef, rules: Rules, field: string | undefined): Resolved => {
     if (typeof ref === "string") {
         return fromPreset(ref, {}, rules, field);
     }
@@ -69,7 +66,7 @@ const single = (ref: RuleRef, rules: Rules, field?: string): Resolved => {
 
     if (isZodType(ref)) {
         const fn = zodToFn(ref)!;
-        return async value => fn(value);
+        return async (value) => fn(value);
     }
 
     if (typeof ref === "object" && "name" in ref && typeof ref.name === "string") {
@@ -88,7 +85,7 @@ const single = (ref: RuleRef, rules: Rules, field?: string): Resolved => {
  * Preset lookup happens eagerly so a typo fails loudly instead of silently
  * skipping validation.
  */
-export default function resolveRule (
+export default function resolveRule(
     ref: RuleRef | readonly RuleRef[] | null | undefined,
     rules: Rules,
     field?: string
@@ -98,7 +95,7 @@ export default function resolveRule (
     }
 
     if (Array.isArray(ref)) {
-        const resolved = ref.map(item => single(item, rules, field));
+        const resolved = ref.map((item) => single(item, rules, field));
 
         return async (value, form) => {
             for (const validate of resolved) {
@@ -112,4 +109,4 @@ export default function resolveRule (
     }
 
     return single(ref as RuleRef, rules, field);
-};
+}

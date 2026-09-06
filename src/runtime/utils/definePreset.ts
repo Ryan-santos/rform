@@ -1,5 +1,7 @@
 import type { MaskInputOptions } from "maska";
+
 import type { FieldType } from "#rform/types/fields";
+
 import type { BaseContext, RulePreset } from "./resolveRule";
 
 /**
@@ -9,6 +11,10 @@ import type { BaseContext, RulePreset } from "./resolveRule";
  * ```ts
  * validation ({ value, uf }: RuleContext<{ uf: string }>) { … }
  * ```
+ *
+ * The active locale reaches a rule through the imported `trRule`, not through
+ * this object — a rule is not a component, and the context stays what the field
+ * actually holds.
  *
  * It narrows as well as adds — `RuleContext<{ value: string, uf: string }>`
  * types `value` as a string, because `unknown & string` is `string`. Whatever
@@ -24,7 +30,7 @@ export type RuleContext<T extends object = Record<never, never>> = BaseContext &
  */
 export type RuleDefinition = Omit<RulePreset, "available"> & {
     /** Field types this rule serves. Omit it to serve every field. */
-    available?: readonly FieldType[]
+    available?: readonly FieldType[];
 };
 
 /**

@@ -16,7 +16,10 @@
                 @focusin="onFocusIn"
                 @focusout="onFocusOut"
             >
-                <RUtilsPlaceholder v-if="props.placeholder" :focused="focused" />
+                <RUtilsPlaceholder
+                    v-if="props.placeholder"
+                    :focused="focused"
+                />
                 <div
                     :class="[
                         props.ui?.group?.field?.inputs,
@@ -29,19 +32,21 @@
                         :name="String(props.name)"
                         type="text"
                         inputmode="numeric"
-                        placeholder="hh:mm"
+                        :placeholder="tr(props.text?.hint)"
                         :class="props.ui?.group?.field?.input"
                         @blur="validate(0)"
                     />
                     <template v-if="props.range">
-                        <span :class="props.ui?.group?.field?.separator"> até </span>
+                        <span :class="props.ui?.group?.field?.separator">
+                            {{ tr(props.text?.separator) }}
+                        </span>
                         <input
                             v-model="typed[1]"
                             v-mask="mask"
                             :name="String(props.name)"
                             type="text"
                             inputmode="numeric"
-                            placeholder="hh:mm"
+                            :placeholder="tr(props.text?.hint)"
                             :class="[
                                 props.ui?.group?.field?.input,
                                 props.ui?.group?.field?.inputEnd
@@ -68,12 +73,12 @@
 </template>
 
 <script lang="ts">
-    import { vMask } from "#rform/utils";
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useInjection } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
+    import { vMask } from "#rform/utils";
     import { defineDefaults } from "#rform/utils";
 
     export const pad = (n: number) => String(n).padStart(2, "0");
@@ -141,14 +146,19 @@
                 }
             }
         },
-        default: ""
+        default: "",
+        text: {
+            hint: "hint",
+            separator: "separator"
+        }
     });
 
     export type Props = Element<typeof defaults, "hour", TimeValue> &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &
-        Utils["Placeholder"] & {
+        Utils["Placeholder"] &
+        TextProp<typeof defaults.text> & {
             range?: boolean;
         };
 </script>
@@ -159,7 +169,7 @@
         loading: undefined
     });
 
-    const { model, props } = await useInjection(_props);
+    const { model, props, tr } = await useInjection(_props);
 
     const mask = {
         mask: "##:##",
@@ -173,8 +183,8 @@
 
     const hasValue = computed(() => !!typed.value[0] || !!typed.value[1]);
 
-    const inputsHidden = computed(() =>
-        !!props.value.placeholder && !focused.value && !hasValue.value
+    const inputsHidden = computed(
+        () => !!props.value.placeholder && !focused.value && !hasValue.value
     );
 
     const onFocusIn = () => {

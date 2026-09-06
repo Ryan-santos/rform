@@ -20,7 +20,7 @@
                 :multiple="props.multiple"
                 :class="props.ui?.group?.input"
                 @change="onChangeFile"
-            >
+            />
 
             <div :class="props.ui?.group?.close">
                 <button
@@ -49,7 +49,9 @@
                             class="text-(--rf-color-success)"
                         />
                         <span class="flex-1 truncate text-sm">{{ f.name }}</span>
-                        <span :class="props.ui?.group?.preview?.size">{{ formatBytes(f.size) }}</span>
+                        <span :class="props.ui?.group?.preview?.size">{{
+                            formatBytes(f.size)
+                        }}</span>
                         <button
                             class="pointer-events-auto rounded-full bg-(--rf-color-danger) px-1 py-px text-xs text-(--rf-color-danger-fg)"
                             @click.prevent="removeFile(i)"
@@ -61,14 +63,14 @@
 
                 <!-- Single mode: existing preview -->
                 <div
-                    v-else-if="!props.multiple && (!!file && !loading || url)"
+                    v-else-if="!props.multiple && ((!!file && !loading) || url)"
                     :class="props.ui?.group?.preview?.container"
                 >
                     <img
                         v-if="!!image"
                         :src="image"
                         :class="props.ui?.group?.preview?.image"
-                    >
+                    />
                     <Icon
                         v-else
                         name="tabler:file-check"
@@ -76,7 +78,7 @@
                         class="text-(--rf-color-success)"
                     />
                     <span>
-                        {{ file?.name || url?.split("/").at(-1) }} <br>
+                        {{ file?.name || url?.split("/").at(-1) }} <br />
                         <span
                             v-if="file?.size"
                             :class="props.ui?.group?.preview?.size"
@@ -92,7 +94,7 @@
                 />
                 <div :class="props.ui?.group?.info?.container">
                     <p :class="props.ui?.group?.info?.text">
-                        {{ props.placeholder }}
+                        {{ tr(props.placeholder) }}
                     </p>
                     <ul :class="props.ui?.group?.info?.list">
                         <li
@@ -115,7 +117,7 @@
                         name="line-md:uploading-loop"
                         size="5rem"
                     />
-                    Carregando...
+                    {{ tr(props.text?.loading) }}
                 </div>
             </Transition>
         </label>
@@ -126,11 +128,12 @@
 </template>
 
 <script lang="ts">
-    import type { Element } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
-    import { useInjection } from "#rform/composables";
-    import type Utils from "#rform/types/components/utils/props";
     import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+
+    import { useInjection } from "#rform/composables";
+    import type { Element, TextProp, TrInput } from "#rform/types";
+    import type Utils from "#rform/types/components/utils/props";
+    import { defineDefaults } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
@@ -146,7 +149,8 @@
                 dragging: "animate-bounce",
                 input: "pointer-events-none absolute top-0 size-0 opacity-0",
                 close: "pointer-events-none absolute top-0 right-0",
-                closeButton: "pointer-events-auto -translate-y-1/2 rounded-full bg-(--rf-color-danger) px-1 py-px text-(--rf-color-danger-fg)",
+                closeButton:
+                    "pointer-events-auto -translate-y-1/2 rounded-full bg-(--rf-color-danger) px-1 py-px text-(--rf-color-danger-fg)",
                 preview: {
                     container: "flex flex-row items-center gap-3 text-start",
                     image: "size-16 rounded-(--rf-radius-xl) bg-(--rf-color-background) object-contain object-center",
@@ -169,20 +173,34 @@
                 }
             }
         },
-        placeholder: "Araste ou click aqui para adicionar:",
-        default: null
+        default: null,
+        placeholder: "placeholder",
+        text: {
+            loading: "loading",
+            zero: "zero",
+            bytes: {
+                b: "b",
+                kb: "kb",
+                mb: "mb",
+                gb: "gb",
+                tb: "tb"
+            }
+        }
     });
 
-    export type Props<
-        Multiple extends boolean = false
-    > = Element<typeof defaults, "file", (Multiple extends true ? Array<File> : File) | null>
-        & Utils["Label"]
-        & Utils["Description"]
-        & Utils["Error"]
-        & {
-            placeholder?: string
-            accept: string
-            multiple?: Multiple
+    export type Props<Multiple extends boolean = false> = Element<
+        typeof defaults,
+        "file",
+        (Multiple extends true ? Array<File> : File) | null
+    > &
+        Utils["Label"] &
+        Utils["Description"] &
+        Utils["Error"] &
+        TextProp<typeof defaults.text> & {
+            accept: string;
+            multiple?: Multiple;
+            /** Top level by contract, like `label` — never inside `text`. */
+            placeholder?: TrInput;
         };
 
     /**
@@ -192,25 +210,23 @@
     type InternalProps = Omit<
         Element<typeof defaults, "file">,
         "modelValue" | "onUpdate:modelValue" | "default"
-    > & Utils["Label"]
-        & Utils["Description"]
-        & Utils["Error"]
-        & {
-        placeholder?: string;
-        accept: string;
-        multiple?: boolean;
-        default?: unknown;
-        modelValue?: unknown;
-    };
+    > &
+        Utils["Label"] &
+        Utils["Description"] &
+        Utils["Error"] &
+        TextProp<typeof defaults.text> & {
+            accept: string;
+            multiple?: boolean;
+            placeholder?: TrInput;
+            default?: unknown;
+            modelValue?: unknown;
+        };
 </script>
 
 <script setup lang="ts" generic="Multiple extends boolean = false">
     const _props = defineProps<Props<Multiple>>();
 
-    const {
-        model,
-        props
-    } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
 
     const loading = ref(false);
     const acceptSplit = props.value.accept?.replaceAll(/[.\s]/g, "").split(",") ?? [];
@@ -221,7 +237,9 @@
 
     const files = computed<File[]>(() => {
         if (props.value.multiple && Array.isArray(model.value)) {
-            return model.value.filter((f): f is File => typeof f === "object" && f !== null && "name" in f);
+            return model.value.filter(
+                (f): f is File => typeof f === "object" && f !== null && "name" in f
+            );
         }
 
         return [];
@@ -235,76 +253,71 @@
         return null;
     });
 
-    const hasValue = computed(() => props.value.multiple ? files.value.length > 0 : !!file.value || !!url.value);
+    const hasValue = computed(() =>
+        props.value.multiple ? files.value.length > 0 : !!file.value || !!url.value
+    );
 
-    function useIsURL (string: string) {
-        return (/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*$/).test(string);
+    function useIsURL(string: string) {
+        return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*$/.test(string);
     }
 
     const url = computed(() => {
         if (!file.value && useIsURL(model.value as unknown as string)) {
             return model.value as unknown as string;
-        }
-        else {
+        } else {
             return undefined;
         }
     });
 
     const image = ref("");
 
-    watch(model, async () => {
-        const imgTypes = [
-            "jpg",
-            "jpeg",
-            "png",
-            "gif",
-            "bmp",
-            "tiff",
-            "webp",
-            "svg"
-        ];
+    watch(
+        model,
+        async () => {
+            const imgTypes = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp", "svg"];
 
-        if (file.value && imgTypes.includes(getType(file.value?.name))) {
-            loading.value = true;
+            if (file.value && imgTypes.includes(getType(file.value?.name))) {
+                loading.value = true;
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file.value);
+                const reader = new FileReader();
+                reader.readAsDataURL(file.value);
 
-            const result = await new Promise<string>((resolve, reject) => {
-                reader.onload = e => resolve(e.target?.result?.toString() ?? "");
-                reader.onerror = error => reject(error);
-            });
+                const result = await new Promise<string>((resolve, reject) => {
+                    reader.onload = (e) => resolve(e.target?.result?.toString() ?? "");
+                    reader.onerror = (error) => reject(error);
+                });
 
-            loading.value = false;
-            image.value = result;
+                loading.value = false;
+                image.value = result;
+            } else if (imgTypes.includes(getType(url.value))) {
+                image.value = url.value ?? "";
+            }
+        },
+        {
+            immediate: true
         }
-        else if (imgTypes.includes(getType(url.value))) {
-            image.value = url.value ?? "";
-        }
-    }, {
-        immediate: true
-    });
+    );
 
     const onChangeFile = (event: Event) => {
         loading.value = true;
-        const fileList = (event?.target as HTMLInputElement)?.files ?? (event as DragEvent)?.dataTransfer?.files;
+        const fileList =
+            (event?.target as HTMLInputElement)?.files ?? (event as DragEvent)?.dataTransfer?.files;
 
         if (props.value.multiple) {
             if (fileList && fileList.length > 0) {
-                const valid = Array.from(fileList).filter(f =>
-                    acceptSplit.includes("*") || acceptSplit.includes(getType(f?.name))
+                const valid = Array.from(fileList).filter(
+                    (f) => acceptSplit.includes("*") || acceptSplit.includes(getType(f?.name))
                 );
 
-                model.value = [
-                    ...(Array.isArray(model.value) ? model.value : []),
-                    ...valid
-                ];
+                model.value = [...(Array.isArray(model.value) ? model.value : []), ...valid];
             }
-        }
-        else {
+        } else {
             const _file = fileList?.[0];
 
-            if (_file && (acceptSplit.includes("*") || acceptSplit.includes(getType(_file?.name)))) {
+            if (
+                _file &&
+                (acceptSplit.includes("*") || acceptSplit.includes(getType(_file?.name)))
+            ) {
                 model.value = _file;
             }
         }
@@ -318,22 +331,22 @@
         }
     };
 
-    const formatBytes = (bytes: number): string => {
-        const sizes = [
-            "Bytes",
-            "KB",
-            "MB",
-            "GB",
-            "TB"
-        ];
+    /**
+     * A tuple, so what the exponent picks stays a key of `text.bytes` — an
+     * indexed `string[]` would widen to `string` and stop resolving.
+     */
+    const UNITS = ["b", "kb", "mb", "gb", "tb"] as const;
 
+    const formatBytes = (bytes: number): string => {
         if (bytes === 0) {
-            return "0 Byte";
+            return tr(props.value.text?.zero);
         }
 
         const i = Number.parseInt(String(Math.floor(Math.log(bytes) / Math.log(1024))));
 
-        return Math.round((bytes / Math.pow(1024, i))) + " " + sizes[i];
+        const unit = UNITS[i] ?? UNITS[0];
+
+        return `${Math.round(bytes / Math.pow(1024, i))} ${tr(props.value.text?.bytes?.[unit])}`;
     };
 
     const dragEvent = ref(false);
@@ -354,10 +367,7 @@
         dragEvent.value = true;
     });
 
-    eventListener([
-        "dragend",
-        "drop"
-    ], () => {
+    eventListener(["dragend", "drop"], () => {
         dragEvent.value = false;
     });
 </script>

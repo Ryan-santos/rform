@@ -1,11 +1,13 @@
 import { z } from "zod";
+
 import { defineRule, type RuleContext } from "../../../utils/definePreset";
+import { trRule } from "../../../utils/tr";
 import { check, digits, isBlank } from "../../helpers";
 
-const schema = z.string().length(8, "CEP inválido.");
+const schema = () => z.string().length(8, trRule("br.cep"));
 
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>
-        isBlank(value) ? undefined : check(schema, digits(value))
+        isBlank(value) ? undefined : check(schema(), digits(value))
 });

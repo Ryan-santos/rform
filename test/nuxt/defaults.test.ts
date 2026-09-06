@@ -1,12 +1,20 @@
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
 import { describe, expect, it, vi } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { computed, defineComponent, h, provide, ref } from "vue";
+
+import { RArray } from "#components";
+
 import useInjection, { keyProp } from "../../src/runtime/composables/useInjection";
 import useUtilProps from "../../src/runtime/composables/useUtilProps";
 
 vi.mock("#rform/defaults", () => ({
     default: {
+        Array: {
+            text: {
+                button: "meu.add"
+            }
+        },
         Text: {
             default: "from-user-defaults",
             ui: {
@@ -24,21 +32,25 @@ vi.mock("#rform/defaults", () => ({
 }));
 
 type Rendered = {
-    default?: unknown
-    ui?: { container?: string }
+    default?: unknown;
+    ui?: { container?: string };
 };
 
 const render = (props: Rendered) =>
-    h("pre", { "data-testid": "field" }, JSON.stringify({
-        default: props.default,
-        container: props.ui?.container
-    }));
+    h(
+        "pre",
+        { "data-testid": "field" },
+        JSON.stringify({
+            default: props.default,
+            container: props.ui?.container
+        })
+    );
 
 const sourceProps = { type: Object, required: true } as const;
 
 const TextField = defineComponent({
     props: { sourceProps },
-    async setup (props) {
+    async setup(props) {
         const ctx = await useInjection(props.sourceProps as never, undefined, "Text");
         return () => render(ctx.props.value as Rendered);
     }
@@ -46,7 +58,7 @@ const TextField = defineComponent({
 
 const NumberField = defineComponent({
     props: { sourceProps },
-    async setup (props) {
+    async setup(props) {
         const ctx = await useInjection(props.sourceProps as never, undefined, "Number");
         return () => render(ctx.props.value as Rendered);
     }
@@ -75,6 +87,17 @@ describe("user defaults (app/rform/defaults.ts)", () => {
         expect(read(wrapper, "field").default).toBe("from-call-site");
     });
 
+    it("takes a text value from the user defaults raw, with no prefix", async () => {
+        const wrapper = await mountSuspended(RArray, {
+            props: { name: "itens", modelValue: [] } as never
+        });
+
+        // The prefix only applies to what the component itself declared in
+        // `defaults.text`. Anything the app writes is the app's key.
+        expect(wrapper.text()).toContain("meu.add");
+        expect(wrapper.text()).not.toContain("rform.fields.array.add");
+    });
+
     it("only reach the component they are keyed under", async () => {
         const wrapper = await mountSuspended(NumberField, {
             props: { sourceProps: {} }
@@ -88,21 +111,25 @@ describe("user defaults (app/rform/defaults.ts)", () => {
 });
 
 const Util = defineComponent({
-    async setup () {
+    async setup() {
         // No `defaults` argument: the registry path, which a util written
         // before the synchronous form still takes.
         const { props } = await useUtilProps(undefined, "Placeholder");
 
         return () =>
-            h("pre", { "data-testid": "util" }, JSON.stringify({
-                placeholder: props.value.placeholder,
-                ui: props.value.ui
-            }));
+            h(
+                "pre",
+                { "data-testid": "util" },
+                JSON.stringify({
+                    placeholder: props.value.placeholder,
+                    ui: props.value.ui
+                })
+            );
     }
 });
 
 const UtilParent = defineComponent({
-    setup () {
+    setup() {
         provide(keyProp, {
             id: null,
             props: computed(() => ({ placeholder: "from-parent" })) as never,

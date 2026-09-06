@@ -1,19 +1,24 @@
 import { describe, expect, it } from "vitest";
+
+import maskCep from "../../src/runtime/presets/masks/br/cep";
+import maskCpf from "../../src/runtime/presets/masks/br/cpf";
+import maskCpfCnpj from "../../src/runtime/presets/masks/br/cpfCnpj";
+import cep from "../../src/runtime/presets/rules/br/cep";
+import cnpj from "../../src/runtime/presets/rules/br/cnpj";
+import cpf from "../../src/runtime/presets/rules/br/cpf";
+import telefone from "../../src/runtime/presets/rules/br/telefone";
 import email from "../../src/runtime/presets/rules/email";
 import max from "../../src/runtime/presets/rules/max";
 import min from "../../src/runtime/presets/rules/min";
 import required from "../../src/runtime/presets/rules/required";
 import url from "../../src/runtime/presets/rules/url";
 
-import cep from "../../src/runtime/presets/rules/br/cep";
-import cnpj from "../../src/runtime/presets/rules/br/cnpj";
-import cpf from "../../src/runtime/presets/rules/br/cpf";
-import telefone from "../../src/runtime/presets/rules/br/telefone";
-
-import maskCep from "../../src/runtime/presets/masks/br/cep";
-import maskCpf from "../../src/runtime/presets/masks/br/cpf";
-import maskCpfCnpj from "../../src/runtime/presets/masks/br/cpfCnpj";
-
+/**
+ * The context is `{ value, form }` and nothing else — a preset reaches the
+ * active locale through the imported `trRule`, not through the channel every
+ * validation reads from. This calls `validation` straight, with no build
+ * around, which is the route `#rform/translate` has to keep working.
+ */
 const run = (
     preset: { validation: (context: never) => unknown },
     value: unknown,
@@ -186,5 +191,25 @@ describe("mask presets", () => {
 
     it("express cpfCnpj as a dynamic mask", () => {
         expect(maskCpfCnpj.mask).toEqual(["###.###.###-##", "##.###.###/####-##"]);
+    });
+});
+
+describe("plural", () => {
+    /**
+     * The bug the hand-rolled resolver shipped: `min: 1` read "Mínimo de 1
+     * caracteres." An empty array is not blank, so the rule does not bail out
+     * early and the message is reachable with a count of one.
+     */
+    it("says caractere in the singular", () => {
+        expect(run(min, [], { min: 1 })).toBe("Mínimo de 1 caractere.");
+    });
+
+    it("says caracteres in the plural", () => {
+        expect(run(min, "ab", { min: 5 })).toBe("Mínimo de 5 caracteres.");
+    });
+
+    it("does the same on the max side", () => {
+        expect(run(max, "ab", { max: 1 })).toBe("Máximo de 1 caractere.");
+        expect(run(max, "abcdef", { max: 2 })).toBe("Máximo de 2 caracteres.");
     });
 });

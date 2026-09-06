@@ -12,7 +12,7 @@
         >
             <RHour
                 name="horario"
-                placeholder="horário"
+                placeholder="~~horário"
             />
         </Demo>
 
@@ -22,9 +22,9 @@
         >
             <RHour
                 name="abertura"
-                label="Abertura"
-                placeholder="que horas abre"
-                description="Horário local do estabelecimento."
+                label="~~Abertura"
+                placeholder="~~que horas abre"
+                description="~~Horário local do estabelecimento."
             />
         </Demo>
 
@@ -35,8 +35,8 @@
         >
             <RHour
                 name="atendimento"
-                label="Janela de atendimento"
-                placeholder="das … às …"
+                label="~~Janela de atendimento"
+                placeholder="~~das … às …"
                 range
             />
         </Demo>
@@ -47,12 +47,12 @@
         >
             <RHour
                 name="comDefault"
-                label="Já vem preenchido"
+                label="~~Já vem preenchido"
                 default="08:30"
             />
             <RHour
                 name="rangeDefault"
-                label="Range já preenchido"
+                label="~~Range já preenchido"
                 :default="['08:00', '18:00']"
                 range
             />
@@ -64,18 +64,18 @@
         >
             <RHour
                 name="obrigatorio"
-                label="Obrigatório"
+                label="~~Obrigatório"
                 required
                 rule="required"
             />
             <RHour
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
             />
             <RHour
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Fora do horário comercial."
             />
         </Demo>

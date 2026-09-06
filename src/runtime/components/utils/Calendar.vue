@@ -129,19 +129,25 @@
                 :class="props.ui?.time?.block"
             >
                 <span :class="props.ui?.time?.label">
-                    {{ props.mode === 'range' ? (idx === 0 ? 'Início' : 'Fim') : 'Hora' }}
+                    {{
+                        props.mode === "range"
+                            ? idx === 0
+                                ? tr(props.text?.start)
+                                : tr(props.text?.end)
+                            : tr(props.text?.time)
+                    }}
                 </span>
                 <input
                     v-model="timeInputs[idx]"
                     v-mask="timeMask"
                     type="text"
                     inputmode="numeric"
-                    placeholder="hh:mm"
+                    :placeholder="tr('rform.fields.hour.hint')"
                     :class="props.ui?.time?.input"
                     @input="onTimeInput(idx)"
                     @blur="commitTime(idx)"
                     @keydown.enter.prevent="commitTime(idx)"
-                >
+                />
             </label>
         </div>
     </div>
@@ -149,10 +155,10 @@
 
 <script lang="ts">
     import { computed, ref, watch } from "vue";
-    import { defineDefaults, vMask } from "#rform/utils";
 
     import { useUtilProps } from "#rform/composables";
-    import type { DeepPartial } from "#rform/types";
+    import type { DeepPartial, TextProp } from "#rform/types";
+    import { dateFormat, defineDefaults, vMask } from "#rform/utils";
 
     import { formatTime, pad, parseTime } from "../fields/Hour.vue";
 
@@ -160,17 +166,19 @@
 
     export type DateValue = string | (string | undefined)[] | string[] | undefined;
 
-    export type ModelType<M extends Mode> =
-        M extends "single" ? string | undefined :
-            M extends "range" ? [string | undefined, string | undefined] | undefined :
-                M extends "multiple" ? string[] | undefined :
-                    DateValue;
+    export type ModelType<M extends Mode> = M extends "single"
+        ? string | undefined
+        : M extends "range"
+          ? [string | undefined, string | undefined] | undefined
+          : M extends "multiple"
+            ? string[] | undefined
+            : DateValue;
 
     export type DisableSpec = {
-        before?: string
-        after?: string
-        between?: [string, string]
-        dates?: string[]
+        before?: string;
+        after?: string;
+        between?: [string, string];
+        dates?: string[];
     };
 
     export const formatIsoDate = (d: Date) =>
@@ -186,7 +194,16 @@
         return time ? formatIsoDateTime(d) : formatIsoDate(d);
     };
 
-    export const parseIncoming = (val: unknown): Date | null => {
+    /**
+     * O ramo ISO fica primeiro e não se mexe: ISO é o formato do model, e é
+     * locale-independente por definição. Só o segundo ramo — uma string
+     * digitada pelo usuário — depende do pack, daí o `pattern`.
+     *
+     * Sem `pattern` cai no `DD/MM/YYYY` do `dateFormat`, o que mantém a função
+     * chamável direto (é o que os testes fazem). Todo call site de verdade passa
+     * o `formats.date` do locale ativo.
+     */
+    export const parseIncoming = (val: unknown, pattern?: string): Date | null => {
         if (val instanceof Date) {
             return val;
         }
@@ -199,24 +216,22 @@
 
         const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
         if (iso) {
-            const [, yy, mm, dd, hh, mi] = iso as unknown as [string, string, string, string, string?, string?];
+            const [, yy, mm, dd, hh, mi] = iso as unknown as [
+                string,
+                string,
+                string,
+                string,
+                string?,
+                string?
+            ];
             const d = new Date(+yy, +mm - 1, +dd, hh ? +hh : 0, mi ? +mi : 0);
             if (!Number.isNaN(d.getTime())) {
                 return d;
             }
         }
 
-        const locale = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
-
-        if (locale) {
-            const [, dd, mm, yy, hh, mi] = locale as unknown as [string, string, string, string, string?, string?];
-            const d = new Date(+yy, +mm - 1, +dd, hh ? +hh : 0, mi ? +mi : 0);
-            if (!Number.isNaN(d.getTime())) {
-                return d;
-            }
-        }
-
-        return null;
+        // "optional": a mesma string pode ou não trazer hora.
+        return dateFormat(pattern).parse(trimmed, "optional");
     };
 
     const ui = {
@@ -295,65 +310,104 @@
         }
     };
 
-    export const defaults = defineDefaults({ ui });
+    export const defaults = defineDefaults({
+        ui,
+        /**
+         * `time` is also the boolean that decides whether the clock shows at
+         * all, and that is not a clash: `text` stays nested, so the message
+         * lives at `props.text.time` and the boolean at `props.time`.
+         */
+        text: {
+            start: "start",
+            end: "end",
+            time: "time"
+        }
+    });
 
-    export type Props = {
-        mode?: Mode
-        time?: boolean
-        disable?: DisableSpec
-        ui?: DeepPartial<typeof defaults.ui>
+    /**
+     * A util writes `Props` by hand — there is no `Element` derivation here, so
+     * the `text` tree is spliced in with `TextProp`.
+     */
+    export type Props = TextProp<typeof defaults.text> & {
+        mode?: Mode;
+        time?: boolean;
+        disable?: DisableSpec;
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 
-    const stripTime = (d: Date) =>
-        new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const stripTime = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     const sameDay = (a: Date | null, b: Date | null) =>
-        !!a && !!b
-        && a.getFullYear() === b.getFullYear()
-        && a.getMonth() === b.getMonth()
-        && a.getDate() === b.getDate();
+        !!a &&
+        !!b &&
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
 
     const capitalize = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
-
-    const monthLongNames = Array.from({ length: 12 }, (_, i) => {
-        const d = new Date(2000, i, 1);
-        return capitalize(d.toLocaleString("pt-BR", { month: "long" }));
-    });
-
-    const monthShortNames = Array.from({ length: 12 }, (_, i) => {
-        const d = new Date(2000, i, 1);
-        const s = d.toLocaleString("pt-BR", { month: "short" }).replace(/\.$/, "");
-        return capitalize(s);
-    });
-
-    const weekdays = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
     const timeFromDate = (d: Date | null | undefined) =>
         d ? formatTime(d.getHours(), d.getMinutes()) : "";
 </script>
 
 <script setup lang="ts">
-    const { props, upper } = useUtilProps<Props>(defaults);
+    const { props, upper, tr, locale } = useUtilProps<Props>(defaults);
 
     const mode = computed<Mode>(() => props.value.mode ?? "single");
+
+    /**
+     * Nomes de mês e de dia da semana saem do `Intl` do locale ativo, não de um
+     * array cravado — é por isso que estes três são `computed` e não constantes
+     * de módulo. O locale é o mesmo que `t` lê, então trocar de idioma troca
+     * "Maio" por "May" e "dom" por "Sun".
+     */
+    const monthLongNames = computed(() =>
+        Array.from({ length: 12 }, (_, i) =>
+            capitalize(new Date(2000, i, 1).toLocaleString(locale.value, { month: "long" }))
+        )
+    );
+
+    const monthShortNames = computed(() =>
+        Array.from({ length: 12 }, (_, i) =>
+            capitalize(
+                new Date(2000, i, 1)
+                    .toLocaleString(locale.value, { month: "short" })
+                    .replace(/\.$/, "")
+            )
+        )
+    );
+
+    // 2023-01-01 caiu num domingo, que é a coluna 0 da grade.
+    const weekdays = computed(() =>
+        Array.from({ length: 7 }, (_, i) =>
+            new Date(2023, 0, 1 + i)
+                .toLocaleString(locale.value, { weekday: "short" })
+                .replace(/\.$/, "")
+        )
+    );
+
+    /**
+     * O que `parseIncoming` usa no ramo não-ISO. Envolvido porque o segundo
+     * parâmetro é o pattern: `arr.map(parseIncoming)` passaria o índice ali.
+     */
+    const incoming = (value: unknown) => parseIncoming(value, tr("rform.formats.date"));
 
     const parsedAll = computed<Date[]>(() => {
         const m = mode.value;
         const val = upper.model.value;
 
         if (m === "single") {
-            const d = parseIncoming(val);
+            const d = incoming(val);
             return d ? [d] : [];
         }
 
         if (m === "range") {
             const arr = Array.isArray(val) ? val : [];
-            return [parseIncoming(arr[0]), parseIncoming(arr[1])]
-                .filter((d): d is Date => !!d);
+            return [incoming(arr[0]), incoming(arr[1])].filter((d): d is Date => !!d);
         }
 
         const arr: unknown[] = Array.isArray(val) ? val : [];
-        return arr.map(parseIncoming).filter((d): d is Date => !!d);
+        return arr.map((value) => incoming(value)).filter((d): d is Date => !!d);
     });
 
     const rangeBounds = computed<[Date | null, Date | null]>(() => {
@@ -361,7 +415,7 @@
             return [null, null];
         }
         const arr = Array.isArray(upper.model.value) ? upper.model.value : [];
-        return [parseIncoming(arr[0]), parseIncoming(arr[1])];
+        return [incoming(arr[0]), incoming(arr[1])];
     });
 
     const writeSingle = (d: Date | null) => {
@@ -376,9 +430,7 @@
     const writeMultiple = (dates: Date[]) => {
         const time = !!props.value.time;
         const sorted = [...dates].sort((x, y) => x.getTime() - y.getTime());
-        upper.model.value = sorted
-            .map(d => formatIso(d, time))
-            .filter((s): s is string => !!s);
+        upper.model.value = sorted.map((d) => formatIso(d, time)).filter((s): s is string => !!s);
     };
 
     const today = new Date();
@@ -391,14 +443,17 @@
 
     const viewMode = ref<"days" | "months" | "years">("days");
 
-    watch(() => parsedAll.value[0], (d) => {
-        if (d) {
-            view.value = {
-                year: d.getFullYear(),
-                month: d.getMonth()
-            };
+    watch(
+        () => parsedAll.value[0],
+        (d) => {
+            if (d) {
+                view.value = {
+                    year: d.getFullYear(),
+                    month: d.getMonth()
+                };
+            }
         }
-    });
+    );
 
     const shiftView = (delta: number) => {
         if (viewMode.value === "days") {
@@ -433,7 +488,7 @@
     const headerLabel = computed(() => {
         if (viewMode.value === "days") {
             return {
-                month: monthLongNames[view.value.month] ?? "",
+                month: monthLongNames.value[view.value.month] ?? "",
                 year: String(view.value.year)
             };
         }
@@ -453,20 +508,20 @@
             return (_: Date) => false;
         }
 
-        const before = spec.before ? parseIncoming(spec.before) : null;
-        const after = spec.after ? parseIncoming(spec.after) : null;
+        const before = spec.before ? incoming(spec.before) : null;
+        const after = spec.after ? incoming(spec.after) : null;
         const beforeTime = before ? stripTime(before).getTime() : null;
         const afterTime = after ? stripTime(after).getTime() : null;
 
-        const bStart = spec.between?.[0] ? parseIncoming(spec.between[0]) : null;
-        const bEnd = spec.between?.[1] ? parseIncoming(spec.between[1]) : null;
+        const bStart = spec.between?.[0] ? incoming(spec.between[0]) : null;
+        const bEnd = spec.between?.[1] ? incoming(spec.between[1]) : null;
         const bStartTime = bStart ? stripTime(bStart).getTime() : null;
         const bEndTime = bEnd ? stripTime(bEnd).getTime() : null;
 
         const specific = (spec.dates ?? [])
-            .map(parseIncoming)
+            .map((value) => incoming(value))
             .filter((v): v is Date => !!v)
-            .map(d => stripTime(d).getTime());
+            .map((d) => stripTime(d).getTime());
 
         return (date: Date) => {
             const t = stripTime(date).getTime();
@@ -476,12 +531,7 @@
             if (afterTime !== null && t > afterTime) {
                 return true;
             }
-            if (
-                bStartTime !== null
-                && bEndTime !== null
-                && t >= bStartTime
-                && t <= bEndTime
-            ) {
+            if (bStartTime !== null && bEndTime !== null && t >= bStartTime && t <= bEndTime) {
                 return true;
             }
             if (specific.includes(t)) {
@@ -492,17 +542,17 @@
     });
 
     type Cell = {
-        key: string
-        year: number
-        month: number
-        day: number
-        outside: boolean
-        isToday: boolean
-        isStart: boolean
-        isEnd: boolean
-        inRange: boolean
-        isSelected: boolean
-        disabled: boolean
+        key: string;
+        year: number;
+        month: number;
+        day: number;
+        outside: boolean;
+        isToday: boolean;
+        isStart: boolean;
+        isEnd: boolean;
+        inRange: boolean;
+        isSelected: boolean;
+        disabled: boolean;
     };
 
     const cells = computed<Cell[]>(() => {
@@ -516,9 +566,7 @@
         const startDay = rangeStart ? stripTime(rangeStart) : null;
         const endDay = rangeEnd ? stripTime(rangeEnd) : null;
 
-        const selectedSet = new Set(
-            parsedAll.value.map(d => stripTime(d).getTime())
-        );
+        const selectedSet = new Set(parsedAll.value.map((d) => stripTime(d).getTime()));
 
         const list: Cell[] = [];
 
@@ -535,11 +583,12 @@
 
             const isStart = m === "range" && sameDay(d, startDay);
             const isEnd = m === "range" && sameDay(d, endDay);
-            const inRange = m === "range"
-                && !!startDay
-                && !!endDay
-                && dayTime > startDay.getTime()
-                && dayTime < endDay.getTime();
+            const inRange =
+                m === "range" &&
+                !!startDay &&
+                !!endDay &&
+                dayTime > startDay.getTime() &&
+                dayTime < endDay.getTime();
             const isSelected = m !== "range" && selectedSet.has(dayTime);
             const disabled = disabledFn(d);
 
@@ -563,12 +612,12 @@
 
     const monthsView = computed(() => {
         const selectedSlots = new Set(
-            parsedAll.value.map(d => `${d.getFullYear()}-${d.getMonth()}`)
+            parsedAll.value.map((d) => `${d.getFullYear()}-${d.getMonth()}`)
         );
 
         return Array.from({ length: 12 }, (_, m) => ({
             month: m,
-            label: monthShortNames[m] ?? "",
+            label: monthShortNames.value[m] ?? "",
             isCurrent: m === today.getMonth() && view.value.year === today.getFullYear(),
             isSelected: selectedSlots.has(`${view.value.year}-${m}`)
         }));
@@ -576,7 +625,7 @@
 
     const yearsView = computed(() => {
         const base = yearWindowBase.value;
-        const selectedYears = new Set(parsedAll.value.map(d => d.getFullYear()));
+        const selectedYears = new Set(parsedAll.value.map((d) => d.getFullYear()));
 
         return Array.from({ length: 12 }, (_, i) => {
             const year = base + i;
@@ -653,7 +702,7 @@
 
         const clicked = new Date(cell.year, cell.month, cell.day);
         const existing = parsedAll.value;
-        const idx = existing.findIndex(d => sameDay(d, clicked));
+        const idx = existing.findIndex((d) => sameDay(d, clicked));
 
         if (idx >= 0) {
             const next = [...existing];
@@ -682,27 +731,34 @@
 
     const timeInputs = ref<[string, string]>(["", ""]);
 
-    watch(() => {
-        if (mode.value === "range") {
-            return rangeBounds.value;
+    watch(
+        () => {
+            if (mode.value === "range") {
+                return rangeBounds.value;
+            }
+            return [parsedAll.value[0] ?? null, null] as [Date | null, Date | null];
+        },
+        ([a, b]) => {
+            const next: [string, string] = [timeFromDate(a), timeFromDate(b)];
+            if (next[0] !== timeInputs.value[0] || next[1] !== timeInputs.value[1]) {
+                timeInputs.value = next;
+            }
+        },
+        {
+            immediate: true
         }
-        return [parsedAll.value[0] ?? null, null] as [Date | null, Date | null];
-    }, ([a, b]) => {
-        const next: [string, string] = [timeFromDate(a), timeFromDate(b)];
-        if (next[0] !== timeInputs.value[0] || next[1] !== timeInputs.value[1]) {
-            timeInputs.value = next;
-        }
-    }, {
-        immediate: true
-    });
+    );
 
     const commitTime = (idx: number) => {
         const parts = parseTime(timeInputs.value[idx]);
 
         if (!parts) {
-            const fallbackDate = mode.value === "range"
-                ? rangeBounds.value[idx]
-                : (idx === 0 ? parsedAll.value[0] ?? null : null);
+            const fallbackDate =
+                mode.value === "range"
+                    ? rangeBounds.value[idx]
+                    : idx === 0
+                      ? (parsedAll.value[0] ?? null)
+                      : null;
             const restored = timeFromDate(fallbackDate);
             if (restored !== timeInputs.value[idx]) {
                 const next: [string, string] = [...timeInputs.value] as [string, string];
@@ -716,9 +772,10 @@
             const [start, end] = rangeBounds.value;
             const existing = idx === 0 ? start : end;
             const other = idx === 0 ? end : start;
-            const baseDate = existing
-                ?? (other ? new Date(other.getFullYear(), other.getMonth(), other.getDate()) : null)
-                ?? new Date(view.value.year, view.value.month, today.getDate());
+            const baseDate =
+                existing ??
+                (other ? new Date(other.getFullYear(), other.getMonth(), other.getDate()) : null) ??
+                new Date(view.value.year, view.value.month, today.getDate());
 
             const d = new Date(baseDate);
             d.setHours(parts.hours);
@@ -731,8 +788,7 @@
         }
 
         const existing = parsedAll.value[0];
-        const baseDate = existing
-            ?? new Date(view.value.year, view.value.month, today.getDate());
+        const baseDate = existing ?? new Date(view.value.year, view.value.month, today.getDate());
 
         const d = new Date(baseDate);
         d.setHours(parts.hours);

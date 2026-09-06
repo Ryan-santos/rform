@@ -41,13 +41,13 @@
         >
             <RText
                 name="padrao"
-                label="Padrão"
-                placeholder="do jeito que o componente declara"
+                label="~~Padrão"
+                placeholder="~~do jeito que o componente declara"
             />
             <RText
                 name="comUi"
-                label="Com ui"
-                placeholder="input maior, resto intacto"
+                label="~~Com ui"
+                placeholder="~~input maior, resto intacto"
                 :ui="{
                     group: {
                         field: {
@@ -67,18 +67,19 @@
         >
             <RText
                 name="semWrapper"
-                label="Wrapper zerado"
-                placeholder="sem fundo, sem borda, sem anel"
+                label="~~Wrapper zerado"
+                placeholder="~~sem fundo, sem borda, sem anel"
                 :ui="semWrapper"
             />
             <RText
                 name="wrapperNovo"
-                label="Wrapper redesenhado"
-                placeholder="null primeiro, classe nova depois"
+                label="~~Wrapper redesenhado"
+                placeholder="~~null primeiro, classe nova depois"
                 :ui="{
                     group: {
                         wrapper: {
-                            container: 'flex flex-row items-center rounded-none border-b-2 border-secondary'
+                            container:
+                                'flex flex-row items-center rounded-none border-b-2 border-secondary'
                         }
                     }
                 }"
@@ -93,17 +94,18 @@
         >
             <RText
                 name="erroPadrao"
-                label="Erro padrão"
+                label="~~Erro padrão"
                 error="Vermelho, como vem de fábrica."
             />
             <RText
                 name="erroRosa"
-                label="Erro reestilizado"
+                label="~~Erro reestilizado"
                 error="Mesma mensagem, outra pele."
                 :ui="{
                     Utils: {
                         Error: {
-                            container: 'text-secondary text-xs italic tracking-normal font-normal ml-0'
+                            container:
+                                'text-secondary text-xs italic tracking-normal font-normal ml-0'
                         }
                     }
                 }"
@@ -132,12 +134,7 @@
                 hint="o arquivo inteiro; nada mais é necessário"
             />
 
-            <div
-                class="
-                    grid gap-3
-                    md:grid-cols-2
-                "
-            >
+            <div class="grid gap-3 md:grid-cols-2">
                 <div
                     v-for="note in notes"
                     :key="note.title"
@@ -212,7 +209,7 @@
         },
         {
             when: "campo",
-            title: ":ui=\"{ … }\"",
+            title: ':ui="{ … }"',
             text: "A prop no call site. Última na fila, então é a que decide.",
             ui: "border-primary/50 bg-primary/[0.07] text-primary"
         }

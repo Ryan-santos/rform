@@ -3,7 +3,7 @@
         v-if="props.label"
         :class="props.ui.container"
     >
-        {{ props.label }}
+        {{ tr(props.label) }}
         <span
             v-if="props.required"
             :class="props.ui.required"
@@ -15,11 +15,18 @@
 
 <script lang="ts">
     import { useUtilProps } from "#rform/composables";
-    import type { DeepPartial } from "#rform/types";
+    import type { DeepPartial, TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
+    /**
+     * No `label: ""` sentinel any more: `label` is a `TrInput` now, and under
+     * an app with `@nuxtjs/i18n` that type is `ModuleKey | Literal` — `""` is
+     * neither, so the default was the one thing in the module's own source that
+     * failed the app's own type-check. It bought nothing: `v-if="props.label"`
+     * reads `undefined` exactly the way it read `""`, and `merger` never let a
+     * falsy default block anything either.
+     */
     export const defaults = defineDefaults({
-        label: "",
         ui: {
             container: "",
             required: "font-bold text-(--rf-color-danger)"
@@ -27,13 +34,11 @@
     });
 
     export type Props = {
-        label?: string
-        ui?: DeepPartial<typeof defaults.ui>
+        label?: TrInput;
+        ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
 
 <script setup lang="ts">
-    const {
-        props
-    } = useUtilProps<Props>(defaults);
+    const { props, tr } = useUtilProps<Props>(defaults);
 </script>

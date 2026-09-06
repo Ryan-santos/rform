@@ -14,11 +14,11 @@
             <RArray
                 v-slot="{ index }"
                 name="emails"
-                label="E-mails"
+                label="~~E-mails"
             >
                 <RText
                     :name="index"
-                    placeholder="E-mail"
+                    placeholder="~~E-mail"
                     rule="email"
                 />
             </RArray>
@@ -32,13 +32,13 @@
             <RArray
                 v-slot="{ index }"
                 name="telefones"
-                label="De 2 a 4 telefones"
+                label="~~De 2 a 4 telefones"
                 :min="2"
                 :max="4"
             >
                 <RText
                     :name="index"
-                    placeholder="Telefone"
+                    placeholder="~~Telefone"
                     mask="brTelefone"
                 />
             </RArray>
@@ -46,18 +46,18 @@
 
         <Demo
             id="button-text"
-            title="buttonText"
+            title="text.button"
             description="Troca o texto do botão de adicionar, que por padrão é Adicionar."
         >
             <RArray
                 v-slot="{ index }"
                 name="tags"
-                label="Tags"
-                button-text="Nova tag"
+                label="~~Tags"
+                :text="{ button: '~~Nova tag' }"
             >
                 <RText
                     :name="index"
-                    placeholder="tag"
+                    placeholder="~~tag"
                 />
             </RArray>
         </Demo>
@@ -70,24 +70,24 @@
             <RArray
                 v-slot="{ index }"
                 name="socios"
-                label="Sócios"
+                label="~~Sócios"
                 :min="1"
             >
                 <RObject :name="index">
                     <RText
                         name="nome"
-                        label="Nome"
-                        placeholder="nome completo"
+                        label="~~Nome"
+                        placeholder="~~nome completo"
                     />
                     <RText
                         name="cpf"
-                        label="CPF"
+                        label="~~CPF"
                         mask="brCpf"
                         rule="brCpf"
                     />
                     <RNumber
                         name="participacao"
-                        label="Participação (%)"
+                        label="~~Participação (%)"
                         :max="100"
                     />
                 </RObject>
@@ -102,17 +102,17 @@
             <RArray
                 v-slot="{ index: setor }"
                 name="setores"
-                label="Setores"
-                button-text="Novo setor"
+                label="~~Setores"
+                button-text="~~Novo setor"
             >
                 <RArray
                     v-slot="{ index }"
                     :name="setor"
-                    button-text="Novo integrante"
+                    button-text="~~Novo integrante"
                 >
                     <RText
                         :name="index"
-                        placeholder="integrante"
+                        placeholder="~~integrante"
                     />
                 </RArray>
             </RArray>
@@ -126,12 +126,12 @@
             <RArray
                 v-slot="{ index }"
                 name="convidados"
-                label="Pelo menos 2 convidados"
+                label="~~Pelo menos 2 convidados"
                 :rule="{ name: 'min', min: 2 }"
             >
                 <RText
                     :name="index"
-                    placeholder="nome do convidado"
+                    placeholder="~~nome do convidado"
                 />
             </RArray>
         </Demo>

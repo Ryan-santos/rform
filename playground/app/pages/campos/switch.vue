@@ -12,16 +12,16 @@
         >
             <RSwitch
                 name="comLabel"
-                label="Notificações"
+                label="~~Notificações"
             />
             <RSwitch
                 name="comPlaceholder"
-                placeholder="Receber e-mails de novidades"
+                placeholder="~~Receber e-mails de novidades"
             />
             <RSwitch
                 name="comOsDois"
-                label="Privacidade"
-                placeholder="Perfil público"
+                label="~~Privacidade"
+                placeholder="~~Perfil público"
             />
         </Demo>
 
@@ -32,12 +32,12 @@
         >
             <RSwitch
                 name="iconPadrao"
-                placeholder="icon (padrão)"
+                placeholder="~~icon (padrão)"
                 icon
             />
             <RSwitch
                 name="iconCustom"
-                placeholder="icon com config própria"
+                placeholder="~~icon com config própria"
                 :icon="{
                     true: 'twemoji:check-mark-button',
                     false: 'twemoji:cross-mark'
@@ -45,7 +45,7 @@
             />
             <RSwitch
                 name="semIcon"
-                placeholder="sem icon"
+                placeholder="~~sem icon"
             />
         </Demo>
 
@@ -56,7 +56,7 @@
         >
             <RSwitch
                 name="comDefault"
-                placeholder="Começa ligado"
+                placeholder="~~Começa ligado"
                 :default="true"
             />
         </Demo>
@@ -67,15 +67,15 @@
         >
             <RSwitch
                 name="aceite"
-                label="Termos de uso"
-                placeholder="Li e aceito"
-                description="Sem isso a conta não é criada."
+                label="~~Termos de uso"
+                placeholder="~~Li e aceito"
+                description="~~Sem isso a conta não é criada."
                 required
                 :rule="({ value }) => (value === true ? undefined : 'É preciso aceitar os termos.')"
             />
             <RSwitch
                 name="comErro"
-                placeholder="Erro manual"
+                placeholder="~~Erro manual"
                 error="Essa opção está bloqueada pelo plano atual."
             />
         </Demo>

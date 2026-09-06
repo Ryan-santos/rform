@@ -13,8 +13,8 @@
         >
             <RFile
                 name="avatar"
-                label="Avatar"
-                placeholder="Arraste ou clique para adicionar"
+                label="~~Avatar"
+                placeholder="~~Arraste ou clique para adicionar"
                 accept="png, jpg"
             />
         </Demo>
@@ -27,8 +27,8 @@
         >
             <RFile
                 name="anexos"
-                label="Anexos"
-                placeholder="pode soltar vários de uma vez"
+                label="~~Anexos"
+                placeholder="~~pode soltar vários de uma vez"
                 accept="png, jpg, gif, mp4, pdf"
                 multiple
             />
@@ -42,12 +42,12 @@
         >
             <RFile
                 name="somenteImagem"
-                label="Só imagem"
+                label="~~Só imagem"
                 accept="png, jpg, webp"
             />
             <RFile
                 name="somenteDocumento"
-                label="Só documento"
+                label="~~Só documento"
                 accept="pdf, doc, docx"
             />
         </Demo>
@@ -59,20 +59,20 @@
         >
             <RFile
                 name="obrigatorio"
-                label="Obrigatório"
+                label="~~Obrigatório"
                 accept="png, jpg"
                 required
                 rule="required"
             />
             <RFile
                 name="carregando"
-                label="Enviando"
+                label="~~Enviando"
                 accept="png, jpg"
                 loading
             />
             <RFile
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 accept="png, jpg"
                 error="Arquivo acima de 5 MB."
             />
@@ -86,7 +86,7 @@
         >
             <RFile
                 name="ruleTamanho"
-                label="Máximo 1 MB"
+                label="~~Máximo 1 MB"
                 accept="png, jpg, pdf"
                 :rule="ateUmMega"
             />
@@ -106,7 +106,7 @@
      * template só enxerga o escopo do componente.
      */
     const ateUmMega = ({ value }: { value: unknown }) =>
-        (value instanceof File && value.size > 1024 * 1024
+        value instanceof File && value.size > 1024 * 1024
             ? "O arquivo precisa ter no máximo 1 MB."
-            : undefined);
+            : undefined;
 </script>

@@ -12,21 +12,21 @@
         >
             <RObject
                 name="endereco"
-                label="Endereço"
+                label="~~Endereço"
             >
                 <RText
                     name="cep"
-                    label="CEP"
+                    label="~~CEP"
                     mask="brCep"
                     rule="brCep"
                 />
                 <RText
                     name="rua"
-                    label="Rua"
+                    label="~~Rua"
                 />
                 <RNumber
                     name="numero"
-                    label="Número"
+                    label="~~Número"
                 />
             </RObject>
         </Demo>
@@ -38,18 +38,18 @@
         >
             <RObject
                 name="responsavel"
-                label="Responsável"
+                label="~~Responsável"
                 required
             >
                 <RText
                     name="nome"
-                    label="Nome"
+                    label="~~Nome"
                     required
                     rule="required"
                 />
                 <RText
                     name="email"
-                    label="E-mail"
+                    label="~~E-mail"
                     rule="email"
                 />
             </RObject>
@@ -62,24 +62,24 @@
         >
             <RObject
                 name="empresa"
-                label="Empresa"
+                label="~~Empresa"
             >
                 <RText
                     name="razaoSocial"
-                    label="Razão social"
+                    label="~~Razão social"
                 />
                 <RObject
                     name="matriz"
-                    label="Matriz"
+                    label="~~Matriz"
                 >
                     <RText
                         name="cidade"
-                        label="Cidade"
+                        label="~~Cidade"
                     />
                     <RSelect
                         name="uf"
-                        label="UF"
-                        placeholder="selecione"
+                        label="~~UF"
+                        placeholder="~~selecione"
                         :options="ufs"
                     />
                 </RObject>
@@ -93,18 +93,19 @@
         >
             <RText
                 name="senha"
-                label="Senha (fora do objeto)"
+                label="~~Senha (fora do objeto)"
             />
             <RObject
                 name="confirmacao"
-                label="Confirmação"
+                label="~~Confirmação"
             >
                 <RText
                     name="senha"
-                    label="Repita a senha"
-                    :rule="({ value, form }) => (value && value !== form?.senha
-                        ? 'As senhas não conferem.'
-                        : undefined)"
+                    label="~~Repita a senha"
+                    :rule="
+                        ({ value, form }) =>
+                            value && value !== form?.senha ? 'As senhas não conferem.' : undefined
+                    "
                 />
             </RObject>
         </Demo>
@@ -116,16 +117,16 @@
         >
             <RObject
                 name="preferencias"
-                label="Preferências"
+                label="~~Preferências"
             >
                 <RSwitch
                     name="newsletter"
-                    placeholder="Newsletter"
+                    placeholder="~~Newsletter"
                     :default="true"
                 />
                 <RSelect
                     name="idioma"
-                    label="Idioma"
+                    label="~~Idioma"
                     :options="{ pt: 'Português', en: 'Inglês' }"
                     default="pt"
                 />

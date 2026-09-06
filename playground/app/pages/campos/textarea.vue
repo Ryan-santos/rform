@@ -12,9 +12,9 @@
         >
             <RTextarea
                 name="basico"
-                label="Observação"
-                placeholder="escreva à vontade"
-                description="Quebra de linha é permitida."
+                label="~~Observação"
+                placeholder="~~escreva à vontade"
+                description="~~Quebra de linha é permitida."
             />
         </Demo>
 
@@ -25,12 +25,12 @@
         >
             <RTextarea
                 name="curto"
-                label="rows = 2"
+                label="~~rows = 2"
                 :rows="2"
             />
             <RTextarea
                 name="longo"
-                label="rows = 8"
+                label="~~rows = 8"
                 :rows="8"
             />
         </Demo>
@@ -42,9 +42,9 @@
         >
             <RTextarea
                 name="length"
-                label="Limite de 140"
+                label="~~Limite de 140"
                 length="140"
-                placeholder="cabe um tweet antigo"
+                placeholder="~~cabe um tweet antigo"
             />
         </Demo>
 
@@ -55,13 +55,13 @@
         >
             <RTextarea
                 name="dinheiroArea"
-                label="dinheiro — mask do usuário, agora em textarea"
+                label="~~dinheiro — mask do usuário, agora em textarea"
                 mask="dinheiro"
                 :rows="2"
             />
             <RTextarea
                 name="cpfArea"
-                label="brCpf em textarea"
+                label="~~brCpf em textarea"
                 mask="brCpf"
                 :rows="2"
             />
@@ -73,20 +73,20 @@
         >
             <RTextarea
                 name="obrigatorio"
-                label="Obrigatório"
+                label="~~Obrigatório"
                 required
                 rule="required"
                 :rows="2"
             />
             <RTextarea
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
                 :rows="2"
             />
             <RTextarea
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Descreva com pelo menos uma frase."
                 :rows="2"
             />
@@ -99,7 +99,7 @@
         >
             <RTextarea
                 name="ruleMin"
-                label="mínimo 10 caracteres"
+                label="~~mínimo 10 caracteres"
                 :rule="{ name: 'min', min: 10 }"
                 :rows="3"
             />

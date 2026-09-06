@@ -32,7 +32,7 @@
                     @click="model?.push(undefined)"
                 >
                     <Icon name="plus" />
-                    {{ props.buttonText ?? "Adicionar" }}
+                    {{ tr(props.text?.button) }}
                 </button>
             </li>
         </TransitionGroup>
@@ -43,7 +43,7 @@
     import { computed, defineComponent, useSlots } from "vue";
 
     import { useInjection, useProvide } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
 
@@ -79,14 +79,17 @@
                 `
             }
         },
-        default: []
+        default: [],
+        text: {
+            button: "add"
+        }
     });
 
     export type Props = Element<typeof defaults, "array"> &
-        Utils["Label"] & {
+        Utils["Label"] &
+        TextProp<typeof defaults.text> & {
             min?: number;
             max?: number;
-            buttonText?: string;
         };
 </script>
 
@@ -96,7 +99,7 @@
         loading: undefined
     });
 
-    const { id, model, props } = await useInjection(_props);
+    const { id, model, props, tr } = await useInjection(_props);
 
     useProvide({ id, model });
 
@@ -123,10 +126,11 @@
                 required: true
             }
         },
-        setup: (rowProps) => () => slots.default?.({
-            index: rowProps.index,
-            item: (model.value as unknown[] | undefined)?.[rowProps.index]
-        })
+        setup: (rowProps) => () =>
+            slots.default?.({
+                index: rowProps.index,
+                item: (model.value as unknown[] | undefined)?.[rowProps.index]
+            })
     });
 
     const canRemove = computed(() => {

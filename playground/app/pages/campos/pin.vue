@@ -12,7 +12,7 @@
         >
             <RPin
                 name="basico"
-                label="Código"
+                label="~~Código"
             />
         </Demo>
 
@@ -22,12 +22,12 @@
         >
             <RPin
                 name="curto"
-                label="4 dígitos"
+                label="~~4 dígitos"
                 :length="4"
             />
             <RPin
                 name="longo"
-                label="8 dígitos"
+                label="~~8 dígitos"
                 :length="8"
             />
         </Demo>
@@ -39,12 +39,12 @@
         >
             <RPin
                 name="comSeparador"
-                label="6 dígitos, separador a cada 3"
+                label="~~6 dígitos, separador a cada 3"
                 :separator="3"
             />
             <RPin
                 name="separadorDois"
-                label="8 dígitos, separador a cada 2"
+                label="~~8 dígitos, separador a cada 2"
                 :length="8"
                 :separator="2"
             />
@@ -57,12 +57,12 @@
         >
             <RPin
                 name="numerico"
-                label="numeric (padrão)"
+                label="~~numeric (padrão)"
                 type="numeric"
             />
             <RPin
                 name="alfanumerico"
-                label="alphanumeric"
+                label="~~alphanumeric"
                 type="alphanumeric"
                 :length="5"
             />
@@ -75,7 +75,7 @@
         >
             <RPin
                 name="secreto"
-                label="Resgate"
+                label="~~Resgate"
                 type="alphanumeric"
                 :length="4"
                 secret
@@ -89,7 +89,7 @@
         >
             <RPin
                 name="comCallback"
-                label="Preencha até o fim"
+                label="~~Preencha até o fim"
                 :length="4"
                 :on-complete="onComplete"
             />
@@ -107,20 +107,20 @@
         >
             <RPin
                 name="obrigatorio"
-                label="Obrigatório"
+                label="~~Obrigatório"
                 :length="4"
                 required
                 rule="required"
             />
             <RPin
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 :length="4"
                 loading
             />
             <RPin
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 :length="4"
                 error="Código expirado, peça outro."
             />
@@ -134,6 +134,7 @@
 
 <script setup lang="ts">
     import { ref } from "vue";
+
     import source from "./pin.vue?raw";
 
     const completedAt = ref("");

@@ -12,12 +12,12 @@
         >
             <RRating
                 name="nota"
-                label="Como foi o atendimento?"
+                label="~~Como foi o atendimento?"
                 rule="required"
             />
             <RRating
                 name="notaCurta"
-                label="Escala menor"
+                label="~~Escala menor"
                 :max="3"
                 hint="max troca a quantidade de estrelas."
             />
@@ -30,7 +30,7 @@
         >
             <RRating
                 name="comHint"
-                label="Com dica"
+                label="~~Com dica"
                 hint="O hint sai do RUtilsHint, que é um arquivo do app — não do módulo."
             />
         </Demo>
@@ -54,12 +54,13 @@
 </template>
 
 <script setup lang="ts">
-    import source from "./customizados.vue?raw";
     import type { Schema } from "#rform/types/schema";
 
+    import source from "./customizados.vue?raw";
+
     const schema: Schema = {
-        apelido: { type: "text", label: "Apelido" },
-        nota: { type: "rating", label: "Nota", max: 5, rule: "required" }
+        apelido: { type: "text", label: "~~Apelido" },
+        nota: { type: "rating", label: "~~Nota", max: 5, rule: "required" }
     };
 
     const defaultsExample = `import { defineFieldDefaults } from "#rform/utils";

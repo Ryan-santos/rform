@@ -24,7 +24,10 @@
                         @focusin="onFocusIn"
                         @focusout="onFocusOut"
                     >
-                        <RUtilsPlaceholder v-if="props.placeholder" :focused="focused" />
+                        <RUtilsPlaceholder
+                            v-if="props.placeholder"
+                            :focused="focused"
+                        />
                         <div
                             :class="[
                                 props.ui?.group?.field?.inputs,
@@ -51,7 +54,9 @@
                                 @blur="validate(0)"
                             />
                             <template v-if="props.mode === 'range'">
-                                <span :class="props.ui?.group?.field?.separator"> até </span>
+                                <span :class="props.ui?.group?.field?.separator">
+                                    {{ tr(props.text?.separator) }}
+                                </span>
                                 <input
                                     v-model="typed[1]"
                                     v-mask="mask"
@@ -98,15 +103,14 @@
 </template>
 
 <script lang="ts">
-    import { vMask } from "#rform/utils";
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useInjection } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults } from "#rform/utils";
+    import { vMask } from "#rform/utils";
+    import { dateFormat, defineDefaults } from "#rform/utils";
 
-    import { pad } from "./Hour.vue";
     import {
         formatIso,
         parseIncoming,
@@ -152,7 +156,12 @@
                 }
             }
         },
-        default: ""
+        default: "",
+        text: {
+            hint: "hint",
+            hintTime: "hintTime",
+            separator: "separator"
+        }
     });
 
     export type Props<M extends Mode = "single"> = Omit<
@@ -164,7 +173,8 @@
         Utils["Error"] &
         Utils["Loading"] &
         Utils["Length"] &
-        Utils["Placeholder"] & {
+        Utils["Placeholder"] &
+        TextProp<typeof defaults.text> & {
             mode?: M;
             time?: boolean;
             disable?: DisableSpec;
@@ -182,7 +192,8 @@
         Utils["Error"] &
         Utils["Loading"] &
         Utils["Length"] &
-        Utils["Placeholder"] & {
+        Utils["Placeholder"] &
+        TextProp<typeof defaults.text> & {
             mode?: Mode;
             time?: boolean;
             disable?: DisableSpec;
@@ -197,60 +208,23 @@
         loading: undefined
     });
 
-    const { model, props } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
 
-    const formatLocaleDate = (d: Date) =>
-        `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    /**
+     * Máscara, regex de parse e formatação de exibição saem todas do mesmo
+     * pattern — `formats.date` do pack ativo. É um `computed` porque `tr` lê o
+     * locale a cada chamada, então trocar de idioma re-deriva as três.
+     *
+     * `formatIso` e o ramo ISO de `parseIncoming` ficam de fora de propósito:
+     * ISO é o formato do model, e é locale-independente por definição.
+     */
+    const pattern = computed(() => dateFormat(tr("rform.formats.date")));
 
-    const formatLocaleDateTime = (d: Date) =>
-        `${formatLocaleDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-
-    const formatLocal = (d: Date | null): string => {
-        if (!d) {
-            return "";
-        }
-        return props.value.time ? formatLocaleDateTime(d) : formatLocaleDate(d);
-    };
+    const formatLocal = (d: Date | null): string => pattern.value.format(d, !!props.value.time);
 
     const toIso = (d: Date | null) => formatIso(d, !!props.value.time);
 
-    const parseLocal = (s: string): Date | null => {
-        const trimmed = s?.trim() ?? "";
-
-        if (!trimmed) {
-            return null;
-        }
-
-        const pattern = props.value.time
-            ? /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/
-            : /^(\d{2})\/(\d{2})\/(\d{4})$/;
-
-        const m = trimmed.match(pattern);
-
-        if (!m) {
-            return null;
-        }
-
-        const [, dd, mm, yy, hh, mi] = m as unknown as [
-            string,
-            string,
-            string,
-            string,
-            string?,
-            string?
-        ];
-        const d = new Date(+yy, +mm - 1, +dd, hh ? +hh : 0, mi ? +mi : 0);
-
-        if (Number.isNaN(d.getTime())) {
-            return null;
-        }
-
-        if (d.getDate() !== +dd || d.getMonth() !== +mm - 1 || d.getFullYear() !== +yy) {
-            return null;
-        }
-
-        return d;
-    };
+    const parseLocal = (s: string): Date | null => pattern.value.parse(s, !!props.value.time);
 
     const typed = ref<[string, string]>(["", ""]);
 
@@ -260,27 +234,31 @@
     ]);
 
     const mask = computed(() => ({
-        mask: props.value.time ? "##/##/#### ##:##" : "##/##/####",
+        mask: pattern.value.mask(!!props.value.time),
         eager: true
     }));
 
-    const placeholderHint = computed(() => (props.value.time ? "dd/mm/aaaa hh:mm" : "dd/mm/aaaa"));
+    const placeholderHint = computed(() =>
+        props.value.time ? tr(props.value.text?.hintTime) : tr(props.value.text?.hint)
+    );
 
     const incomingToTyped = (val: unknown): [string, string] => {
         const m = props.value.mode ?? "single";
 
+        const incoming = (value: unknown) => parseIncoming(value, pattern.value.pattern);
+
         if (m === "range") {
             const arr = Array.isArray(val) ? val : [];
-            return [formatLocal(parseIncoming(arr[0])), formatLocal(parseIncoming(arr[1]))];
+            return [formatLocal(incoming(arr[0])), formatLocal(incoming(arr[1]))];
         }
 
         if (m === "multiple") {
             const arr: unknown[] = Array.isArray(val) ? val : [];
-            const list = arr.map((v) => formatLocal(parseIncoming(v))).filter(Boolean);
+            const list = arr.map((v) => formatLocal(incoming(v))).filter(Boolean);
             return [list.join(", "), ""];
         }
 
-        return [formatLocal(parseIncoming(val)), ""];
+        return [formatLocal(incoming(val)), ""];
     };
 
     const computeModel = (): DateValue => {
@@ -296,9 +274,17 @@
 
     let internalWrite = false;
 
+    /**
+     * `pattern` is a source too, not just `model`: trocar de idioma não mexe no
+     * model (que é ISO), mas muda como ele se escreve. Sem isso o campo ficava
+     * exibindo `15/05/2026` depois de virar para `MM/DD/YYYY`.
+     *
+     * A ordem é segura porque o watcher de `typed` só dispara quando `typed`
+     * muda — ou seja, depois deste, já com o pattern novo dos dois lados.
+     */
     watch(
-        model,
-        (val) => {
+        [model, pattern],
+        ([val]) => {
             if (internalWrite) {
                 return;
             }

@@ -71,7 +71,7 @@
                     <input
                         v-model="search"
                         type="search"
-                        placeholder="Pesquisar"
+                        :placeholder="tr(props.text?.search)"
                         :class="props.ui?.list?.search?.input"
                     />
                 </div>
@@ -107,7 +107,7 @@
     import { computed, ref } from "vue";
 
     import { useInjection } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults, dropdownFit } from "#rform/utils";
 
@@ -139,7 +139,10 @@
                 },
                 field: {
                     container: "flex min-w-0 grow flex-col",
-                    selected: "flex min-h-12 w-full grow flex-row items-center gap-2 p-3",
+                    selected: `
+                        flex min-h-12 w-full grow flex-row items-center gap-2
+                        p-3
+                    `,
                     text: "truncate"
                 },
                 icon: "m-3 ml-0"
@@ -148,13 +151,17 @@
                 search: {
                     container: "sticky top-0 z-0 bg-(--rf-color-background-300)",
                     icon: "absolute top-1/2 left-3 -z-1 -translate-y-1/2 opacity-60",
-                    input: "w-full p-3 pl-10 outline-0 placeholder:text-current/30"
+                    input: `
+                        w-full p-3 pl-10 outline-0
+                        placeholder:text-current/30
+                    `
                 },
                 container: "divide-y divide-(--rf-color-contrast)/10",
                 option: {
                     container: `
                         flex w-full cursor-pointer flex-row items-center gap-1 p-3
-                        transition-all duration-300 hover:bg-(--rf-color-primary)/20
+                        transition-all duration-300
+                        hover:bg-(--rf-color-primary)/20
                     `,
                     selected: "text-(--rf-color-primary-fg) bg-(--rf-color-primary)!",
                     text: "truncate"
@@ -162,16 +169,16 @@
             },
             Utils: {
                 Dropdown: {
-                    popover: `
-                        overflow-auto rounded-(--rf-radius-lg) border
-                        border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)
-                    `
+                    popover: `overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)`
                 }
             }
         },
         default: null,
         keyValue: "id",
-        keyLabel: "name"
+        keyLabel: "name",
+        text: {
+            search: "search"
+        }
     });
 
     export type Props<Opts extends Options = OptArrayObj, Multiple extends boolean = false> = Omit<
@@ -183,7 +190,8 @@
         Utils["Dropdown"] &
         Utils["Error"] &
         Utils["Loading"] &
-        Utils["Placeholder"] & {
+        Utils["Placeholder"] &
+        TextProp<typeof defaults.text> & {
             options: Opts;
             keyValue?: string;
             keyLabel?: string;
@@ -202,7 +210,8 @@
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &
-        Utils["Placeholder"] & {
+        Utils["Placeholder"] &
+        TextProp<typeof defaults.text> & {
             options: Options;
             keyValue?: string;
             keyLabel?: string;
@@ -232,7 +241,7 @@
         trailing(): void;
     }>();
 
-    const { model, props } = await useInjection(_props as unknown as InternalProps);
+    const { model, props, tr } = await useInjection(_props as unknown as InternalProps);
 
     const isRecord = (value: unknown): value is Record<string, unknown> => {
         return typeof value === "object" && value !== null;

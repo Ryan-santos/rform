@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+
 import resolveRule from "../../src/runtime/utils/resolveRule";
 
 const rules = {
     required: {
-        validation: ({ value }: { value: unknown }) => value ? undefined : "obrigatório"
+        validation: ({ value }: { value: unknown }) => (value ? undefined : "obrigatório")
     },
     min: {
-        validation: ({ value, min }: { value: unknown, min: number }) =>
+        validation: ({ value, min }: { value: unknown; min: number }) =>
             String(value).length >= min ? undefined : `mínimo ${min}`
     },
     onlyText: {
@@ -31,10 +32,12 @@ describe("resolveRule", () => {
     it("resolves a preset by name, forwarding value and form in one context", async () => {
         const seen: unknown[] = [];
         const spy = {
-            spy: { validation: (context: unknown) => {
-                seen.push(context);
-                return undefined;
-            } }
+            spy: {
+                validation: (context: unknown) => {
+                    seen.push(context);
+                    return undefined;
+                }
+            }
         };
 
         const form = { nome: "ana" };
@@ -58,13 +61,17 @@ describe("resolveRule", () => {
     it("never lets an argument shadow value or form", async () => {
         const seen: unknown[] = [];
         const spy = {
-            spy: { validation: (context: unknown) => {
-                seen.push(context);
-                return undefined;
-            } }
+            spy: {
+                validation: (context: unknown) => {
+                    seen.push(context);
+                    return undefined;
+                }
+            }
         };
 
-        await resolveRule({ name: "spy", value: "roubado", form: "roubado" }, spy)!("real", { id: 1 });
+        await resolveRule({ name: "spy", value: "roubado", form: "roubado" }, spy)!("real", {
+            id: 1
+        });
 
         expect(seen).toEqual([{ value: "real", form: { id: 1 } }]);
     });
@@ -75,7 +82,7 @@ describe("resolveRule", () => {
 
     it("accepts a plain function, called with the same context", async () => {
         const rule = resolveRule(
-            ({ value }: { value: unknown }) => value === 1 ? undefined : "não é 1",
+            ({ value }: { value: unknown }) => (value === 1 ? undefined : "não é 1"),
             rules
         )!;
 
@@ -85,7 +92,7 @@ describe("resolveRule", () => {
 
     it("hands a plain function the form too", async () => {
         const rule = resolveRule(
-            ({ value, form }: { value: unknown, form: { pais?: string } }) =>
+            ({ value, form }: { value: unknown; form: { pais?: string } }) =>
                 form?.pais === "BR" || value === "livre" ? undefined : "só no BR",
             rules
         )!;
@@ -109,6 +116,24 @@ describe("resolveRule", () => {
         expect(await rule("abc", {})).toBeUndefined();
     });
 
+    it("does not put a translator in the context", async () => {
+        let seen: Record<string, unknown> | undefined;
+
+        const rules = {
+            spy: {
+                validation: (context: Record<string, unknown>) => {
+                    seen = context;
+                }
+            }
+        };
+
+        const resolved = resolveRule("spy", rules as never, "text")!;
+
+        await resolved("ana", {});
+
+        expect(seen).toEqual({ value: "ana", form: {} });
+    });
+
     it("throws naming the unknown preset", () => {
         expect(() => resolveRule("naoExiste", rules)).toThrowError(/naoExiste/);
     });
@@ -118,9 +143,7 @@ describe("resolveRule", () => {
 
         resolveRule("onlyText", rules, "color");
 
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringContaining("onlyText")
-        );
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("onlyText"));
 
         warn.mockRestore();
     });

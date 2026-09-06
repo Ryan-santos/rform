@@ -1,0 +1,38 @@
+{
+    "form": {
+        "nome": "Nome",
+        "nomeCompleto": "nome completo",
+        "email": "E-mail",
+        "emailExemplo": "voce{'@'}empresa.com",
+        "senha": "Senha",
+        "descricao": "Descrição",
+        "enviar": "Enviar",
+        "max": "No máximo {n} caracteres",
+        "cpf": "CPF",
+        "telefone": "Telefone",
+        "endereco": "Endereço",
+        "cep": "CEP",
+        "rua": "Rua",
+        "numero": "Número",
+        "uf": "UF",
+        "selecione": "selecione",
+        "nascimento": "Nascimento",
+        "aceiteTermos": "Li e aceito os termos"
+    },
+    "empresa": {
+        "razaoSocial": "Razão social",
+        "razaoSocialExemplo": "nome da empresa",
+        "cnpj": "CNPJ",
+        "abertura": "Data de abertura",
+        "cidade": "Cidade",
+        "socios": "Sócios (slot custom)"
+    },
+    "campos": {
+        "itens": "um item | {n} itens"
+    },
+    "traducao": {
+        "titular": "Nome do titular",
+        "ajudaMax": "No máximo {n} caracteres",
+        "socios": "Sócios"
+    }
+}

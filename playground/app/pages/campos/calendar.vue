@@ -12,7 +12,7 @@
         >
             <RCalendar
                 name="agenda"
-                label="Agenda"
+                label="~~Agenda"
             />
         </Demo>
 
@@ -24,7 +24,7 @@
         >
             <RCalendar
                 name="ferias"
-                label="Período de férias"
+                label="~~Período de férias"
                 mode="range"
             />
         </Demo>
@@ -37,7 +37,7 @@
         >
             <RCalendar
                 name="feriados"
-                label="Feriados"
+                label="~~Feriados"
                 mode="multiple"
             />
         </Demo>
@@ -50,7 +50,7 @@
         >
             <RCalendar
                 name="janela"
-                label="Janela com hora"
+                label="~~Janela com hora"
                 mode="range"
                 time
             />
@@ -64,7 +64,7 @@
         >
             <RCalendar
                 name="restrito"
-                label="Só 2026, sem feriados"
+                label="~~Só 2026, sem feriados"
                 :disable="{
                     before: '2026-01-01',
                     after: '2026-12-31',
@@ -73,7 +73,7 @@
             />
             <RCalendar
                 name="semRecesso"
-                label="Sem o recesso de fim de ano"
+                label="~~Sem o recesso de fim de ano"
                 mode="range"
                 :disable="{
                     between: ['2026-12-20', '2026-12-31']
@@ -88,13 +88,13 @@
         >
             <RCalendar
                 name="obrigatorio"
-                label="Obrigatório"
+                label="~~Obrigatório"
                 required
                 rule="required"
             />
             <RCalendar
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Essa data já está ocupada."
             />
         </Demo>

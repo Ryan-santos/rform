@@ -22,9 +22,9 @@ src/runtime/components/
 
 Todo componente em `components/fields/*.vue` e `components/utils/*.vue` — embutido **ou** do usuário — segue o mesmo formato:
 
-1. **`<script lang="ts">`** — exporta `defaults` (via `defineDefaults`) e o tipo `Props`. Campo monta `Props` a partir de `Element<typeof defaults, "<tipo>">` (de `src/type.d.ts`) interseccionado com `Utils["..."]` (de `#rform/types/components/utils/props`) e props específicas; util escreve `Props` à mão e referencia `DeepPartial<typeof defaults.ui>`.
-2. **`<script setup lang="ts">`** — campo chama `await useInjection(_props)` para obter `{ id, model, props }`; util chama `await useUtilProps<Props>()`. Containers (Form, Array, Object) também chamam `useProvide({ id, model })`.
-3. **`defaults`** sempre define `ui` (classes Tailwind); campo também define `default` (valor inicial do model). Outros campos (`keyValue`, `keyLabel` no Select, `max` num Rating) também viram defaults mesclados via `merger`.
+1. **`<script lang="ts">`** — exporta `defaults` (via `defineDefaults`) e o tipo `Props`. Campo monta `Props` a partir de `Element<typeof defaults, "<tipo>">` (de `src/type.d.ts`) interseccionado com `Utils["..."]` (de `#rform/types/components/utils/props`), `TextProp<typeof defaults.text>` quando há texto, e props específicas; util escreve `Props` à mão e referencia `DeepPartial<typeof defaults.ui>` (mais `TextProp<typeof defaults.text>`, no mesmo caso).
+2. **`<script setup lang="ts">`** — campo chama `await useInjection(_props)` para obter `{ id, model, props, tr, locale }`; util chama `await useUtilProps<Props>()`, que devolve `{ props, upper, tr, locale }`. Containers (Form, Array, Object) também chamam `useProvide({ id, model })`.
+3. **`defaults`** sempre define `ui` (classes Tailwind); campo também define `default` (valor inicial do model); quem tem texto define `text`, um **objeto aninhado** de chaves de tradução do módulo — é o marcador que autoriza o auto-prefixo `rform.<fields|utils>.<componente>.`, e a árvore mantém a forma até o template: `text: { button: "add" }` lê `tr(props.text?.button)`, nunca uma prop `buttonText` de nível superior. Outros campos (`keyValue`, `keyLabel` no Select, `max` num Rating) também viram defaults mesclados via `merger` — e ficam fora do `text` justamente porque não são texto. `label` e `placeholder` são as duas exceções: moram no topo por contrato (um app os passa direto), mas ainda são `TrInput` e ainda são prefixados quando o valor vem do próprio `defaults` do componente.
 
 `Base["default"]` é **opcional** justamente para o item 1 valer nos dois: um util tem `ui` mas não tem model. Antes os utils usavam um par `defaultUi` + `defaults: Props` que não passava por `defineDefaults` — eram duas convenções, e só uma estava documentada.
 
@@ -51,7 +51,7 @@ Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compil
 ### useInjection (`src/runtime/composables/useInjection.ts`)
 
 - Lê o pai (Form) via `inject(key)`. Quando há pai e `props.name` está definido, `model.value` lê/escreve diretamente em `upper.model.value[name]` — é por isso que mutações em arrays no model do filho refletem no Form.
-- Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger`.
+- Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger` — depois de passar o `defaults` do componente pelo `prefixText`, que é o que dá procedência de graça ao texto (ver `defaults.text`, na seção de i18n).
 - Carrega os defaults do componente pelo `#rform/registry` gerado (`nome → () => import(path)`). **Não** pode ser `import('../components/${name}.vue')`: o Vite compila isso num glob ancorado no arquivo da composable, e um campo em `app/rform/fields` não faz parte dele. As entradas são thunks, então o ciclo `Text.vue → useInjection → registry → Text.vue` não fecha em tempo de carga.
 - `componentName` vem do `src/vite.plugin.ts`. Nome ausente ou fora do registry **lança**. Havia um fallback `"Text"` (e `"Label"` no `useUtilProps`) que renderizava o campo com os defaults de outro componente sem dizer nada.
 
@@ -158,7 +158,7 @@ Resolução em runtime é ponto único: `resolveRule` / `resolveMask` (`src/runt
 
 #### Um objeto só: `{ value, form, ...args }`
 
-Toda validação — `validation` de preset **e** função inline no `rule` — recebe um único objeto. Quem tipa é `RuleContext` (`utils/definePreset.ts`, exportado por `#rform/utils`): `value` e `form` já vêm, o parâmetro é só o que o preset **acrescenta**.
+Toda validação — `validation` de preset **e** função inline no `rule` — recebe um único objeto. Quem tipa é `RuleContext` (`utils/definePreset.ts`, exportado por `#rform/utils`): `value` e `form` já vêm, o parâmetro é só o que o preset **acrescenta**. O tradutor **não** está aí — uma rule chega ao locale ativo pelo `trRule` importado, e o contexto continua sendo só o que o campo de fato tem.
 
 ```ts
 import { defineRule, type RuleContext } from "#rform/utils";
@@ -178,25 +178,302 @@ Os args são **nomeados no próprio ref**, não posicionais: `{ name: "min", min
 
 #### As rules embutidas são zod
 
-Cada uma monta um `ZodType` e passa por `check(schema, value)` (`presets/helpers.ts`), que devolve `issues[0].message`. É isso que torna a mensagem do preset a mensagem do campo. Consequência de empacotamento: `#rform/presets.ts` importa **todos** os presets estaticamente, e todo campo importa `#rform/presets` — então **zod deixou de ser peer dependency opcional**, é obrigatória.
+Cada uma é uma **fábrica sem parâmetro** — `const schema = () => z.custom(…, trRule("required"))` — e passa por `check(schema(), value)` (`presets/helpers.ts`), que devolve `issues[0].message`. É isso que torna a mensagem do preset a mensagem do campo. Fábrica, e não constante de escopo de módulo, porque `trRule` é resolvido **na construção do schema**: a mensagem tem de ser a do locale ativo, e o locale muda sem a página recarregar. Consequência de empacotamento: `#rform/presets.ts` importa **todos** os presets estaticamente, e todo campo importa `#rform/presets` — então **zod deixou de ser peer dependency opcional**, é obrigatória.
 
 As format rules (`email`, `url`, `br/*`) saem cedo em `isBlank(value)` para `required` continuar dono sozinho da vacuidade. `min`/`max` escolhem o schema pelo **valor** (`z.number()` / `z.array()` / `z.string()`), não pelo tipo do campo.
 
 Preset em `useRForm(schema)` passa intacto por `normalizeSchema` (quem resolve é o campo) e vira `z.any().superRefine(async ...)` no `rules` agregado — **schema com preset exige `safeParseAsync`**; schema só-Zod continua síncrono.
 
+### i18n: `tr`, uma função e dois motores (`src/runtime/translate`, `utils/tr.ts`, `src/runtime/locales`)
+
+Nenhum texto e nenhum formato de data cravado, e **uma** função de tradução só: `tr`. Ela é o que campo, util e rule chamam, e aceita quatro formas de entrada:
+
+```ts
+tr("form.nome")                              // chave do app
+tr({ key: "form.max", params: { n: 30 } })   // chave do app, com params
+tr("rform.formats.date")                     // chave do módulo, caminho por extenso
+tr("~~Nome")                                 // literal explícito
+```
+
+As camadas:
+
+- **Packs** — `src/runtime/locales/<code>.ts`, objeto aninhado com `export default`. `pt-BR` é o de referência (é o `typeof` dele que vira `Messages`) e `en.ts` é tipado *contra* ele, então uma chave nova sem tradução é erro de compilação. Sintaxe do vue-i18n: interpolação `{param}` **e** plural `a | b`, que agora rendem o mesmo nos dois motores.
+- **`tr`** — `useTranslate()` (composable) devolve `{ tr, locale }` delegando a `#rform/translate`; `useInjection` e `useUtilProps` o chamam, então **todo** campo e util — inclusive os de `app/rform/{fields,utils}` — ganham `tr` sem escrever import, do mesmo jeito que já ganham `mask`. Fora de componente, `tr` e `trRule` saem de `#rform/utils`.
+- **Datas** — `dateFormat(pattern)` (`utils/dateFormat.ts`, puro) deriva de `formats.date` a máscara maska, o regex de parse e a formatação de exibição, que antes eram três literais `dd/mm/yyyy` em dois arquivos. Quem lê o pattern é `tr("rform.formats.date")`.
+
+`app/rform/locales/<code>.ts` é o pack do usuário, escaneado como os presets. **Mesmo code mescla** (via `merger`), não substitui — diferente de campo, util e preset, onde mesmo nome troca o arquivo inteiro. É o que permite um pack de três chaves continuar completo. Um code novo (`es`) simplesmente entra, e o que faltar cai no `fallbackLocale`, que é o pack default.
+
+#### As duas rotas
+
+O algoritmo mora **acima** do motor. `normalize` (em `utils/i18n.ts`) reduz qualquer das quatro formas a `(key, params)` — e mora ali, não ao lado do `tr`, porque os dois motores o importam e `utils/tr.ts` importa os motores: a outra direção fecharia ciclo. Daí em diante:
+
+```
+COM PONTE (translate/bridge.ts)
+  1. key começa com "~~"  →  key.slice(2).trimStart()
+  2. resto                →  $i18n.t(key, params, plural?)
+       (o store do app já tem os packs do módulo sob `rform`, registrados pelo
+        i18n:registerModule — "rform.fields.array.add" resolve sem tratamento especial)
+
+SEM PONTE (translate/standalone.ts)
+  1. key NÃO começa com "rform."  →  key, intacta
+  2. resto                        →  translate(ctx, key.slice(6), params, plural?)
+```
+
+Com ponte, `tr("Nome")` — literal sem `~~`, que a tipagem já proíbe — cai no passo 2 e o vue-i18n loga *missing key* no dev. Barulhento de propósito. Sem ponte, uma chave do módulo que o pack não tem volta como a **chave inteira** (`rform.foo.bar`), e não como o caminho pelado que o intlify devolve — uma mensagem faltando continua legível como uma.
+
+`tr` lê `locale.value` **a cada chamada**, então uma chamada dentro de template rastreia o ref e trocar de idioma re-renderiza. É o que faz `RDate` reformatar: o `watch` dele tem `[model, pattern]` como fonte, não só `model` — trocar de idioma não mexe no model (que é ISO), mas muda como ele se escreve.
+
+O `standalone` mantém **um** `CoreContext` para o processo (compilar mensagem é a parte cara e o intlify cacheia por contexto) e troca `context.locale` a cada chamada. O contexto é casteado para `CoreContext<string>`: com o tipo literal dos packs, as sobrecargas de `translate` andam recursivamente por ele (`PickupPaths`/`PickupKeys`) e o TS desiste com *"Type instantiation is excessively deep and possibly infinite"* — e a completação de chave que elas dão não serve a este call site, que monta o caminho na mão.
+
+#### O corte do bundle é estrutural
+
+**Detecção:** `hasNuxtModule("@nuxtjs/i18n", nuxt)`, no topo do `setup`. Ele lê a lista **declarada** de módulos, então não depende de o rform ser registrado antes ou depois do i18n no `modules:` — ao contrário do hook, que só resolve tarde.
+
+**Forma:** dois arquivos reais, não um template que gera código em string, para que os dois corpos passem por oxlint e `vue-tsc` como qualquer fonte. O `module.ts` registra um **alias exato** `#rform/translate` → um dos dois, **antes** de `#rform/*` — o Vite casa aliases na ordem de inserção, e o prefixo mais curto engoliria o mais longo. Mesma precedência que `#rform/tailwindcss` e `#rform/builtin` já usam.
+
+**A exclusão é estrutural, não uma otimização de bundler que pode falhar: o corpo da ponte não escreve o import.** `test/unit/translateBridge.test.ts` lê o fonte de `bridge.ts` e asserta que a string `@intlify` não aparece — e a prova final do build é `grep -c "@intlify" dist/runtime/translate/bridge.mjs` dar `0`.
+
+Custo medido (ESM cru, `@intlify/core` 11.4.10):
+
+| pacote | tamanho |
+|---|---|
+| `@intlify/core-base` | 66.239 B |
+| `@intlify/message-compiler` | 57.230 B |
+| `@intlify/shared` | 13.820 B |
+| **total** | **~137 kB** |
+
+No app **sem** i18n. Zero no app com.
+
+**Alavanca futura, fora de escopo:** a flag `__INTLIFY_DROP_MESSAGE_COMPILER__` corta os 57 kB do compilador em troca de packs pré-compilados. `#rform/locales` já é template gerado, então é viável — mas não hoje.
+
+`@intlify/core` está em `dependencies`, não como peer opcional: o caminho sem i18n é o **comum**, e um peer opcional faria o caso padrão exigir instalação manual. (É também o que evita "Potential implicit dependencies" no `prepack`.)
+
+#### A assimetria do `~~`
+
+`~~` é removido **só** com ponte. Sem ela, `tr` é a identidade para tudo que não começa com `rform.` — e `~~Nome` inclui o `~~` na string devolvida, então **um componente escrito com `~~Nome` imprime `~~Nome` num app sem i18n**. Custo aceito, não bug: sem ponte não há nada contra o que resolver uma chave do app, então não há como distinguir "literal" de "chave" sem inventar uma segunda regra que só existiria para esse caso. A rigidez do `~~` só faz sentido onde ela compra alguma coisa — no app com i18n, onde a tipagem transforma todo literal solto em erro de compilação.
+
+#### `defaults.text` é o marcador
+
+O `defaults` de um componente guarda coisas de naturezas diferentes, e só uma é texto:
+
+```ts
+export const defaults = defineDefaults({
+    ui: { … },                          // classes
+    default: [],                        // valor inicial do model
+    text: {
+        button: "add",                  // ← chave de tradução DO MÓDULO
+        bytes: { kb: "kb" }              // ← grupo: a própria chave entra no caminho
+    },
+    keyValue: "id"                       // nome de propriedade — NÃO é texto
+});
+```
+
+`Base` reserva `ui`, `default`, `text` e as duas que moram fora dele por contrato — `label` e `placeholder`, adiante. `text` é `TextSource` (`src/type.d.ts`): um objeto aninhado, `{ [key]: string | TextSource }`, e continua aninhado o caminho inteiro — nada é achatado para o topo. Um template lê `tr(props.text?.button)`, nunca uma prop de nível superior tipo `buttonText`. Sem esse marcador a regra "prefixa toda string do `defaults`" transformaria `Select.keyValue: "id"` em `"rform.fields.select.id"`, e o Select passaria a procurar `option["rform.fields.select.id"]` — quebra calada em três lugares hoje (`Select.keyValue`, `Select.keyLabel`, `Pin.type`) e armadilha permanente para campo de usuário.
+
+Quem prefixa é `prefixText` (`utils/prefixText.ts`, puro), chamado por `useInjection` (com `scope: "fields"`) e por `useUtilProps` (com `scope: "utils"`) sobre o `defaults` do componente, **antes** do `merger`:
+
+```
+defaults.text = { button: "add", bytes: { kb: "kb" } }
+      ↓ prefixa com rform.<scope>.<componente>.
+{ button: "rform.fields.array.add", bytes: { kb: "rform.fields.file.bytes.kb" } }
+      ↓ merger(defaults, userDefaults, localProps, sourceProps) — recursivo, folha a folha
+props.text.button / props.text.bytes.kb
+```
+
+**Um grupo carrega a própria chave para dentro do prefixo.** Sem isso o aninhamento seria forma para a prop e nada para a chave, e cada folha teria de reescrever o caminho inteiro na mão. É por isso que `text: { bytes: { kb: "kb" } }` no `File` sai como `rform.fields.file.bytes.kb`, e não `rform.fields.file.kb`.
+
+O `scope` (`"fields"` ou `"utils"`) é o que dissolve a preocupação antiga de um campo e um util com o mesmo nome disputarem chave: `Calendar` é os dois hoje, e um vive em `rform.fields.calendar.*`, o outro em `rform.utils.calendar.*` — subárvores diferentes, sem teste nenhum precisando provar a ausência de colisão.
+
+**Como o prefixo acontece antes do merge, e o merge é recursivo, quem sobrescreve substitui só o valor prefixado daquela folha** — a procedência sai de graça, sem rastrear nada:
+
+```ts
+<RArray :text="{ button: 'form.adicionar' }" />                    → "form.adicionar"         (cru)
+defineFieldDefaults({ Array: { text: { button: "meu.add" } } })    → "meu.add"                (cru)
+// nada passado                                                    → "rform.fields.array.add" (prefixado)
+```
+
+**`label` e `placeholder` são as duas exceções — sempre fora de `text`, no topo**, por contrato: um app os passa direto (`<RText label="Nome" />`), então não podem morar dentro de uma árvore que o app não escreve por inteiro. Continuam sendo `TrInput`, e `prefixText` prefixa os dois quando o valor veio dos defaults do próprio componente e não é uma string vazia — é o `placeholder: "placeholder"` do `File`, que sai como `rform.fields.file.placeholder`. A string vazia é deixada em paz: é o sentinela de "não renderiza nada", e `rform.fields.file.` sozinho nunca é uma chave a resolver por engano.
+
+No `useUtilProps` o `prefixText` roda **uma vez, fora do `computed`**: ele copia, e o objeto `defaults` do componente é compartilhado por todas as instâncias.
+
+**Isso já foi achatamento, e a colisão que ele arriscava já foi resolvida por guarda em vez de por forma.** `defaults.text` costumava virar props de nível superior — `text: { buttonText: "add" }` produzia `props.buttonText` — e `defineDefaults` recusava em tempo de tipo qualquer chave de `text` que colidisse com uma chave do topo (`NoTextCollision`), porque o achatamento a sobrescreveria calado. A armadilha real, e ela mordeu de verdade: `utils/Calendar.vue` chegou a declarar `timeLabel` em vez de `time`, porque `time` já era o booleano que decide se o relógio aparece, e uma chave achatada ali seria *truthy* para sempre — o painel de hora abriria e nunca mais fecharia. Com `text` aninhado, `props.text.time` e `props.time` são caminhos diferentes e não podem colidir; a chave voltou a ser `time`, e o guard `NoTextCollision` não existe mais — nada precisa recusar o que não pode acontecer. A lição que fica, mesmo sem o mecanismo que a forçava: não dar a uma chave de `text` o nome de uma prop que o componente testa por veracidade.
+
+Cuidado com o nome, também: `src/runtime/presets/helpers.ts` exporta uma função `text()` (coerção para string, usada pelas rules de formato). Não colidem — helper de preset não entra no barrel `#rform/utils` — mas são coisas diferentes com o mesmo nome num repo onde as duas aparecem lado a lado.
+
+#### O `Element` **não** deriva os props de texto — e não tem como, na forma ingênua
+
+A forma óbvia seria `Element<OBJ> & { [K in keyof OBJ["text"]]?: TrInput }`, com `OBJ` vindo de `typeof defaults`. **Não é implementável.** Quem resolve `defineProps<Props>()` é o `@vue/compiler-sfc`, que anda o tipo na mão e não tem checker: indexar `OBJ["text"]` atrás de um `TSTypeQuery` e depois enumerar `keyof` disso para gerar props novas é pedir para resolver um mapped type sobre o índice de um genérico — e falha, derrubando a coleta de props do SFC inteiro (`@vue-ignore` "resolve" compilando, mas pior: os props type-checkam enquanto a declaração de runtime não existe, e um valor passado em `text` cai em `attrs` sem nunca chegar ao componente, calado).
+
+A saída é `TextTree`/`TextProp` (`src/type.d.ts`), um **mapped type**, não condicional, ancorado num lugar fixo:
+
+```ts
+export type TextTree<T> = {
+    [K in keyof T]?: T[K] extends string ? TrInput : TextTree<T[K]>
+};
+
+export type TextProp<T> = { text?: TextTree<T> };
+```
+
+O que o compiler-sfc aceita aqui e recusa na forma ingênua é que **a chave `text` sempre existe** — só o interior dela é mapeado sobre `T`. Um `TSConditionalType` que decide **se** a prop existe é o que ele não resolve (`"Unresolvable type: TSConditionalType"`); um mapped type que decide **o que tem dentro** de uma prop que já existe, ele resolve. Um campo escreve `TextProp<typeof defaults.text>` na interseção do próprio `Props` e para de restatar as chaves à mão: `TextProp<{ hint: string, teste: { a: string } }>` vira `{ text?: { hint?: TrInput, teste?: { a?: TrInput } } }`.
+
+`Element` não tenta enxergar `text` de propósito — ele nem recebe `OBJ["text"]` como conceito, e não faz por onde. Cada campo intersecciona `TextProp<typeof defaults.text>` por conta própria, porque só o componente sabe a forma da própria árvore; um util, que já escreve `Props` à mão, faz o mesmo sem estranhar.
+
+**Isso já foi resolvido diferente.** Antes de `TextTree` existir, cada campo escrevia os props de texto por extenso (`buttonText?: TrInput`) e listava as mesmas chaves em `defaults.text` — duas fontes de verdade para a mesma lista, uma delas silenciosamente esquecível. `timeLabel` no `Calendar` (acima) é do mesmo período: a chave existia tanto para nomear a mensagem quanto para não pisar na prop `time`.
+
+#### `WithTextSource<P>`: o mesmo componente, visto do lado errado
+
+`useUtilProps<Props>(defaults)` (a forma síncrona, com os próprios `defaults` do componente em mão) não pode receber `defaults` tipado como `Props`: em `Props`, `text` é `TextTree<...>` — folhas `TrInput` — mas o objeto que o componente de fato declara em `defaults.text` ainda não passou por `prefixText`, e suas folhas são só o **sufixo** cru (`"start"`, não um `TrInput` resolvido). Num app com `@nuxtjs/i18n`, `TrInput` estreita para `ModuleKey | Literal` — nenhum sufixo solto como `"start"` é `ModuleKey` nem começa com `~~` — então os dois tipos genuinamente divergem, e não é um detalhe de nomenclatura.
+
+`WithTextSource<P>` (`src/type.d.ts`) existe para isso: `Omit<P, "text"> & { text?: TextSource }` — o mesmo `Props`, com `text` trocado de volta para a forma de autoria. `useUtilProps` aceita `WithTextSource<P>` e não `P` na sobrecarga síncrona precisamente porque `defaults` está do lado de cá do prefixo; quem chama `useUtilProps<Props>()` sem argumento (a forma assíncrona, que busca os defaults pelo registry) não precisa dele — ali quem já prefixou é o próprio `useUtilProps`, por dentro.
+
+#### O plural é o **quarto** argumento
+
+Medido contra `@intlify/core@11.4.10`, com `presets.rules.min.length` = `"Mínimo de {min} caractere. | Mínimo de {min} caracteres."`:
+
+| chamada | resultado |
+|---|---|
+| `translate(ctx, path, { named: { min } })` | param chamado literalmente `named`; `{min}` sai **vazio** |
+| `translate(ctx, path, { min: 5 })` | interpola, mas fica no ramo 0 → `"Mínimo de 5 caractere."` |
+| `translate(ctx, path, { min: 5 }, 5)` | interpola **e** escolhe o ramo → `"Mínimo de 5 caracteres."` |
+
+Ou seja: o terceiro argumento é o objeto de params **cru** (nada de wrapper `{ named }` / `{ plural }`), e a escolha do plural é o **quarto**. Sem ele o intlify renderiza o ramo 0 qualquer que seja a contagem, que é exatamente o bug que isto substitui (`"Mínimo de 1 caracteres."`).
+
+Quem fecha essa lacuna é `pluralOf` (`utils/i18n.ts`), compartilhado pelos dois motores: **o primeiro valor numérico do objeto de params serve de escolha**. É o que permite a uma rule escrever `trRule({ key: "min.length", params: { min } })` sem repetir o número — a mensagem interpola e pluraliza pelo mesmo `min`. A ponte faz igual, com a sobrecarga `t(key, named, plural)` do vue-i18n, que é a mesma posição.
+
+#### `trRule`: a rule importa o tradutor, não o recebe
+
+Uma rule não é componente e não pode chamar composable — era por isso que `t` viajava no contexto. Um helper **importado** resolve o mesmo problema sem ocupar o canal:
+
+```ts
+import { trRule } from "#rform/utils";
+
+trRule({ key: "min.number", params: { min } });
+//  → tr({ key: "rform.presets.rules.min.number", params: { min } })
+```
+
+`#rform/utils` exporta os dois: `tr` (caminho completo, sem prefixo — para o `tr("rform.formats.date")` do `Date.vue` e para um preset de usuário que queira mensagem do **app**) e `trRule` (o açúcar que prefixa `rform.presets.rules.`).
+
+Por tabela, nada disso existe: `resolveRule` não tem parâmetro de tradutor, `BaseContext` é `{ value, form }`, `fromPreset` não injeta nada além dos args, e `useInjection` não repassa tradutor nenhum para a validação. `RuleContext<T>` é `{ value, form } & T`.
+
+**A rota sem build é o alias.** `resolveRule` não importa mais nada de tradução; quem precisa é a rule, e ela chega no motor por `#rform/translate` — que o `vitest.config.ts` aliasa para `runtime/translate/standalone.ts` no projeto `unit`. É a propriedade que o antigo `defaultT` carregava e que não pode se perder: `test/unit/presetsBuiltin.test.ts` continua chamando `preset.validation({ value })` **direto**, sem app, sem build e com a mensagem em pt-BR. `useRForm`, que agrega as rules num `z.any().superRefine`, é a mesma rota.
+
+#### A forma do pack
+
+```
+rform.
+  fields.                      ← components/fields, via prefixText(scope: "fields")
+    array.add
+    file.bytes.kb              ← grupo: a própria chave ("bytes") entra no caminho
+    date.hint
+    date.hintTime
+  utils.                       ← components/utils, via prefixText(scope: "utils")
+    calendar.time
+  presets.
+    rules.min.number           ← preset, via trRule({ key: "min.number" })
+    rules.required
+  formats.
+    date                        ← compartilhado; escrito por extenso: tr("rform.formats.date")
+```
+
+O topo tem exatamente as quatro raízes que o mecanismo de prefixo consegue produzir: `fields.*` e `utils.*` são o `scope` que `useInjection`/`useUtilProps` passam para `prefixText`; `presets.*` e `formats.*` são espaços compartilhados que nada prefixa, escritos por extenso nos call sites (`trRule`, `tr("rform.formats.date")`). Quem guarda essa forma é `test/unit/i18n.test.ts` — `keeps the top level to the four namespaces the prefix can produce` — que também asserta que os dois packs concordam em toda chave, para nenhum locale cair no fallback calado.
+
+`fields.*`/`utils.*` é o que dissolve a antiga preocupação de um campo e um util de mesmo nome disputarem chave: `Calendar` é os dois hoje, e cada um tem a própria raiz — `rform.fields.calendar.*` contra `rform.utils.calendar.*`. Isso já foi um espaço plano só, com os dois lados no mesmo nível e um teste dedicado só para provar que não colidiam; a separação por `scope` torna a colisão impossível em vez de meramente ausente.
+
+`presets.rules.*` pareia com o layout de `src/runtime/presets/{rules,masks}` e deixa espaço para `presets.masks.*` se um dia houver mensagem lá.
+
+#### O mapa de chaves do app (`src/appMessages.ts`)
+
+Com `@nuxtjs/i18n` instalado, o módulo lê o arquivo de mensagens do app e gera `#rform/types/tr.d.ts` — a união `TrInput` que faz de um literal solto numa prop de texto um **erro de compilação**.
+
+**Onde a config é lida: dentro do `getContents` do template, não no `setup`.** O @nuxtjs/i18n resolve `langDir` durante o setup **dele** (`resolve(layer.i18nDir, layer.i18n.langDir ?? "locales")`, com `i18nDir = <rootDir>/<restructureDir ?? "i18n">`), e `getContents` só roda no `builder:generateApp` — o mesmo truque que o `localeFiles()` já usa.
+
+**São duas leituras de config diferentes, e as duas precisam existir.** `declaredLocales()` existe para a ponte e precisa só dos *codes*, então também olha as opções inline do `modules:` — a ponte é registrada durante o setup, quando o i18n ainda pode não ter mesclado nada. `resolveAppMessages()` precisa de `langDir` + `file` já **resolvidos**, e por isso lê o `nuxt.options.i18n` mesclado, tarde. Fontes e momentos distintos.
+
+A decisão de modo mora no `appMessages.ts` com o disco **injetado** (`read`, `warn`) — puro, porque é a decisão que precisa de cobertura e o `module.ts` não tem costura para testar:
+
+| caso | chaves | o que sai |
+|---|---|---|
+| `.json` do `defaultLocale` | lidas e achatadas | `TrInput = Paramless \| ModuleKey \| WithParams \| Literal` |
+| i18n sem nenhum `file` declarado | não há | `TrInput = ModuleKey \| Literal` — **o rigor fica** |
+| `.ts`/`.js`, yaml, json5, loader de `lazy: true`, JSON que não parseia | não | `TrInput = string` + `console.warn` nomeando arquivo e motivo |
+| sem `@nuxtjs/i18n` | — | `TrInput = string` |
+
+**As duas degradações são diferentes de propósito.** "Nenhum arquivo declarado" não é falha: o app tem i18n, só não há chave do app a oferecer, e exigir chave ou `~~` continua valendo. "Há arquivo e não dá para ler" é falha, e ser rigoroso ali rejeitaria toda chave válida — daí cair para `string`, com aviso.
+
+Só `.json`, e por escolha: `JSON.parse` é zero dependência. Ler `.ts` exigiria executar o arquivo no build, e um loader de `lazy: true` (`defineI18nLocale(async …)`) não tem chave nenhuma para ler — é provavelmente o caso mais comum em produção, e é por isso que o aviso nomeia o motivo.
+
+Detalhe do ambiente: **`@nuxtjs/i18n@10.6.0` lança o próprio `ENOENT` durante o setup dele quando um `file` declarado não existe**, então a degradação por leitura cobre o arquivo *presente e ilegível*, não o ausente — para o ausente o build já morreu antes, no i18n.
+
+Extração, sobre o arquivo do `defaultLocale`, achatado em caminhos pontilhados: as interpolações literais do vue-i18n (`{'…'}`) saem **antes** de procurar params, para que `{'{{contato_nome}}'}` não vire param; params nomeados por `/\{\s*(\w+)\s*\}/g`; plural é a mensagem conter `|`. Sem params e sem plural → `never`; só nomeados → `{ a: Interp }`; só plural → `number`; ambos → a união dos dois.
+
+O `builder:watch` cobre `/(^|[\\/])i18n[\\/].*\.json$/` e chama `builder:generateApp` — inclusive em **edição**, não só add/unlink: o arquivo mora fora do `srcDir` (`<rootDir>/i18n` por padrão) e mudar uma mensagem muda as chaves que o `tr.d.ts` oferece.
+
+#### A ponte é hook, não peer dependency
+
+`nuxt.hook("i18n:registerModule", …)` é a API documentada. O hook **nunca dispara** se o @nuxtjs/i18n não estiver instalado, então não há guarda a escrever nem dependência a declarar — e é por isso que a *detecção* de qual motor entra no bundle não pode depender dele, e usa `hasNuxtModule` (acima).
+
+Quem escolhe o motor é o build; quem acha o `$i18n` é o runtime. O `bridge.ts` lê `tryUseNuxtApp()?.$i18n` e o valida **estruturalmente** (`t` função, `locale` com `.value`) — o módulo é opcional, então não há tipo a importar nem dependência a declarar. Sem `$i18n` por perto (um teste unitário, um `mount()` fora de app), a ponte devolve a chave e um `ref("")`. O `standalone.ts` usa `useState("rform-locale")` semeado com a opção `locale` do módulo (default `"pt-BR"`) quando há app Nuxt, e um `ref` local quando não há — cair de volta em vez de lançar é o ponto, porque `tr` também é chamado de dentro de uma `validation`, muito depois de qualquer setup.
+
+**Os arquivos do `langDir` são escritos na mão, com `writeFile`, além do `addTemplate`.** O @nuxtjs/i18n lê cada um com `readFileSync` durante o setup dele (`analyzeResource`, para descobrir se é objeto ou loader), e template do Nuxt só chega ao disco no `builder:generateApp`, bem depois. O sintoma de esquecer isso é um `ENOENT` apontando para um caminho dentro do próprio `buildDir`.
+
+**Quem manda na lista de codes é o app, e a ponte só responde.** O merge do i18n é por code exato — um app com `locales: ["pt"]` não veria um pack registrado só como `pt-BR` — mas registrar `pt` na marra tem preço: o `mergeConfigLocales` do i18n junta *todos* os configs num `Map` por code, então **um code que só a ponte cita entra na lista de locales do app**, e de lá sai no seletor de idioma dele, no `localeCodes` e no prerender.
+
+Medido no playground com `locales: ["pt", "es"]`: registrando os codes dos packs, o app passa a ter `["pt", "es", "en", "pt-BR"]`. Uma tabela de apelidos (`pt-BR` → `pt`, `en` → `en-US`/`en-GB`…) só piora — são mais codes inventados.
+
+Então o `module.ts` lê os codes que o app declarou (`nuxt.options.i18n.locales` mais as opções inline do `modules:`) e registra **sob esses**, escolhendo o pack por code exato e, na falta, por língua. O app de `pt` + `es` continua com `["pt", "es"]`: o `pt` recebe o pack `pt-BR`, o `es` não recebe nada e cai no `fallbackLocale` do vue-i18n, que é a precedência normal dele. Sem code legível (config de i18n num layer) cada pack entra sob o próprio code — o mínimo que faz a ponte funcionar, e são os codes do módulo, não apelidos.
+
+O `packFor` do `module.ts` é gêmeo em build time do `matchLocale` de `runtime/utils/i18n.ts`, e não um import dele: aquele arquivo só resolve pelo alias `#rform/types/locales`, que não existe em build time — trazê-lo para cá arrastaria o grafo de tipos gerado junto.
+
+O app com i18n sobrescreve qualquer mensagem no próprio `locales/pt-BR.json`, sob a chave `rform` — precedência normal do vue-i18n, sem nada específico do módulo.
+
+#### O que **não** foi localizado
+
+`formatIso`/`formatIsoDate`/`formatIsoDateTime` e o ramo ISO de `parseIncoming`. ISO é o formato do model e é locale-independente por definição: localizá-lo faria o valor gravado mudar com o idioma da tela. Só o segundo ramo de `parseIncoming` — uma string digitada — passa a depender do pack, e por isso a função ganhou um parâmetro de pattern.
+
+Cuidado com esse parâmetro: `arr.map(parseIncoming)` passaria o **índice** como pattern. Por isso `Calendar.vue` e `Date.vue` embrulham em `incoming(value)` antes de mapear.
+
 ### `Element<OBJ, C, D>` (`src/type.d.ts`)
 
 - `C` é o field type ("text", "color", ...) e filtra quais presets o `rule` aceita, via `available` de cada um. Todo **campo** passa o seu: `Element<typeof defaults, "text">`. `Form` não passa `C`, porque não é campo e não tem membro no `FieldType`. Os que sobrescrevem o model (`File`, `Hour`, `Number`) passam `D` como terceiro parâmetro.
 - Tipa `modelValue`/`default` baseado em `OBJ["default"]` via `ConvertNeverToUnknown`.
+- **Não** tipa nada a partir de `OBJ["text"]`, e não tem como — ver "O `Element` não deriva os props de texto", acima. Campo com texto intersecciona `TextProp<typeof defaults.text>` no próprio `Props`, ao lado da entrada em `defaults.text`; `label` e `placeholder` também ficam de fora do `Element` — quem os usa declara o próprio `TrInput` (é o `placeholder?: TrInput` do `File`).
 - Atenção: se `defaults.default = null`, então `modelValue?: null` — props com valores diferentes precisam sobrescrever via `Omit<Element<...>, "modelValue" | "default"> & { modelValue?: unknown; default?: unknown }`.
 
 ## Gotchas
 
 ### `#rform/utils` é o barrel público
 
-O template de `utils.ts` emite `import X from "<path>"` (default, virando `export { X }`) **e** `export * from "<path>"` para cada arquivo de `src/runtime/utils`. É o `export *` que faz `import { defineRule } from "#rform/utils"` funcionar.
+O template de `utils.ts` emite `import X from "<path>"` (default, virando `export { X }`) **e** `export * from "<path>"` para cada arquivo de `src/runtime/utils`. É o `export *` que faz `import { defineRule } from "#rform/utils"` funcionar. De lá saem também `tr` e `trRule`, `defineLocale` e `prefixText`.
 
 Os specifiers do `export *` passam por `specifier()` e saem **sem extensão**. Com `.ts` no caminho, o TS precisa de `allowImportingTsExtensions` e um app consumidor normalmente não liga — o sintoma é `TS2614: Module '#rform/utils' has no exported member 'defineRule'`, como se o barrel não exportasse nada nomeado.
+
+Consequência de carga, da mesma classe que a do zod: **importar qualquer coisa do barrel puxa a pilha de tradução inteira**, e num app sem i18n isso inclui o `@intlify/core` e todos os packs de locale. O barrel é ansioso por construção — é o preço de ele ser a entrada pública única.
+
+#### O `import` vem pareado com o próprio `export *`, e os reentrantes vão para o fim
+
+O template não emite um bloco de `import` seguido de um bloco de `export *`: **cada `import` vem colado ao `export *` do mesmo arquivo**, e os helpers que fazem *value import* de `#rform/*` são estavelmente ordenados para o **fim** da lista.
+
+Isso existe porque `utils/tr.ts` fechou um ciclo de verdade:
+
+```
+#rform/utils → tr.ts → #rform/translate → standalone.ts → #rform/locales
+             → um pack de locale do usuário → import { defineLocale } from "#rform/utils"
+```
+
+O vite-node **rebaixa `export * from` para uma chamada posicional `__vite_ssr_exportAll__`**, não para um live binding. Na reentrada, portanto, só enxerga-se o que os `export *` que **já rodaram** trouxeram — não basta o `export *` estar declarado depois no arquivo, ele precisa não ter executado. O sintoma foi `defineLocale is not a function`, apontando para o **pack do usuário**, que não tem culpa nenhuma.
+
+O predicado é `importsRformValue` (`module.ts`), e ele **ignora import type de propósito**: `import type { Base } from "#rform/types"` é apagado na compilação e nunca roda código — sem essa exclusão, quase todo helper qualificaria como reentrante e a ordenação perderia o sentido. Duas lacunas conhecidas dele, as duas por ser linha a linha:
+
+- `import { type Foo } from "#rform/x"` — todo o conteúdo inline-type. Falso **positivo**: manda o helper para o fim sem necessidade, e não quebra nada.
+- um `import` quebrado em **várias linhas**. Falso **negativo**, e esse deixaria o ciclo voltar. Um helper novo que faça value import de `#rform/*` precisa escrever a declaração numa linha só.
+
+Ordenar em vez de contar com o `readdir` (que hoje põe `i18n.ts`, dono do `defineLocale`, antes de `tr.ts`) é o que torna a propriedade independente do que for adicionado ou renomeado nesse diretório depois.
+
+### Um `@` literal numa mensagem precisa ser `{'@'}`
+
+`@:chave` é a sintaxe de mensagem ligada (*linked message*) do vue-i18n, e ela não pede opt-in — um `@` cru em qualquer pack, do módulo ou do app, é interpretado como o início de uma. Um e-mail (`"Fale com a gente: contato@empresa.com"`) já derrubou uma mensagem do playground assim: em runtime, `"Invalid linked format (error code: 10)"`, nomeando o caminho da mensagem quebrada — não o `@`, então o sintoma não aponta pro problema.
+
+A saída é escrever o `@` como interpolação literal, `{'@'}` — a mesma sintaxe que já escapa `{'{{...}}'}` para um par de chaves cru. E o gerador de `TrInput` (`src/appMessages.ts`, `messageParams`) já conta com isso: ele **remove** todo `{'…'}` antes de procurar `{param}`, então escapar o `@` não inventa um param fantasma — o comportamento é o mesmo que já existe para chaves literais, só que aplicado ao caso que ninguém tinha testado até morder.
 
 ### O preview do autofill é invisível para o JS
 
@@ -368,4 +645,8 @@ O `prepack` roda **duas vezes** no `release`: uma explícita na cadeia, outra pe
 
 `playground/app/pages/customizados.vue` cobre campo e util do usuário, com `playground/app/rform/fields/Rating.vue` e `playground/app/rform/utils/Hint.vue`. São eles que dão cobertura de type-check a um componente escrito **como usuário** — o `src/` não exercita esse caminho.
 
-A fixture (`test/fixtures/basic/rform/`) tem os três casos que os testes cobrem: `fields/Rating.vue` (campo novo), `fields/Switch.vue` (substitui um embutido via `#rform/builtin`) e `utils/Hint.vue` (util novo).
+**O playground é o único lugar que exercita a ponte com o @nuxtjs/i18n** — ele está no `playground/package.json` com `pt-BR`/`en` e `strategy: "no_prefix"`, e o seletor (`app/components/Locale.vue`) mora no rodapé do `Default.vue`, ao lado do de tema. Por tabela, é ele que dá cobertura de `vue-tsc` à ponte.
+
+E ao gerador estrito: ele declara `langDir: "locales"` com `i18n/locales/{pt-BR,en}.json` de verdade, então o `TrInput` dele é a união completa e **todo literal solto numa prop de texto das páginas é erro de `vue-tsc`** — parte dos labels virou chave, parte virou `~~`. É o custo da decisão em forma de trabalho real. A fixture, sem i18n, é a cobertura do outro extremo: `TrInput = string`, `tr` identidade e `~~Nome` impresso com os til.
+
+A fixture (`test/fixtures/basic/rform/`) tem os três casos de componente que os testes cobrem — `fields/Rating.vue` (campo novo), `fields/Switch.vue` (substitui um embutido via `#rform/builtin`) e `utils/Hint.vue` (util novo) — mais `locales/pt-BR.ts`, um pack de usuário com uma chave sobrescrita. Ela fica **sem** @nuxtjs/i18n de propósito: é ela que cobre o resolvedor próprio.

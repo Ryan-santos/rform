@@ -1,0 +1,73 @@
+type Messages = typeof import("./pt-BR").default;
+
+/**
+ * Typed against the reference pack, so a key added there without a translation
+ * here is a compile error rather than a silent fallback at runtime.
+ *
+ * The `br.*` rules are translated too: an en-US app can perfectly well validate
+ * a Brazilian document.
+ */
+const en: Messages = {
+    fields: {
+        array: {
+            add: "Add"
+        },
+        select: {
+            search: "Search"
+        },
+        file: {
+            placeholder: "Drag or click here to add:",
+            loading: "Loading...",
+            zero: "0 Byte",
+            bytes: {
+                b: "Bytes",
+                kb: "KB",
+                mb: "MB",
+                gb: "GB",
+                tb: "TB"
+            }
+        },
+        date: {
+            hint: "mm/dd/yyyy",
+            hintTime: "mm/dd/yyyy hh:mm",
+            separator: "to"
+        },
+        hour: {
+            hint: "hh:mm",
+            separator: "to"
+        }
+    },
+    utils: {
+        calendar: {
+            start: "Start",
+            end: "End",
+            time: "Time"
+        }
+    },
+    presets: {
+        rules: {
+            required: "Required field.",
+            min: {
+                number: "Minimum value: {min}.",
+                length: "At least {min} character. | At least {min} characters."
+            },
+            max: {
+                number: "Maximum value: {max}.",
+                length: "At most {max} character. | At most {max} characters."
+            },
+            email: "Invalid e-mail.",
+            url: "Invalid URL.",
+            br: {
+                cpf: "Invalid CPF.",
+                cnpj: "Invalid CNPJ.",
+                cep: "Invalid CEP.",
+                telefone: "Invalid phone number."
+            }
+        }
+    },
+    formats: {
+        date: "MM/DD/YYYY"
+    }
+};
+
+export default en;

@@ -12,13 +12,13 @@
         >
             <RText
                 name="basico"
-                label="Nome"
-                placeholder="como te chamam"
-                description="Aparece abaixo do campo."
+                label="~~Nome"
+                placeholder="~~como te chamam"
+                description="~~Aparece abaixo do campo."
             />
             <RText
-                label="Sem name"
-                placeholder="não vai pro model"
+                label="~~Sem name"
+                placeholder="~~não vai pro model"
             />
         </Demo>
 
@@ -29,12 +29,12 @@
         >
             <RText
                 name="required"
-                label="Com asterisco"
+                label="~~Com asterisco"
                 required
             />
             <RText
                 name="requiredRule"
-                label="Com asterisco e validação"
+                label="~~Com asterisco e validação"
                 required
                 rule="required"
             />
@@ -47,7 +47,7 @@
         >
             <RText
                 name="comDefault"
-                label="Com default"
+                label="~~Com default"
                 default="valor inicial"
             />
         </Demo>
@@ -59,9 +59,9 @@
         >
             <RText
                 name="length"
-                label="Limite de 20"
+                label="~~Limite de 20"
                 length="20"
-                placeholder="conte os caracteres"
+                placeholder="~~conte os caracteres"
             />
         </Demo>
 
@@ -72,12 +72,12 @@
         >
             <RText
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
             />
             <RText
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Esse CPF já está cadastrado."
             />
         </Demo>
@@ -89,9 +89,9 @@
         >
             <RText
                 name="whatsapp"
-                label="WhatsApp"
+                label="~~WhatsApp"
                 mask="brCelular"
-                placeholder="(00) 00000-0000"
+                placeholder="~~(00) 00000-0000"
             >
                 <template #leading>
                     <Icon name="logos:whatsapp-icon" />
@@ -109,27 +109,27 @@
         >
             <RText
                 name="maskCpf"
-                label="brCpf"
+                label="~~brCpf"
                 mask="brCpf"
             />
             <RText
                 name="maskCnpj"
-                label="brCnpj"
+                label="~~brCnpj"
                 mask="brCnpj"
             />
             <RText
                 name="maskCep"
-                label="brCep"
+                label="~~brCep"
                 mask="brCep"
             />
             <RText
                 name="maskCpfCnpj"
-                label="brCpfCnpj — alterna pelo tamanho"
+                label="~~brCpfCnpj — alterna pelo tamanho"
                 mask="brCpfCnpj"
             />
             <RText
                 name="maskPlaca"
-                label="brPlaca"
+                label="~~brPlaca"
                 mask="brPlaca"
             />
         </Demo>
@@ -141,7 +141,7 @@
         >
             <RText
                 name="maskCrua"
-                label="(##) #####-####"
+                label="~~(##) #####-####"
                 mask="(##) #####-####"
             />
         </Demo>
@@ -153,7 +153,7 @@
         >
             <RText
                 name="dinheiro"
-                label="dinheiro (reversed)"
+                label="~~dinheiro (reversed)"
                 mask="dinheiro"
             />
         </Demo>
@@ -165,17 +165,17 @@
         >
             <RText
                 name="ruleEmail"
-                label="email"
+                label="~~email"
                 rule="email"
             />
             <RText
                 name="ruleUrl"
-                label="url"
+                label="~~url"
                 rule="url"
             />
             <RText
                 name="ruleCpf"
-                label="brCpf — com a mask junto"
+                label="~~brCpf — com a mask junto"
                 mask="brCpf"
                 rule="brCpf"
             />
@@ -188,12 +188,12 @@
         >
             <RText
                 name="ruleMin"
-                label="{ name: 'min', min: 3 }"
+                label="~~{ name: 'min', min: 3 }"
                 :rule="{ name: 'min', min: 3 }"
             />
             <RText
                 name="ruleInscEst"
-                label="brInscEst — preset do usuário, aninhado em br/"
+                label="~~brInscEst — preset do usuário, aninhado em br/"
                 :rule="{ name: 'brInscEst', uf: 'SP' }"
             />
         </Demo>
@@ -205,7 +205,7 @@
         >
             <RText
                 name="ruleArray"
-                label="required + min 3"
+                label="~~required + min 3"
                 :rule="['required', { name: 'min', min: 3 }]"
             />
         </Demo>
@@ -217,19 +217,22 @@
         >
             <RText
                 name="ruleFn"
-                label="só aceita 1"
+                label="~~só aceita 1"
                 :rule="({ value }) => (value === '1' ? undefined : 'Digite 1.')"
             />
             <RText
                 name="ruleForm"
-                label="tem que ser diferente do campo acima"
-                :rule="({ value, form }) => (value && value === form?.ruleFn
-                    ? 'Não pode repetir o campo anterior.'
-                    : undefined)"
+                label="~~tem que ser diferente do campo acima"
+                :rule="
+                    ({ value, form }) =>
+                        value && value === form?.ruleFn
+                            ? 'Não pode repetir o campo anterior.'
+                            : undefined
+                "
             />
             <RText
                 name="ruleZod"
-                label="z.string().min(5)"
+                label="~~z.string().min(5)"
                 :rule="z.string().min(5, 'mínimo 5 caracteres')"
             />
         </Demo>
@@ -241,7 +244,7 @@
         >
             <RText
                 name="uiOverride"
-                label="Erro em rosa"
+                label="~~Erro em rosa"
                 error="Mensagem com a classe trocada."
                 :ui="{
                     Utils: {
@@ -261,5 +264,6 @@
 
 <script setup lang="ts">
     import { z } from "zod";
+
     import source from "./text.vue?raw";
 </script>

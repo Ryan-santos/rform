@@ -7,7 +7,7 @@
             floatingDisable ? props.ui?.disable : ''
         ]"
     >
-        {{ props.placeholder }}
+        {{ tr(props.placeholder) }}
         <span
             v-if="props.required && !props.label"
             :class="props.ui?.required"
@@ -21,7 +21,7 @@
     import { computed } from "vue";
 
     import { useUtilProps } from "#rform/composables";
-    import type { DeepPartial } from "#rform/types";
+    import type { DeepPartial, TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
     const ui = {
@@ -38,8 +38,8 @@
     export const defaults = defineDefaults({ ui });
 
     export type Props = {
-        placeholder?: string;
-        label?: string;
+        placeholder?: TrInput;
+        label?: TrInput;
         ui?: DeepPartial<typeof defaults.ui>;
     };
 </script>
@@ -49,7 +49,7 @@
         focused?: boolean;
     }>();
 
-    const { props, upper } = useUtilProps<Props>(defaults);
+    const { props, upper, tr } = useUtilProps<Props>(defaults);
 
     const modelFilled = computed(() => {
         return !!String(upper.model.value ?? "").length;
@@ -70,4 +70,4 @@
     const floatingDisable = computed(() => {
         return modelFilled.value && !floating.value;
     });
-</script>
+</script>

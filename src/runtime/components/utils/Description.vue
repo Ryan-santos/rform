@@ -3,27 +3,26 @@
         v-if="props.description"
         :class="props.ui"
     >
-        {{ props.description }}
+        {{ tr(props.description) }}
     </p>
 </template>
 
 <script lang="ts">
     import { useUtilProps } from "#rform/composables";
+    import type { TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
+    /** No `description: ""` sentinel — see the note in `utils/Label.vue`. */
     export const defaults = defineDefaults({
-        description: "",
         ui: "text-xs text-current/50"
     });
 
     export type Props = {
-        description?: string
-        ui?: typeof defaults.ui
+        description?: TrInput;
+        ui?: typeof defaults.ui;
     };
 </script>
 
 <script setup lang="ts">
-    const {
-        props
-    } = useUtilProps<Props>(defaults);
+    const { props, tr } = useUtilProps<Props>(defaults);
 </script>

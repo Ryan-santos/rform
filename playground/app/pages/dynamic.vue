@@ -24,9 +24,11 @@
                     :key="option.id"
                     type="button"
                     class="rounded-lg px-3 py-1.5 text-sm transition-colors duration-300"
-                    :class="tipo === option.id
-                        ? 'bg-primary text-white'
-                        : 'text-contrast/60 hover:text-primary'"
+                    :class="
+                        tipo === option.id
+                            ? 'bg-primary text-white'
+                            : 'text-contrast/60 hover:text-primary'
+                    "
                     @click="tipo = option.id"
                 >
                     {{ option.label }}
@@ -41,28 +43,25 @@
             <RForm
                 v-model="apiData"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RDynamic :schema="apiSchema">
                     <template #socios="{ fieldName, rule }">
                         <RArray
                             v-slot="{ index }"
                             :name="fieldName"
-                            label="Sócios (slot custom)"
+                            label="empresa.socios"
                             class="md:col-span-2"
                             :rule="rule as Rule<'array'>"
                         >
                             <RObject :name="index">
                                 <RText
                                     name="nome"
-                                    label="Nome"
+                                    label="form.nome"
                                 />
                                 <RText
                                     name="cpf"
-                                    label="CPF"
+                                    label="form.cpf"
                                     mask="brCpf"
                                     rule="brCpf"
                                 />
@@ -85,36 +84,33 @@
             <RForm
                 v-model="zodData"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RText
                     name="empresa"
-                    label="Razão social"
-                    placeholder="nome da empresa"
+                    label="empresa.razaoSocial"
+                    placeholder="empresa.razaoSocialExemplo"
                     required
                 />
                 <RText
                     name="cnpj"
-                    label="CNPJ"
+                    label="empresa.cnpj"
                     mask="brCnpj"
                     required
                 />
                 <RObject
                     name="endereco"
-                    label="Endereço"
+                    label="form.endereco"
                     class="md:col-span-2"
                 >
                     <RText
                         name="cep"
-                        label="CEP"
+                        label="form.cep"
                         mask="brCep"
                     />
                     <RText
                         name="cidade"
-                        label="Cidade"
+                        label="empresa.cidade"
                     />
                 </RObject>
 
@@ -132,39 +128,36 @@
             <RForm
                 v-model="tsData"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RText
                     name="empresa"
-                    label="Razão social"
-                    placeholder="nome da empresa"
+                    label="empresa.razaoSocial"
+                    placeholder="empresa.razaoSocialExemplo"
                     required
                     rule="required"
                 />
                 <RText
                     name="cnpj"
-                    label="CNPJ"
+                    label="empresa.cnpj"
                     mask="brCnpj"
                     required
                     rule="brCnpj"
                 />
                 <RObject
                     name="endereco"
-                    label="Endereço"
+                    label="form.endereco"
                     class="md:col-span-2"
                 >
                     <RText
                         name="cep"
-                        label="CEP"
+                        label="form.cep"
                         mask="brCep"
                         rule="brCep"
                     />
                     <RText
                         name="cidade"
-                        label="Cidade"
+                        label="empresa.cidade"
                     />
                 </RObject>
 
@@ -192,7 +185,9 @@
 <script setup lang="ts">
     import { computed, ref } from "vue";
     import { z } from "zod";
+
     import type { Rule } from "#rform/types/presets";
+
     import source from "./dynamic.vue?raw";
 
     const mode = ref("schema");
@@ -206,7 +201,8 @@
         {
             id: "zod",
             label: "2 · só zod",
-            description: "Sem UI gerada: o useRForm não devolve schema, então não há o que o RDynamic renderize."
+            description:
+                "Sem UI gerada: o useRForm não devolve schema, então não há o que o RDynamic renderize."
         },
         {
             id: "ts",
@@ -222,39 +218,39 @@
 
     const tipo = ref("pj");
 
-    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map(uf => ({ id: uf, name: uf }));
+    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map((uf) => ({ id: uf, name: uf }));
 
     // #region modo-schema
     const pj = useRForm({
         empresa: {
             type: "text",
-            label: "Razão social",
-            placeholder: "nome da empresa",
+            label: "empresa.razaoSocial",
+            placeholder: "empresa.razaoSocialExemplo",
             rule: z.string().min(2, "informe a razão social")
         },
         cnpj: {
             type: "text",
-            label: "CNPJ",
+            label: "empresa.cnpj",
             mask: "brCnpj",
             rule: "brCnpj"
         },
         abertura: {
             type: "date",
-            label: "Data de abertura"
+            label: "empresa.abertura"
         },
         endereco: {
             type: "object",
-            label: "Endereço",
+            label: "form.endereco",
             children: {
                 cep: {
                     type: "text",
-                    label: "CEP",
+                    label: "form.cep",
                     mask: "brCep",
                     rule: "brCep"
                 },
                 cidade: {
                     type: "text",
-                    label: "Cidade"
+                    label: "empresa.cidade"
                 },
                 /**
                  * Em schema o `options` só aceita array de objetos: o generic
@@ -264,8 +260,8 @@
                  */
                 uf: {
                     type: "select",
-                    label: "UF",
-                    placeholder: "selecione",
+                    label: "form.uf",
+                    placeholder: "form.selecione",
                     options: ufs
                 }
             }
@@ -279,29 +275,29 @@
     const pf = useRForm({
         nome: {
             type: "text",
-            label: "Nome",
-            placeholder: "nome completo",
+            label: "form.nome",
+            placeholder: "form.nomeCompleto",
             rule: z.string().min(2, "informe o nome")
         },
         cpf: {
             type: "text",
-            label: "CPF",
+            label: "form.cpf",
             mask: "brCpf",
             rule: "brCpf"
         },
         endereco: {
             type: "object",
-            label: "Endereço",
+            label: "form.endereco",
             children: {
                 cep: {
                     type: "text",
-                    label: "CEP",
+                    label: "form.cep",
                     mask: "brCep",
                     rule: "brCep"
                 },
                 cidade: {
                     type: "text",
-                    label: "Cidade"
+                    label: "empresa.cidade"
                 }
             }
         }
@@ -324,10 +320,7 @@
     });
 
     // #region modo-zod
-    const {
-        data: zodData,
-        rules: zodRules
-    } = useRForm({
+    const { data: zodData, rules: zodRules } = useRForm({
         empresa: z.string().min(2, "informe a razão social"),
         cnpj: z.string().min(18, "CNPJ incompleto"),
         endereco: z.object({
@@ -339,12 +332,12 @@
 
     // #region modo-ts
     type Onboarding = {
-        empresa?: string
-        cnpj?: string
+        empresa?: string;
+        cnpj?: string;
         endereco?: {
-            cep?: string
-            cidade?: string
-        }
+            cep?: string;
+            cidade?: string;
+        };
     };
 
     const { data: tsData } = useRForm<Onboarding>();
@@ -365,8 +358,9 @@
             data: current.data,
             rules: current.rules,
             key: current.key,
-            parse: parses.value[current.key]
-                ?? (current.rules ? "clique em submit" : "este modo não devolve rules")
+            parse:
+                parses.value[current.key] ??
+                (current.rules ? "clique em submit" : "este modo não devolve rules")
         };
     });
 
@@ -380,9 +374,7 @@
 
         parses.value = {
             ...parses.value,
-            [key]: rules
-                ? await rules.safeParseAsync(data)
-                : "este modo não devolve rules"
+            [key]: rules ? await rules.safeParseAsync(data) : "este modo não devolve rules"
         };
     };
 </script>

@@ -152,8 +152,8 @@
                 },
                 Dropdown: {
                     popover: `
-                        flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border
-                        border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-3 shadow-lg
+                        flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-contrast)/10
+                        bg-(--rf-color-background-100) p-3 shadow-lg
                     `
                 }
             }

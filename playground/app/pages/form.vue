@@ -22,10 +22,7 @@
                 v-model="schemaData"
                 :schema="schemaFields"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <DemoActions />
             </RForm>
@@ -41,46 +38,43 @@
             <RForm
                 v-model="zodData"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RText
                     name="nome"
-                    label="Nome"
-                    placeholder="nome completo"
+                    label="form.nome"
+                    placeholder="form.nomeCompleto"
                     required
                 />
                 <RText
                     name="cpf"
-                    label="CPF"
+                    label="form.cpf"
                     mask="brCpf"
                     required
                 />
                 <RText
                     name="email"
-                    label="E-mail"
-                    placeholder="voce@empresa.com"
+                    label="form.email"
+                    placeholder="form.emailExemplo"
                 />
                 <RText
                     name="telefone"
-                    label="Telefone"
+                    label="form.telefone"
                     mask="brTelefone"
                 />
                 <RObject
                     name="endereco"
-                    label="Endereço"
+                    label="form.endereco"
                     class="md:col-span-2"
                 >
                     <RText
                         name="cep"
-                        label="CEP"
+                        label="form.cep"
                         mask="brCep"
                     />
                     <RText
                         name="rua"
-                        label="Rua"
+                        label="form.rua"
                     />
                 </RObject>
 
@@ -98,51 +92,48 @@
             <RForm
                 v-model="tsData"
                 :on-submit="submit"
-                class="
-                    grid grid-cols-1 gap-4
-                    md:grid-cols-2
-                "
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
                 <RText
                     name="nome"
-                    label="Nome"
-                    placeholder="nome completo"
+                    label="form.nome"
+                    placeholder="form.nomeCompleto"
                     required
                     rule="required"
                 />
                 <RText
                     name="cpf"
-                    label="CPF"
+                    label="form.cpf"
                     mask="brCpf"
                     required
                     rule="brCpf"
                 />
                 <RText
                     name="email"
-                    label="E-mail"
-                    placeholder="voce@empresa.com"
+                    label="form.email"
+                    placeholder="form.emailExemplo"
                     rule="email"
                 />
                 <RText
                     name="telefone"
-                    label="Telefone"
+                    label="form.telefone"
                     mask="brTelefone"
                     rule="brTelefone"
                 />
                 <RObject
                     name="endereco"
-                    label="Endereço"
+                    label="form.endereco"
                     class="md:col-span-2"
                 >
                     <RText
                         name="cep"
-                        label="CEP"
+                        label="form.cep"
                         mask="brCep"
                         rule="brCep"
                     />
                     <RText
                         name="rua"
-                        label="Rua"
+                        label="form.rua"
                     />
                 </RObject>
 
@@ -170,6 +161,7 @@
 <script setup lang="ts">
     import { computed, ref } from "vue";
     import { z } from "zod";
+
     import source from "./form.vue?raw";
 
     const mode = ref("schema");
@@ -183,16 +175,18 @@
         {
             id: "zod",
             label: "2 · só zod",
-            description: "Sem UI gerada. Tipos e validação vêm do zod; o formulário é escrito à mão."
+            description:
+                "Sem UI gerada. Tipos e validação vêm do zod; o formulário é escrito à mão."
         },
         {
             id: "ts",
             label: "3 · só TS",
-            description: "Nada em runtime. Só o tipo do data; a validação fica nos presets de cada campo."
+            description:
+                "Nada em runtime. Só o tipo do data; a validação fica nos presets de cada campo."
         }
     ];
 
-    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map(uf => ({ id: uf, name: uf }));
+    const ufs = ["SP", "RJ", "MG", "BA", "RS"].map((uf) => ({ id: uf, name: uf }));
 
     // #region modo-schema
     const {
@@ -202,49 +196,49 @@
     } = useRForm({
         nome: {
             type: "text",
-            label: "Nome",
-            placeholder: "nome completo",
+            label: "form.nome",
+            placeholder: "form.nomeCompleto",
             rule: z.string().min(2, "mínimo 2 caracteres")
         },
         cpf: {
             type: "text",
-            label: "CPF",
+            label: "form.cpf",
             mask: "brCpf",
             rule: "brCpf"
         },
         email: {
             type: "text",
-            label: "E-mail",
-            placeholder: "voce@empresa.com",
+            label: "form.email",
+            placeholder: "form.emailExemplo",
             rule: "email"
         },
         telefone: {
             type: "text",
-            label: "Telefone",
+            label: "form.telefone",
             mask: "brTelefone",
             rule: "brTelefone"
         },
         nascimento: {
             type: "date",
-            label: "Nascimento"
+            label: "form.nascimento"
         },
         endereco: {
             type: "object",
-            label: "Endereço",
+            label: "form.endereco",
             children: {
                 cep: {
                     type: "text",
-                    label: "CEP",
+                    label: "form.cep",
                     mask: "brCep",
                     rule: "brCep"
                 },
                 rua: {
                     type: "text",
-                    label: "Rua"
+                    label: "form.rua"
                 },
                 numero: {
                     type: "number",
-                    label: "Número"
+                    label: "form.numero"
                 },
                 /**
                  * Em schema o `options` só aceita array de objetos: o generic
@@ -254,25 +248,22 @@
                  */
                 uf: {
                     type: "select",
-                    label: "UF",
-                    placeholder: "selecione",
+                    label: "form.uf",
+                    placeholder: "form.selecione",
                     options: ufs
                 }
             }
         },
         aceite: {
             type: "switch",
-            placeholder: "Li e aceito os termos",
+            placeholder: "form.aceiteTermos",
             rule: z.literal(true, "É preciso aceitar os termos.")
         }
     });
     // #endregion
 
     // #region modo-zod
-    const {
-        data: zodData,
-        rules: zodRules
-    } = useRForm({
+    const { data: zodData, rules: zodRules } = useRForm({
         nome: z.string().min(2, "mínimo 2 caracteres"),
         cpf: z.string().min(14, "CPF incompleto"),
         email: z.email("e-mail inválido"),
@@ -286,14 +277,14 @@
 
     // #region modo-ts
     type Cadastro = {
-        nome?: string
-        cpf?: string
-        email?: string
-        telefone?: string
+        nome?: string;
+        cpf?: string;
+        email?: string;
+        telefone?: string;
         endereco?: {
-            cep?: string
-            rua?: string
-        }
+            cep?: string;
+            rua?: string;
+        };
     };
 
     const { data: tsData } = useRForm<Cadastro>();
@@ -313,8 +304,9 @@
         return {
             data: current.data,
             rules: current.rules,
-            parse: parses.value[mode.value]
-                ?? (current.rules ? "clique em submit" : "este modo não devolve rules")
+            parse:
+                parses.value[mode.value] ??
+                (current.rules ? "clique em submit" : "este modo não devolve rules")
         };
     });
 
@@ -328,9 +320,7 @@
 
         parses.value = {
             ...parses.value,
-            [mode.value]: rules
-                ? await rules.safeParseAsync(data)
-                : "este modo não devolve rules"
+            [mode.value]: rules ? await rules.safeParseAsync(data) : "este modo não devolve rules"
         };
     };
 </script>

@@ -15,10 +15,11 @@ import userDefaults from "#rform/defaults";
 import { components as registry, hooks } from "#rform/registry";
 import type { Element } from "#rform/types";
 import type Components from "#rform/types/components";
-import { hookUi, merger, resolveMask, resolveRule } from "#rform/utils";
+import { hookUi, merger, prefixText, resolveMask, resolveRule } from "#rform/utils";
 
 import { injectFormRoot } from "./formRoot";
 import { injectRulesList } from "./rulesList";
+import useTranslate from "./useTranslate";
 
 type Obj = Record<NonNullable<Element["name"]>, unknown>;
 
@@ -55,6 +56,12 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
             `[rform] useInjection could not resolve a component name${componentName ? ` (got "${componentName}")` : ""}. A field has to live in the module's own components directory or in app/rform/fields for the build to inject it.`
         );
     }
+
+    /**
+     * Every field gets `tr` and `locale` without writing an import — the same
+     * way it already gets `mask`. A user field in `app/rform/fields` included.
+     */
+    const { tr, locale } = useTranslate();
 
     const defaults = shallowRef<Element>({});
     const overrides = userDefaults[componentName];
@@ -266,7 +273,12 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
         defaults?: Element;
     }>;
 
-    defaults.value = (await load())?.defaults ?? {};
+    /**
+     * Prefixed **before** the merger, so whatever a prop or
+     * `app/rform/defaults.ts` passes replaces the prefixed value whole and
+     * stays raw. Provenance comes out for free.
+     */
+    defaults.value = prefixText((await load())?.defaults ?? {}, componentName, "fields") as Element;
 
     /**
      * The watch above already ran, but back then `defaults.value` was still
@@ -283,6 +295,8 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
         upper,
         model,
         mask,
-        props
+        props,
+        tr,
+        locale
     };
 }

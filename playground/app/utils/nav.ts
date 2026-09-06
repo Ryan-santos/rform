@@ -1,12 +1,12 @@
 export type NavItem = {
-    label: string
-    tag: string
-    to: string
+    label: string;
+    tag: string;
+    to: string;
 };
 
 export type NavGroup = {
-    title: string
-    items: NavItem[]
+    title: string;
+    items: NavItem[];
 };
 
 /**
@@ -15,13 +15,6 @@ export type NavGroup = {
  * accident of the filesystem.
  */
 export const nav: NavGroup[] = [
-    {
-        title: "Conceitos",
-        items: [
-            { label: "ui e Defaults", tag: "defaults", to: "/ui" },
-            { label: "Campos próprios", tag: "app/rform", to: "/customizados" }
-        ]
-    },
     {
         title: "Formulário",
         items: [
@@ -45,6 +38,14 @@ export const nav: NavGroup[] = [
             { label: "Switch", tag: "RSwitch", to: "/campos/switch" },
             { label: "Text", tag: "RText", to: "/campos/text" },
             { label: "Textarea", tag: "RTextarea", to: "/campos/textarea" }
+        ]
+    },
+    {
+        title: "Conceitos",
+        items: [
+            { label: "ui e Defaults", tag: "defaults", to: "/ui" },
+            { label: "Tradução", tag: "tr", to: "/traducao" },
+            { label: "Campos próprios", tag: "app/rform", to: "/customizados" }
         ]
     }
 ];

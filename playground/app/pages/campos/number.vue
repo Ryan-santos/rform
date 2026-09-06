@@ -12,7 +12,7 @@
         >
             <RNumber
                 name="basico"
-                placeholder="quantidade"
+                placeholder="~~quantidade"
             />
         </Demo>
 
@@ -23,14 +23,14 @@
         >
             <RNumber
                 name="intervalo"
-                label="20 a 100, de 20 em 20"
+                label="~~20 a 100, de 20 em 20"
                 :min="20"
                 :max="100"
                 :step="20"
             />
             <RNumber
                 name="decimal"
-                label="step 0.5"
+                label="~~step 0.5"
                 :step="0.5"
             />
         </Demo>
@@ -42,19 +42,15 @@
         >
             <RNumber
                 name="delay"
-                placeholder="delay"
+                placeholder="~~delay"
             >
-                <template #trailing>
-                    segundos
-                </template>
+                <template #trailing> segundos </template>
             </RNumber>
             <RNumber
                 name="preco"
-                placeholder="preço"
+                placeholder="~~preço"
             >
-                <template #leading>
-                    R$
-                </template>
+                <template #leading> R$ </template>
             </RNumber>
         </Demo>
 
@@ -64,7 +60,7 @@
         >
             <RNumber
                 name="comDefault"
-                label="Começa em 42"
+                label="~~Começa em 42"
                 :default="42"
             />
         </Demo>
@@ -76,18 +72,21 @@
         >
             <RNumber
                 name="ruleMin"
-                label="mínimo 18"
+                label="~~mínimo 18"
                 :rule="{ name: 'min', min: 18 }"
             />
             <RNumber
                 name="ruleMax"
-                label="máximo 30"
+                label="~~máximo 30"
                 :rule="{ name: 'max', max: 30 }"
             />
             <RNumber
                 name="ruleFaixa"
-                label="entre 18 e 30"
-                :rule="[{ name: 'min', min: 18 }, { name: 'max', max: 30 }]"
+                label="~~entre 18 e 30"
+                :rule="[
+                    { name: 'min', min: 18 },
+                    { name: 'max', max: 30 }
+                ]"
             />
         </Demo>
 
@@ -97,12 +96,12 @@
         >
             <RNumber
                 name="carregando"
-                label="Carregando"
+                label="~~Carregando"
                 loading
             />
             <RNumber
                 name="comErro"
-                label="Erro manual"
+                label="~~Erro manual"
                 error="Fora do estoque disponível."
             />
         </Demo>
@@ -114,7 +113,7 @@
         >
             <RNumber
                 name="uiOverride"
-                label="minutos"
+                label="~~minutos"
                 :ui="{
                     group: {
                         wrapper: {
@@ -123,9 +122,7 @@
                     }
                 }"
             >
-                <template #trailing>
-                    minutos
-                </template>
+                <template #trailing> minutos </template>
             </RNumber>
         </Demo>
 

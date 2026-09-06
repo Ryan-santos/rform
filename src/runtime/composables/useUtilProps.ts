@@ -1,11 +1,15 @@
-import type Utils from "#rform/types/components/utils";
-import type { DeepRequired, Element } from "#rform/types";
-import type { ValueProp } from "./useInjection";
-import { computed, inject, type ComputedRef } from "vue";
-import { keyProp } from "./useInjection";
+import { computed, inject, type ComputedRef, type Ref } from "vue";
+
 import userDefaults from "#rform/defaults";
 import { utils as registry, hooks } from "#rform/registry";
-import { hookUi, merger } from "#rform/utils";
+import type { DeepRequired, Element, WithTextSource } from "#rform/types";
+import type Utils from "#rform/types/components/utils";
+import { hookUi, merger, prefixText } from "#rform/utils";
+
+import type { Tr } from "../utils/i18n";
+import type { ValueProp } from "./useInjection";
+import { keyProp } from "./useInjection";
+import useTranslate from "./useTranslate";
 
 /**
  * What a Utils component actually receives: the parent field's `Element` props,
@@ -13,12 +17,14 @@ import { hookUi, merger } from "#rform/utils";
  * key is present, which is what the templates already assume.
  */
 export type UtilProps<P> = Omit<Element & P, "ui"> & {
-    ui: DeepRequired<NonNullable<P extends { ui?: infer U } ? U : never>>
+    ui: DeepRequired<NonNullable<P extends { ui?: infer U } ? U : never>>;
 };
 
 export type UtilContext<P extends Record<string, unknown>> = {
-    props: ComputedRef<UtilProps<P>>
-    upper: ValueProp<P>
+    props: ComputedRef<UtilProps<P>>;
+    upper: ValueProp<P>;
+    tr: Tr;
+    locale: Ref<string>;
 };
 
 const assertName: (name?: keyof Utils) => asserts name is keyof Utils = (name) => {
@@ -31,28 +37,28 @@ const assertName: (name?: keyof Utils) => asserts name is keyof Utils = (name) =
     }
 };
 
-const build = <P extends Record<string, unknown>> (
+const build = <P extends Record<string, unknown>>(
     upper: ValueProp<P>,
     overrides: P,
     defaults: P,
-    componentName: keyof Utils
+    componentName: keyof Utils,
+    translate: Pick<UtilContext<P>, "tr" | "locale">
 ): UtilContext<P> => {
+    /**
+     * Once, outside the computed: `prefixText` copies, and the component's own
+     * `defaults` object — shared by every instance — must not be touched.
+     */
+    const prefixed = prefixText(defaults, componentName, "utils") as P;
+
     const props = computed((): UtilProps<P> => {
-        const {
-            ui,
-            ...rest
-        } = upper.props.value;
+        const { ui, ...rest } = upper.props.value;
 
         const utilUi = typeof ui === "object" ? (ui?.Utils as Utils) : undefined;
 
-        const merged = merger(
-            defaults,
-            overrides,
-            {
-                ...rest,
-                ui: utilUi?.[componentName] as P["ui"]
-            }
-        );
+        const merged = merger(prefixed, overrides, {
+            ...rest,
+            ui: utilUi?.[componentName] as P["ui"]
+        });
 
         return {
             ...merged,
@@ -62,7 +68,8 @@ const build = <P extends Record<string, unknown>> (
 
     return {
         props,
-        upper
+        upper,
+        ...translate
     };
 };
 
@@ -78,18 +85,18 @@ const build = <P extends Record<string, unknown>> (
  * The no-argument form still resolves through the registry and still returns a
  * promise, because a util written before this existed calls it that way.
  */
-export default function useUtilProps<P extends Record<string, unknown>> (
-    defaults: P,
+export default function useUtilProps<P extends Record<string, unknown>>(
+    defaults: WithTextSource<P>,
     componentName?: keyof Utils
 ): UtilContext<P>;
 
-export default function useUtilProps<P extends Record<string, unknown>> (
+export default function useUtilProps<P extends Record<string, unknown>>(
     defaults?: undefined,
     componentName?: keyof Utils
 ): Promise<UtilContext<P>>;
 
-export default function useUtilProps<P extends Record<string, unknown>> (
-    defaults?: P,
+export default function useUtilProps<P extends Record<string, unknown>>(
+    defaults?: WithTextSource<P>,
     /**
      * Injected by the vite plugin from the component's own file name.
      */
@@ -98,19 +105,26 @@ export default function useUtilProps<P extends Record<string, unknown>> (
     assertName(componentName);
 
     /**
-     * Both reads happen here, before any `await`: `inject` needs the component
-     * instance to still be current, and on the legacy path the continuation
-     * runs in a microtask, long after Vue has cleared it.
+     * All three reads happen here, before any `await`: `inject` and
+     * `useTranslate` need the component instance to still be current, and on
+     * the legacy path the continuation runs in a microtask, long after Vue has
+     * cleared it.
      */
     const upper = inject<ValueProp<P>>(keyProp, {} as ValueProp<P>);
     const overrides = userDefaults.Utils?.[componentName] as P;
+    const translate = useTranslate();
 
     if (defaults) {
-        return build(upper, overrides, defaults, componentName);
+        // `prefixText` is what turns the raw suffixes into keys, so the two
+        // shapes meet on the other side of it.
+        return build(upper, overrides, defaults as P, componentName, translate);
     }
 
-    const load = registry[componentName as keyof typeof registry] as unknown as
-        () => Promise<{ defaults?: P }>;
+    const load = registry[componentName as keyof typeof registry] as unknown as () => Promise<{
+        defaults?: P;
+    }>;
 
-    return load().then((mod) => build(upper, overrides, (mod?.defaults ?? {}) as P, componentName));
-};
+    return load().then((mod) =>
+        build(upper, overrides, (mod?.defaults ?? {}) as P, componentName, translate)
+    );
+}

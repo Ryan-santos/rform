@@ -38,13 +38,13 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Seletor de tema do playground: claro, escuro ou o do sistema.
+     */
     const colorMode = useColorMode();
 
-    /**
-     * `system` é uma opção de verdade, não um estado escondido: o toggle de duas
-     * posições que existia aqui só sabia alternar claro/escuro e, uma vez tocado,
-     * nunca mais devolvia a escolha ao sistema operacional.
-     */
+    // `system` é opção de verdade, não estado escondido: um toggle de duas posições,
+    // uma vez tocado, nunca mais devolvia a escolha ao sistema operacional.
     const options = [
         {
             id: "light",

@@ -6,21 +6,21 @@ import { nextTick } from "vue";
 import { RHour } from "#components";
 
 describe("RHour", () => {
-    it("renders a single <input> by default", async () => {
+    it("renderiza um <input> só por padrão", async () => {
         const wrapper = await mountSuspended(RHour);
         const inputs = wrapper.findAll("input");
         expect(inputs).toHaveLength(1);
         expect(inputs[0]!.attributes("placeholder")).toBe("hh:mm");
     });
 
-    it("renders two <input>s when range is true", async () => {
+    it("renderiza dois <input> quando range é true", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { range: true } as never
         });
         expect(wrapper.findAll("input")).toHaveLength(2);
     });
 
-    it("reflects a string modelValue into the input", async () => {
+    it("reflete um modelValue string no input", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { modelValue: "09:30" } as never
         });
@@ -28,7 +28,7 @@ describe("RHour", () => {
         expect((input.element as HTMLInputElement).value).toBe("09:30");
     });
 
-    it("reflects a tuple modelValue into both inputs when range", async () => {
+    it("reflete um modelValue tupla nos dois inputs do range", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { range: true, modelValue: ["08:00", "17:30"] } as never
         });
@@ -37,7 +37,7 @@ describe("RHour", () => {
         expect((inputs[1]!.element as HTMLInputElement).value).toBe("17:30");
     });
 
-    it("emits a normalized model value when the user types a valid time", async () => {
+    it("emite um model normalizado quando se digita uma hora válida", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { modelValue: "" } as never
         });
@@ -49,7 +49,7 @@ describe("RHour", () => {
         expect(emits?.at(-1)?.[0]).toBe("12:30");
     });
 
-    it("clamps out-of-range input on blur", async () => {
+    it("limita no blur a entrada fora da faixa", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { modelValue: "" } as never
         });
@@ -63,7 +63,7 @@ describe("RHour", () => {
         expect(emits?.at(-1)?.[0]).toBe("23:59");
     });
 
-    it("emits an empty string (not the default) when the input is cleared", async () => {
+    it("emite string vazia — e não o default — quando o input é limpo", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { default: "09:00", modelValue: "12:00" } as never
         });
@@ -74,14 +74,14 @@ describe("RHour", () => {
         expect(emits?.at(-1)?.[0]).toBe("");
     });
 
-    it("applies the name attribute on the input", async () => {
+    it("aplica o atributo name no input", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { name: "start", modelValue: "" } as never
         });
         expect(wrapper.find("input").attributes("name")).toBe("start");
     });
 
-    it("emits a tuple when the user types into a range field", async () => {
+    it("emite uma tupla quando se digita num campo range", async () => {
         const wrapper = await mountSuspended(RHour, {
             props: { range: true, modelValue: ["", ""] } as never
         });

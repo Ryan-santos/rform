@@ -10,11 +10,11 @@ const schema = () =>
             return false;
         }
 
-        // Area codes start at 11, and an eleven-digit number is a mobile, which
-        // always carries the extra 9.
+        // DDD começa em 11, e onze dígitos é celular, que sempre carrega o 9.
         return Number(phone.slice(0, 2)) >= 11 && (phone.length === 10 || phone[2] === "9");
     }, trRule("br.telefone"));
 
+/** Exige um telefone brasileiro válido: DDD real, e o 9 do celular. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

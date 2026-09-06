@@ -6,7 +6,7 @@ import { defineComponent, h } from "vue";
 import { RForm } from "#components";
 
 describe("RForm", () => {
-    it("renders a <form> element with the default ui class", async () => {
+    it("renderiza um <form> com a classe de ui default", async () => {
         const Slot = defineComponent({
             setup: () => () => h("span", "ok")
         });
@@ -20,7 +20,7 @@ describe("RForm", () => {
         expect(form.classes().join(" ")).toMatch(/flex-col/);
     });
 
-    it("exposes model/submit/validate in the default slot", async () => {
+    it("expõe model, submit e validate no slot default", async () => {
         let received: Record<string, unknown> | null = null;
 
         await mountSuspended(RForm, {
@@ -40,7 +40,7 @@ describe("RForm", () => {
         expect(typeof scope.submit).toBe("function");
     });
 
-    it("calls onSubmit with the current model on form submit", async () => {
+    it("chama onSubmit com o model corrente ao submeter", async () => {
         const onSubmit = vi.fn();
 
         const wrapper = await mountSuspended(RForm, {

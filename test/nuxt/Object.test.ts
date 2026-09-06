@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick } from "vue";
 import { RObject, RText } from "#components";
 
 describe("RObject", () => {
-    it("renders the default slot inside its group container", async () => {
+    it("renderiza o slot default dentro do container de grupo", async () => {
         const wrapper = await mountSuspended(RObject, {
             slots: { default: () => h("span", { "data-testid": "child" }, "ok") }
         });
@@ -14,7 +14,7 @@ describe("RObject", () => {
         expect(wrapper.find('[data-testid="child"]').text()).toBe("ok");
     });
 
-    it("propagates child mutations into the shared modelValue object (in-place)", async () => {
+    it("propaga mutação do filho no objeto compartilhado do modelValue, no lugar", async () => {
         const sharedModel: Record<string, unknown> = {};
 
         const Parent = defineComponent({

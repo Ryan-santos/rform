@@ -6,6 +6,7 @@ import { check, isBlank, text } from "../helpers";
 
 const schema = () => z.url(trRule("url"));
 
+/** Exige uma URL válida. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

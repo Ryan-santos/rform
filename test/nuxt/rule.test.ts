@@ -5,11 +5,8 @@ import { h, nextTick } from "vue";
 
 import { RForm, RText } from "#components";
 
-/**
- * A field only registers its validator when a Form provides the rules list, so
- * every case here goes through the real chain: useField → resolveRule →
- * preset validation.
- */
+// Um campo só registra o validador quando um Form provê o registro de rules, então
+// todo caso aqui passa pela cadeia de verdade: useField → resolveRule → validation.
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     let scope: { validate: () => Promise<void> } | undefined;
 
@@ -29,8 +26,8 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
             try {
                 await scope!.validate();
             } catch {
-                // `validate` rejects on the first failing field; the message is
-                // what this asserts on, and it lands on the field itself.
+                // O `validate` rejeita no primeiro campo que falha; o que se asserta
+                // é a mensagem, e ela pousa no próprio campo.
             }
 
             await nextTick();
@@ -40,8 +37,8 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     };
 };
 
-describe("rule presets in a live field", () => {
-    it("passes named args through to the validation", async () => {
+describe("presets de rule num campo vivo", () => {
+    it("repassa os args nomeados à validation", async () => {
         const short = await mountField({ name: "min", min: 3 }, { campo: "ab" });
         expect(await short.validate()).toContain("Mínimo de 3 caracteres.");
 
@@ -49,13 +46,13 @@ describe("rule presets in a live field", () => {
         expect(await ok.validate()).not.toContain("Mínimo");
     });
 
-    it("uses the arg value in the message, not a fixed one", async () => {
+    it("usa o valor do arg na mensagem, não um fixo", async () => {
         const field = await mountField({ name: "min", min: 8 }, { campo: "ab" });
 
         expect(await field.validate()).toContain("Mínimo de 8 caracteres.");
     });
 
-    it("resolves a brazilian preset under its br prefix", async () => {
+    it("resolve um preset brasileiro sob o prefixo br", async () => {
         const bad = await mountField("brCpf", { campo: "111.111.111-11" });
         expect(await bad.validate()).toContain("CPF inválido.");
 
@@ -63,7 +60,7 @@ describe("rule presets in a live field", () => {
         expect(await good.validate()).not.toContain("CPF inválido.");
     });
 
-    it("hands an inline function the same context object", async () => {
+    it("entrega a uma função inline o mesmo objeto de contexto", async () => {
         const field = await mountField(
             ({ value, form }: { value: unknown; form: Record<string, unknown> }) =>
                 value === form.esperado ? undefined : "não bate com o form",
@@ -73,7 +70,7 @@ describe("rule presets in a live field", () => {
         expect(await field.validate()).toContain("não bate com o form");
     });
 
-    it("runs an array of refs in order", async () => {
+    it("roda um array de refs em ordem", async () => {
         const empty = await mountField(["required", { name: "min", min: 3 }], { campo: "" });
         expect(await empty.validate()).toContain("Campo obrigatório.");
 

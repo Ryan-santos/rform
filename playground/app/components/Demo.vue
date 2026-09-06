@@ -50,19 +50,23 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Um exemplo da página: renderiza o próprio slot ao vivo e, abaixo, o recorte do
+     * fonte que o produziu — o mesmo arquivo, não uma segunda cópia.
+     */
     import { computed, inject, ref } from "vue";
 
     import { demoSourceKey, extractDemo, extractRegion } from "~/utils/demo";
 
     const props = withDefaults(
         defineProps<{
-            /** Matched verbatim against the source to find this block in the template. */
+            /** Casado verbatim contra o fonte para achar este bloco no template. */
             id: string;
             title: string;
             description?: string;
-            /** Name of a `// #region` block in the page's script to show above the template. */
+            /** Nome de um bloco `// #region` do script da página, mostrado acima do template. */
             script?: string;
-            /** Classes for the wrapper around the live example. */
+            /** Classes do wrapper em volta do exemplo vivo. */
             ui?: string;
         }>(),
         {

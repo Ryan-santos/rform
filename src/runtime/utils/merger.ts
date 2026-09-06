@@ -17,6 +17,12 @@ export type MergeObjects<Objects extends Array<unknown>> = Objects extends [
 
 type OBJ = Record<string | number, unknown> | null | undefined;
 
+/**
+ * Mescla as fontes de props folha a folha, na ordem em que chegam — `defaults` do
+ * componente, defaults do app, call site. A chave `ui` desvia pro `mergerUI`.
+ *
+ * @example merger({ default: "", ui: { container: "flex" } }, { ui: { container: "grid" } })
+ */
 export default function merger<T extends Array<OBJ>>(...objects: T) {
     return objects.reduce((result, current) => {
         if (!current || typeof current !== "object") {
@@ -27,13 +33,8 @@ export default function merger<T extends Array<OBJ>>(...objects: T) {
             const resultValue = result?.[key];
             const currentValue = current[key];
 
-            /**
-             * `undefined` means "not provided", never "clear it". It has to be
-             * skipped before the truthiness guard below, which would otherwise
-             * let an absent prop wipe a falsy default — `defineProps` fills
-             * every declared key, so a plain `<RText name="x" />` arrives with
-             * `default: undefined` and used to erase the component's own `""`.
-             */
+            // `undefined` é "não passei", nunca "apaga": `defineProps` preenche toda
+            // chave declarada, então prop ausente apagaria um default falsy.
             if (currentValue === undefined) {
                 continue;
             }

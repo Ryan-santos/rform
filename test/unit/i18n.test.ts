@@ -7,28 +7,28 @@ import { matchLocale } from "../../src/runtime/utils/i18n";
 describe("matchLocale", () => {
     const available = ["pt-BR", "en"];
 
-    it("matches an exact code", () => {
+    it("casa um code exato", () => {
         expect(matchLocale("pt-BR", available)).toBe("pt-BR");
         expect(matchLocale("en", available)).toBe("en");
     });
 
-    it("matches case-insensitively", () => {
+    it("casa sem diferenciar caixa", () => {
         expect(matchLocale("pt-br", available)).toBe("pt-BR");
     });
 
-    it("widens a bare language to the region that ships", () => {
+    it("alarga uma língua pelada para a região que existe", () => {
         expect(matchLocale("pt", available)).toBe("pt-BR");
     });
 
-    it("narrows a region to the bare language that ships", () => {
+    it("estreita uma região para a língua pelada que existe", () => {
         expect(matchLocale("en-GB", available)).toBe("en");
     });
 
-    it("prefers an exact bare match over a regional one", () => {
+    it("prefere o casamento exato pelado ao regional", () => {
         expect(matchLocale("en", ["en-GB", "en"])).toBe("en");
     });
 
-    it("returns undefined for a language nothing covers", () => {
+    it("devolve undefined para língua que nada cobre", () => {
         expect(matchLocale("ja", available)).toBeUndefined();
         expect(matchLocale(undefined, available)).toBeUndefined();
     });
@@ -39,18 +39,15 @@ const keys = (messages: unknown, prefix = ""): string[] =>
         typeof value === "string" ? [`${prefix}${key}`] : keys(value, `${prefix}${key}.`)
     );
 
-describe("the built-in packs", () => {
-    it("agree on every key, so no locale silently falls back", () => {
+describe("os packs embutidos", () => {
+    it("concordam em toda chave, para nenhum locale cair no fallback calado", () => {
         expect(keys(en).sort()).toEqual(keys(ptBR).sort());
     });
 
-    it("keeps the top level to the four namespaces the prefix can produce", () => {
-        /**
-         * `fields.*` and `utils.*` are what `prefixText` writes, one per
-         * component directory — which is what keeps a field and a util of the
-         * same name (`Calendar` is both today) from sharing a key. `presets`
-         * and `formats` are the two shared spaces nothing prefixes.
-         */
+    it("mantém o topo nas quatro raízes que o prefixo consegue produzir", () => {
+        // `fields.*` e `utils.*` são o que o `prefixText` escreve, um por diretório
+        // de componente; `presets` e `formats` são os dois espaços compartilhados
+        // que nada prefixa.
         const owners = [
             "fields", // components/fields/**
             "formats", // shared

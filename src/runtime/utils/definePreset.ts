@@ -5,40 +5,30 @@ import type { FieldType } from "#rform/types/fields";
 import type { BaseContext, RulePreset } from "./resolveRule";
 
 /**
- * The object a `validation` receives. `value` and `form` come for free; the
- * type parameter is what this preset adds on top:
+ * O objeto que uma `validation` recebe: `value` e `form` vêm de graça, o parâmetro
+ * é só o que o preset acrescenta — e é ele que o `rule` cobra como `{ name, ...args }`.
+ * Também estreita: `RuleContext<{ value: string }>` tipa `value` como string.
  *
- * ```ts
- * validation ({ value, uf }: RuleContext<{ uf: string }>) { … }
- * ```
- *
- * The active locale reaches a rule through the imported `trRule`, not through
- * this object — a rule is not a component, and the context stays what the field
- * actually holds.
- *
- * It narrows as well as adds — `RuleContext<{ value: string, uf: string }>`
- * types `value` as a string, because `unknown & string` is `string`. Whatever
- * is left after `value` and `form` is exactly what the `rule` prop demands as
- * `{ name, ...args }`.
+ * @example validation: ({ value, uf }: RuleContext<{ uf: string }>) => …
  */
 export type RuleContext<T extends object = Record<never, never>> = BaseContext & T;
 
 /**
- * Authoring shape of a rule preset. `available` is narrowed to the field types
- * that actually exist, so a typo ("txt") fails at the definition instead of
- * silently never matching a component.
+ * Forma de autoria de uma rule. `available` é estreitado aos field types que
+ * existem, então um typo ("txt") falha na definição em vez de nunca casar.
  */
 export type RuleDefinition = Omit<RulePreset, "available"> & {
-    /** Field types this rule serves. Omit it to serve every field. */
+    /** Field types que esta rule serve. Omitir serve todos. */
     available?: readonly FieldType[];
 };
 
 /**
- * `const` type parameters keep `available: ["text"]` a literal tuple, which is
- * what lets the generated types filter presets per component.
+ * O `const` no type parameter é o que preserva `available: ["text"]` como tupla
+ * literal — sem ele o filtro de preset por componente para de funcionar.
  */
 export const defineRule = <const T extends RuleDefinition>(rule: T): T => rule;
 
+/** Define um preset de máscara: as opções vão cruas pro maska. */
 export const defineMask = <const T extends MaskInputOptions>(mask: T): T => mask;
 
 export default { defineRule, defineMask };

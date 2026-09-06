@@ -101,10 +101,8 @@
 <script setup lang="ts">
     import source from "./file.vue?raw";
 
-    /**
-     * Declared here, not inline no template: `File` é um global do browser e o
-     * template só enxerga o escopo do componente.
-     */
+    // Declarado aqui, e não inline no template: `File` é um global do browser, e o
+    // template só enxerga o escopo do componente.
     const ateUmMega = ({ value }: { value: unknown }) =>
         value instanceof File && value.size > 1024 * 1024
             ? "O arquivo precisa ter no máximo 1 MB."

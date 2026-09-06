@@ -15,8 +15,13 @@
 </template>
 
 <script lang="ts">
-    // Replaces the built-in Switch, reusing its defaults through the escape
-    // hatch rather than restating them.
+    /**
+     * Substituição de um embutido: mesmo nome troca o componente inteiro, e o original
+     * continua alcançável pelo alias `#rform/builtin` — é o que deixa embrulhar em vez
+     * de reescrever.
+     *
+     * @example <RSwitch name="ativo" />
+     */
     import { defaults as builtin } from "#rform/builtin/fields/Switch.vue";
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";

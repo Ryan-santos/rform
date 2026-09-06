@@ -4,10 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { RSelect } from "#components";
 
-/**
- * The popover mounts its contents on first open, so every option assertion has
- * to open it first — the same click a user makes.
- */
+// O popover só monta o conteúdo no primeiro `open`, então toda asserção sobre
+// opção precisa abri-lo antes — o mesmo clique que um usuário dá.
 const open = async (wrapper: {
     findAll: (s: string) => { trigger: (e: string) => Promise<void> }[];
 }) => {
@@ -15,7 +13,7 @@ const open = async (wrapper: {
 };
 
 describe("RSelect", () => {
-    it("parses an array of primitives into options", async () => {
+    it("transforma um array de primitivos em opções", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: { options: ["a", "b", "c"] } as never
         });
@@ -27,7 +25,7 @@ describe("RSelect", () => {
         expect(items.map((i) => i.text())).toEqual(["a", "b", "c"]);
     });
 
-    it("parses an object {key: label} into options", async () => {
+    it("transforma um objeto {chave: rótulo} em opções", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: { options: { foo: "Foo Label", bar: "Bar Label" } } as never
         });
@@ -39,7 +37,7 @@ describe("RSelect", () => {
         expect(labels).toContain("Bar Label");
     });
 
-    it("selects an item on click (single, primitive)", async () => {
+    it("seleciona um item no clique (single, primitivo)", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: { options: ["a", "b"] } as never
         });
@@ -50,7 +48,7 @@ describe("RSelect", () => {
         expect(emits?.at(-1)?.[0]).toBe("b");
     });
 
-    it("stores selections as an array when multiple is true", async () => {
+    it("guarda as seleções num array quando multiple é true", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: { options: ["a", "b"], multiple: true, modelValue: [] } as never
         });

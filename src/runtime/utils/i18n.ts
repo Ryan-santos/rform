@@ -1,9 +1,8 @@
 import type { Messages } from "#rform/types/locales";
 
 /**
- * What `tr` accepts at runtime, before the generated `TrInput` narrows it. A
- * number as `params` is the plural choice — the same thing vue-i18n's
- * `t(key, 3)` means.
+ * O que o `tr` aceita em runtime, antes de o `TrInput` gerado estreitar. Um número
+ * em `params` é a escolha de plural, o mesmo que o `t(key, 3)` do vue-i18n.
  */
 export type TrParams = Record<string, unknown> | number;
 
@@ -14,9 +13,9 @@ export type TrValue = string | TrRef;
 export type Tr = (input: TrValue | null | undefined) => string;
 
 /**
- * The one entry shape both engines read. Lives here, and not next to `tr`,
- * because both engines import it and `utils/tr.ts` imports the engines — the
- * other direction would close a cycle.
+ * A forma de entrada única que os dois motores leem. Mora aqui, e não ao lado do
+ * `tr`, porque os dois motores a importam e `utils/tr.ts` importa os motores — a
+ * outra direção fecharia ciclo.
  */
 export const normalize = (
     input: TrValue | null | undefined
@@ -35,8 +34,10 @@ export const normalize = (
 };
 
 /**
- * `"pt"` -> `"pt-BR"`, `"en-GB"` -> `"en"`. Exact first (case-insensitively),
- * then the bare language, then any region of it.
+ * Casa um code com os packs disponíveis: exato primeiro (sem caixa), depois a
+ * língua pelada, depois qualquer região dela.
+ *
+ * @example matchLocale("pt", ["pt-BR", "en"]) // → "pt-BR"
  */
 export const matchLocale = (
     code: string | null | undefined,
@@ -62,26 +63,26 @@ export const matchLocale = (
 };
 
 /**
- * Deliberately not the shared `DeepPartial` from `#rform/types`: that module
- * reaches `types/presets.d.ts`, which reads every preset back, and a preset
- * reaches `resolveRule` — which imports this file. Keeping the only type edge
- * on `#rform/types/locales` keeps that loop from closing.
+ * De propósito não é o `DeepPartial` de `#rform/types`: aquele módulo alcança
+ * `types/presets.d.ts`, que lê todo preset de volta, e um preset alcança
+ * `resolveRule` — que importa este arquivo.
  */
 type PartialMessages<T> = {
     [K in keyof T]?: T[K] extends string ? T[K] : PartialMessages<T[K]>;
 };
 
-/** Authoring helper for `app/rform/locales/<code>.ts`. Partial by design. */
+/**
+ * Tipa o `app/rform/locales/<code>.ts`. Parcial por desenho: um pack de três chaves
+ * continua completo, porque mesmo code mescla com o default em vez de substituir.
+ *
+ * @example export default defineLocale({ presets: { rules: { required: "Preencha" } } });
+ */
 export const defineLocale = <const T extends PartialMessages<Messages>>(messages: T): T => messages;
 
 /**
- * A named object can also choose a plural form: the built-in `min`/`max`
- * messages interpolate the very number that picks singular from plural, and
- * repeating it at every call site would be noise. The first numeric value in
- * the object is the choice.
- *
- * Without one, both engines stay on branch 0 — `"a | b"` would always read
- * `a`, which is exactly the bug this replaces.
+ * O primeiro valor numérico dos params serve de escolha de plural — é o que deixa
+ * uma rule escrever `{ min }` uma vez e a mensagem interpolar e pluralizar por ele.
+ * Sem isso os dois motores ficam no ramo 0 de `"a | b"`.
  */
 export const pluralOf = (named: Record<string, unknown>): number | undefined =>
     Object.values(named).find((value): value is number => typeof value === "number");

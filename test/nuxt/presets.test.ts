@@ -6,19 +6,19 @@ import { describe, expect, it } from "vitest";
 
 import { defineMask, defineRule } from "#rform/utils";
 
-// Vite rewrites `new URL(<template literal>, import.meta.url)`, so paths are
-// built from the repo root instead.
+// O Vite reescreve `new URL(<template literal>, import.meta.url)`, então os
+// caminhos são montados a partir da raiz do repo.
 const root = process.cwd();
 
 const read = (path: string) => readFile(join(root, "test/fixtures/basic/.nuxt", path), "utf8");
 
-describe("preset helpers", () => {
-    it("are named exports of #rform/utils", () => {
+describe("helpers de preset", () => {
+    it("são exports nomeados de #rform/utils", () => {
         expect(defineRule).toBeTypeOf("function");
         expect(defineMask).toBeTypeOf("function");
     });
 
-    it("hand the preset object back untouched", () => {
+    it("devolvem o objeto do preset intacto", () => {
         const rule = { available: ["text"], validation: () => undefined } as const;
         const mask = { mask: "###" } as const;
 
@@ -26,15 +26,15 @@ describe("preset helpers", () => {
         expect(defineMask(mask)).toBe(mask);
     });
 
-    it("are imported, never auto-imported", async () => {
+    it("são importados, nunca auto-importados", async () => {
         const imports = await read("imports.d.ts");
 
         expect(imports).not.toContain("definePreset");
     });
 });
 
-describe("#rform/utils barrel", () => {
-    it("re-exports every util's named exports, not just its default", async () => {
+describe("barrel #rform/utils", () => {
+    it("reexporta os exports nomeados de cada util, não só o default", async () => {
         const utils = await read("rform/utils.ts");
         const files = (await readdir(join(root, "src/runtime/utils"))).filter((file) =>
             file.endsWith(".ts")
@@ -47,8 +47,8 @@ describe("#rform/utils barrel", () => {
     });
 });
 
-describe("br namespace", () => {
-    it("prefixes every brazilian preset, rules and masks alike", async () => {
+describe("namespace br", () => {
+    it("prefixa todo preset brasileiro, rules e masks igualmente", async () => {
         const presets = await read("rform/presets.ts");
 
         for (const name of ["brCpf", "brCnpj", "brCep", "brTelefone"]) {
@@ -60,7 +60,7 @@ describe("br namespace", () => {
         }
     });
 
-    it("leaves no unprefixed brazilian preset behind", async () => {
+    it("não deixa preset brasileiro sem prefixo para trás", async () => {
         const presets = await read("rform/presets.ts");
 
         for (const name of ["cpf", "cnpj", "cep", "telefone", "celular", "placa"]) {
@@ -68,7 +68,7 @@ describe("br namespace", () => {
         }
     });
 
-    it("keeps the generic rules unprefixed", async () => {
+    it("mantém as rules genéricas sem prefixo", async () => {
         const presets = await read("rform/presets.ts");
 
         for (const name of ["required", "min", "max", "email", "url"]) {
@@ -78,7 +78,7 @@ describe("br namespace", () => {
 });
 
 describe("FieldType", () => {
-    it("lists one member per field component, across both roots", async () => {
+    it("lista um membro por componente de campo, nas duas raízes", async () => {
         const contents = await read("rform/types/fields.d.ts");
         const generated = [...contents.matchAll(/"([^"]+)"/g)]
             .map((match) => match[1] ?? "")
@@ -89,7 +89,7 @@ describe("FieldType", () => {
             join(root, "test/fixtures/basic/rform/fields")
         ];
 
-        // A set: the fixture replaces `Switch`, which is one member, not two.
+        // Um set: a fixture substitui `Switch`, que é um membro, não dois.
         const expected = [
             ...new Set(
                 (await Promise.all(roots.map((dir) => readdir(dir))))
@@ -102,14 +102,14 @@ describe("FieldType", () => {
         expect(generated).toEqual(expected);
     });
 
-    it("leaves out Form and Dynamic, which live outside `fields`", async () => {
+    it("deixa de fora Form e Dynamic, que moram fora de `fields`", async () => {
         const contents = await read("rform/types/fields.d.ts");
 
         expect(contents).not.toContain(`"form"`);
         expect(contents).not.toContain(`"dynamic"`);
     });
 
-    it("covers the field types the masked components pass to Element", async () => {
+    it("cobre os field types que os componentes com máscara passam ao Element", async () => {
         const contents = await read("rform/types/fields.d.ts");
 
         expect(contents).toContain(`"text"`);

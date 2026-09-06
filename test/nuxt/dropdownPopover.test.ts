@@ -5,21 +5,16 @@ import { describe, expect, it } from "vitest";
 import { RColor, RDate, RSelect } from "#components";
 
 /**
- * O painel é do `RUtilsDropdown`, então o que vale para todo painel — o `z-999`
- * e o `w-(--width)` que o `dropdownFit` alimenta — é default dele, e cada campo
- * sobrescreve pelo mesmo endereço: `ui.Utils.Dropdown.popover`.
- *
- * O endereço único é o ponto, e o motivo de existir teste: um `class` cravado no
- * template do campo não passaria pelo `twMerge`, e duas classes de largura no
- * mesmo elemento se resolvem pela ordem da folha de estilo — `w-72` perderia
- * para um `w-(--width)` sem `--width` nenhum declarado, que renderiza
- * `width: auto`. Compila, não avisa, e o painel abre com a largura errada.
+ * Toda aparência de painel mora em `ui.Utils.Dropdown.popover`, e o endereço único é
+ * o ponto: um `class` cravado no template do campo não passaria pelo `twMerge`, e o
+ * painel abriria com a largura errada, calado. Ver "O painel é do Dropdown" no
+ * `.claude/CLAUDE.md`.
  */
 const popover = (wrapper: { find: (s: string) => { classes: () => string[] } }) =>
     wrapper.find(".RUtilsDropdown").classes();
 
-describe("dropdown popover", () => {
-    it("puts z-999 on every panel, from the Dropdown's own defaults", async () => {
+describe("painel do dropdown", () => {
+    it("põe z-999 em todo painel, pelos defaults do próprio Dropdown", async () => {
         for (const [component, props] of [
             [RSelect, { options: ["a"] }],
             [RDate, {}],
@@ -31,13 +26,13 @@ describe("dropdown popover", () => {
         }
     });
 
-    it("reads the measured width where the field measures one", async () => {
+    it("lê a largura medida onde o campo mede uma", async () => {
         const wrapper = await mountSuspended(RSelect, { props: { options: ["a"] } as never });
 
         expect(popover(wrapper)).toContain("w-(--width)");
     });
 
-    it("drops w-(--width) for the fixed width of a field that measures none", async () => {
+    it("troca w-(--width) pela largura fixa de um campo que não mede nada", async () => {
         for (const [component, width] of [
             [RDate, "w-72"],
             [RColor, "w-64"]
@@ -50,7 +45,7 @@ describe("dropdown popover", () => {
         }
     });
 
-    it("drops w-(--width) when the ui writes another width", async () => {
+    it("troca w-(--width) quando o ui escreve outra largura", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: {
                 options: ["a"],

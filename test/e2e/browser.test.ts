@@ -5,13 +5,13 @@ import { describe, expect, it } from "vitest";
 
 const fixture = fileURLToPath(new URL("../fixtures/basic", import.meta.url));
 
-describe("e2e browser: basic fixture", async () => {
+describe("e2e browser: fixture basic", async () => {
     await setup({
         rootDir: fixture,
         browser: true
     });
 
-    it("updates the displayed model when the input is typed", async () => {
+    it("atualiza o model exibido quando se digita no input", async () => {
         const page = await createPage("/");
         await page.locator('input[name="name"]').fill("Ada");
         await page.waitForFunction(() => {

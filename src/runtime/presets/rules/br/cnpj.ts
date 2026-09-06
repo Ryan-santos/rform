@@ -16,6 +16,7 @@ const schema = () =>
         );
     }, trRule("br.cnpj"));
 
+/** Exige um CNPJ válido, conferindo os dois dígitos verificadores. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

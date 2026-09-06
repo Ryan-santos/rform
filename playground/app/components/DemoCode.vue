@@ -37,6 +37,9 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Bloco de código com realce, alimentado pelo `highlight()` do playground.
+     */
     import { computed, ref } from "vue";
 
     import { highlight, type Lang } from "~/utils/highlight";

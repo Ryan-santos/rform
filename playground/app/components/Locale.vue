@@ -23,6 +23,9 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Seletor de idioma do playground — é ele que exercita a ponte com o i18n do app.
+     */
     const { locale, locales, setLocale } = useI18n();
 
     const options = computed(() =>

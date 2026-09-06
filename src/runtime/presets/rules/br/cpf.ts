@@ -16,6 +16,7 @@ const schema = () =>
         );
     }, trRule("br.cpf"));
 
+/** Exige um CPF válido, conferindo os dois dígitos verificadores. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

@@ -1,12 +1,11 @@
 import { ref, type Ref } from "vue";
 
 /**
- * `#app` for the unit project, which runs in plain node with no Nuxt around —
- * the same way it already stubs every `#rform/*` alias.
+ * O `#app` do projeto unit, que roda em node puro sem Nuxt em volta — do mesmo
+ * jeito que ele já stuba todo alias `#rform/*`.
  *
- * `tryUseNuxtApp` returning `undefined` is not a mock of a behaviour: it is
- * exactly the branch `useTranslate` already has for a component mounted outside
- * a Nuxt app, so the unit tests exercise the real path.
+ * `tryUseNuxtApp` devolvendo `undefined` não é mock de comportamento: é exatamente
+ * o ramo que o `useTranslate` já tem para componente montado fora de app Nuxt.
  */
 export const tryUseNuxtApp = (): undefined => undefined;
 

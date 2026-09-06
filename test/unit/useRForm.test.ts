@@ -4,13 +4,13 @@ import { z, ZodObject } from "zod";
 import useRForm from "../../src/runtime/composables/useRForm";
 
 describe("useRForm", () => {
-    it("returns empty data ref when called with no args", () => {
+    it("devolve um data vazio quando chamado sem argumento", () => {
         const result = useRForm();
         expect(result.data.value).toEqual({});
         expect("rules" in result).toBe(false);
     });
 
-    it("treats a zod-only record as flat rules and returns a ZodObject", () => {
+    it("trata um record só-zod como rules planas e devolve um ZodObject", () => {
         const result = useRForm({
             name: z.string().min(1),
             age: z.number()
@@ -20,7 +20,7 @@ describe("useRForm", () => {
         expect(parsed.success).toBe(true);
     });
 
-    it("aggregates rules from a schema with flat fields", () => {
+    it("agrega as rules de um schema de campos planos", () => {
         const result = useRForm({
             name: { type: "text", rule: z.string().min(2) }
         } as never);
@@ -29,7 +29,7 @@ describe("useRForm", () => {
         expect(bad.success).toBe(false);
     });
 
-    it("aggregates rules recursively for object children", () => {
+    it("agrega as rules recursivamente nos filhos de um object", () => {
         const result = useRForm({
             user: {
                 type: "object",
@@ -45,7 +45,7 @@ describe("useRForm", () => {
         expect(bad.success).toBe(false);
     });
 
-    it("aggregates rules for array of objects", () => {
+    it("agrega as rules de um array de objetos", () => {
         const result = useRForm({
             tags: {
                 type: "array",
@@ -63,7 +63,7 @@ describe("useRForm", () => {
         expect(bad.success).toBe(false);
     });
 
-    it("leaves a preset rule untouched so the field resolves it", () => {
+    it("deixa intacta uma rule de preset, para o campo resolvê-la", () => {
         const result = useRForm({
             doc: { type: "text", rule: "brCpf" }
         } as never) as unknown as { schema: { doc: { rule: unknown } } };
@@ -71,7 +71,7 @@ describe("useRForm", () => {
         expect(result.schema.doc.rule).toBe("brCpf");
     });
 
-    it("leaves a composed preset array untouched", () => {
+    it("deixa intacto um array de presets composto", () => {
         const result = useRForm({
             doc: { type: "text", rule: ["required", { name: "min", min: 3 }] }
         } as never) as unknown as { schema: { doc: { rule: unknown } } };
@@ -79,7 +79,7 @@ describe("useRForm", () => {
         expect(result.schema.doc.rule).toEqual(["required", { name: "min", min: 3 }]);
     });
 
-    it("enforces a preset rule through the aggregated zod object", async () => {
+    it("cobra uma rule de preset pelo objeto zod agregado", async () => {
         const result = useRForm({
             doc: { type: "text", rule: "brCpf" }
         } as never);
@@ -88,7 +88,7 @@ describe("useRForm", () => {
         expect((await result.rules.safeParseAsync({ doc: "529.982.247-25" })).success).toBe(true);
     });
 
-    it("reports the preset message on the aggregated zod object", async () => {
+    it("reporta a mensagem do preset no objeto zod agregado", async () => {
         const result = useRForm({
             doc: { type: "text", rule: "brCpf" }
         } as never);
@@ -98,7 +98,7 @@ describe("useRForm", () => {
         expect(parsed.error?.issues[0]?.message).toBe("CPF inválido.");
     });
 
-    it("normalizes schema by converting zod rule into a callable validator", () => {
+    it("normaliza o schema convertendo a rule zod num validador chamável", () => {
         const result = useRForm({
             name: { type: "text", rule: z.string().min(2) }
         } as never) as unknown as {

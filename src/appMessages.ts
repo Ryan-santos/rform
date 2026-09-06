@@ -1,23 +1,23 @@
-/**
- * Build time only. Reads the app's own message file — the one `@nuxtjs/i18n`
- * declares for its `defaultLocale` — and turns it into the `TrInput` union that
- * makes a literal in a text prop a compile error.
- *
- * Pure: `module.ts` does the disk and the config, this does the shapes.
- */
+// Build time. Lê o arquivo de mensagens do app — o que o i18n declara para o
+// `defaultLocale` — e o transforma na união `TrInput`. Puro: `module.ts` cuida do
+// disco e da config, aqui ficam as formas.
 
 import { join } from "node:path";
 
 export type ParamInfo = { named: string[]; plural: boolean };
 
 export type TrMode =
-    /** No `@nuxtjs/i18n`, or a file that cannot be read. `TrInput` is `string`. */
+    /** Sem i18n, ou com arquivo ilegível. `TrInput` vira `string`. */
     | { kind: "loose" }
-    /** i18n, but no message file declared: no app key to offer, rigour kept. */
+    /** Com i18n e sem arquivo declarado: não há chave do app a oferecer, e o rigor fica. */
     | { kind: "moduleOnly" }
     | { kind: "strict"; messages: Record<string, string> };
 
-/** `{ form: { nome: "Nome" } }` -> `{ "form.nome": "Nome" }`. */
+/**
+ * Achata um objeto de mensagens em caminhos pontilhados.
+ *
+ * @example flattenMessages({ form: { nome: "Nome" } }) // → { "form.nome": "Nome" }
+ */
 export const flattenMessages = (source: unknown, prefix = ""): Record<string, string> => {
     if (!source || typeof source !== "object" || Array.isArray(source)) {
         return {};
@@ -40,8 +40,9 @@ export const flattenMessages = (source: unknown, prefix = ""): Record<string, st
 };
 
 /**
- * The literal interpolation goes first: `{'{{contato_nome}}'}` is vue-i18n's
- * way of printing braces, and its inside is not a param.
+ * Que params uma mensagem declara, e se ela é plural. A interpolação literal sai
+ * primeiro: `{'{{contato_nome}}'}` é como o vue-i18n imprime chaves cruas, e o que
+ * está lá dentro não é param — é o mesmo escape que o `{'@'}` de um e-mail usa.
  */
 export const messageParams = (message: string): ParamInfo => {
     const stripped = message.replace(/\{\s*'[^']*'\s*\}/g, "");
@@ -66,16 +67,16 @@ const entry = (key: string, message: string): string => {
 };
 
 const HEADER = [
-    "// auto-generated — the keys `tr` accepts, read from the app's own locale file",
+    "// gerado — as chaves que o `tr` aceita, lidas do arquivo de locale do app",
     "",
     `import type { MessageKey } from "./locales";`,
     "",
     "export type Interp = string | number;",
     "",
-    '/** An explicit literal: `tr("~~Nome")`. */',
+    '/** Um literal explícito: `tr("~~Nome")`. */',
     "export type Literal = `~~${string}`;",
     "",
-    "/** A message of the module's own pack, written out in full. */",
+    "/** Uma mensagem do pack do próprio módulo, escrita por extenso. */",
     "export type ModuleKey = `rform.${MessageKey}`;",
     ""
 ];
@@ -85,8 +86,8 @@ export const trTemplate = (mode: TrMode): string => {
         return [
             ...HEADER,
             "/**",
-            " * Either the app has no `@nuxtjs/i18n`, or its message file could not be",
-            " * read. Being strict here would reject every valid key.",
+            " * Ou o app não tem i18n, ou o arquivo de mensagens dele não pôde ser lido.",
+            " * Ser rigoroso aqui rejeitaria toda chave válida.",
             " */",
             "export type TrInput = string;",
             ""
@@ -99,8 +100,8 @@ export const trTemplate = (mode: TrMode): string => {
         return [
             ...HEADER,
             "/**",
-            " * The app has i18n but declares no message key, so there is none to offer —",
-            " * and the rigour stays: text is a key or a `~~` literal.",
+            " * O app tem i18n mas não declara chave nenhuma, então não há o que oferecer",
+            " * — e o rigor fica: texto é uma chave ou um literal `~~`.",
             " */",
             "export type TrInput = ModuleKey | Literal;",
             ""
@@ -147,13 +148,10 @@ const filesOf = (locale: I18nLocale): string[] =>
         .filter((entry): entry is string => !!entry);
 
 /**
- * Which of the three modes the app earns. Pure, with the disk injected: the
- * decision is what has to be covered, and `module.ts` has no seam for a test.
- *
- * The two degradations are different on purpose. **No file declared** is not a
- * failure — the app has i18n, there is simply no app key to offer, and the
- * rigour stays. **A file that cannot be read** is a failure, and being strict
- * there would reject every valid key, so it says so and falls back to `string`.
+ * Qual dos três modos o app ganha. Puro, com o disco injetado — a decisão é o que
+ * precisa de cobertura, e `module.ts` não tem costura para testar. As duas
+ * degradações são diferentes de propósito; ver "O mapa de chaves do app" no
+ * `.claude/CLAUDE.md`.
  */
 export const resolveAppMessages = async (input: {
     hasI18n: boolean;
@@ -179,11 +177,9 @@ export const resolveAppMessages = async (input: {
         return { kind: "moduleOnly" };
     }
 
-    /**
-     * `restructureDir` defaults to `"i18n"` in @nuxtjs/i18n v10, and `langDir`
-     * to `"locales"` — the same pair its own `resolve(layer.i18nDir, langDir)`
-     * uses. `false` flattens the first half away.
-     */
+    // `restructureDir` default é `"i18n"` no i18n v10, e `langDir` é `"locales"` — o
+    // mesmo par que o `resolve(layer.i18nDir, langDir)` dele usa. `false` achata a
+    // primeira metade.
     const restructureDir =
         typeof config.restructureDir === "string"
             ? config.restructureDir

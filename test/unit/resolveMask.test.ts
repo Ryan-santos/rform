@@ -8,32 +8,32 @@ const masks = {
 };
 
 describe("resolveMask", () => {
-    it("returns undefined when no mask is given", () => {
+    it("devolve undefined quando nenhuma mask é passada", () => {
         expect(resolveMask(undefined, masks)).toBeUndefined();
         expect(resolveMask(null, masks)).toBeUndefined();
     });
 
-    it("resolves a preset name to its options", () => {
+    it("resolve um nome de preset nas opções dele", () => {
         expect(resolveMask("cpf", masks)).toEqual({ mask: "###.###.###-##" });
     });
 
-    it("resolves a preset holding a dynamic mask", () => {
+    it("resolve um preset que guarda máscara dinâmica", () => {
         expect(resolveMask("cpfCnpj", masks)).toEqual({
             mask: ["###.###.###-##", "##.###.###/####-##"]
         });
     });
 
-    it("passes an unknown string through as a raw maska pattern", () => {
+    it("repassa string desconhecida como pattern maska cru", () => {
         expect(resolveMask("###.###.###-##", masks)).toBe("###.###.###-##");
     });
 
-    it("passes an options object through untouched", () => {
+    it("repassa intacto um objeto de opções", () => {
         const options = { mask: "##/##", eager: true };
 
         expect(resolveMask(options, masks)).toBe(options);
     });
 
-    it("prefers the preset over a raw pattern when both could match", () => {
+    it("prefere o preset ao pattern cru quando os dois casariam", () => {
         expect(resolveMask("cpf", { cpf: { mask: "###" } })).toEqual({ mask: "###" });
     });
 });

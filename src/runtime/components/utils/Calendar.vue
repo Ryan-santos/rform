@@ -154,6 +154,11 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Grade de calendário: navegação por mês e ano, seleção `single`, `multiple` ou
+     * `range`, e o painel de hora opcional. Nomes de mês e de dia saem do `Intl` do
+     * locale ativo.
+     */
     import { computed, ref, watch } from "vue";
 
     import { useUtil } from "#rform/composables";
@@ -312,11 +317,8 @@
 
     export const defaults = defineDefaults({
         ui,
-        /**
-         * `time` is also the boolean that decides whether the clock shows at
-         * all, and that is not a clash: `text` stays nested, so the message
-         * lives at `props.text.time` and the boolean at `props.time`.
-         */
+        // `time` também é o booleano que decide se o relógio aparece, e não colide:
+        // `text` fica aninhado, então a mensagem mora em `props.text.time`.
         text: {
             start: "start",
             end: "end",
@@ -324,10 +326,8 @@
         }
     });
 
-    /**
-     * A util writes `Props` by hand — there is no `Element` derivation here, so
-     * the `text` tree is spliced in with `TextProp`.
-     */
+    // Um util escreve `Props` à mão — não há `Element` aqui, então a árvore de
+    // `text` entra pelo `TextProp`.
     export type Props = TextProp<typeof defaults.text> & {
         mode?: Mode;
         time?: boolean;

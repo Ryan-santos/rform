@@ -1,7 +1,6 @@
 <template>
     <div class="flex min-w-0 grow flex-col xl:flex-row">
         <div class="flex min-w-0 grow flex-col gap-10 px-6 py-12 lg:px-10">
-            <!-- A linha embaixo do cabeçalho separa a apresentação da página dos exemplos. -->
             <header class="flex flex-col gap-2 border-b border-contrast/10 pb-6">
                 <div class="flex flex-row flex-wrap items-baseline gap-3">
                     <h1
@@ -55,6 +54,11 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * A moldura de toda página de demo: cabeçalho, os `<Demo>` da página e, opcionalmente,
+     * o `RForm` em volta com o painel de model. A linha embaixo do cabeçalho é o que
+     * separa a apresentação dos exemplos.
+     */
     import { provide, ref, toRef } from "vue";
 
     import { demoSourceKey } from "~/utils/demo";
@@ -64,9 +68,9 @@
             title: string;
             tag?: string;
             description?: string;
-            /** The page's own text, from `import source from "./<page>.vue?raw"`. */
+            /** O texto da própria página, de `import source from "./<page>.vue?raw"`. */
             source?: string;
-            /** Wrap the examples in an `RForm` and print its model. Off for pages that own their forms. */
+            /** Embrulha os exemplos num `RForm` e imprime o model. Desligado nas páginas que têm o próprio form. */
             form?: boolean;
             initial?: Record<string, unknown>;
         }>(),

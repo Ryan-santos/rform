@@ -16,14 +16,14 @@ const findDayButton = (wrapper: Awaited<ReturnType<typeof mountSuspended>>, day:
 };
 
 describe("RCalendar", () => {
-    it("renders the day grid with 42 cells by default (single mode)", async () => {
+    it("renderiza a grade de dias com 42 células por padrão (modo single)", async () => {
         const wrapper = await mountSuspended(RCalendar);
-        // 42 day cells + nav and title buttons. The day grid has exactly 42 cells.
+        // 42 células de dia, mais os botões de navegação e título.
         const grid = wrapper.find('[class*="grid-cols-7"]');
         expect(grid.exists()).toBe(true);
     });
 
-    it("writes a YYYY-MM-DD string on day click (single mode)", async () => {
+    it("escreve uma string YYYY-MM-DD ao clicar num dia (modo single)", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { modelValue: "2026-05-15" } as never
         });
@@ -38,7 +38,7 @@ describe("RCalendar", () => {
         expect(emits?.at(-1)?.[0]).toBe("2026-05-20");
     });
 
-    it("emits a tuple on day click when mode=range (first click)", async () => {
+    it("emite uma tupla ao clicar num dia com mode=range (primeiro clique)", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { mode: "range", modelValue: undefined } as never
         });
@@ -52,12 +52,12 @@ describe("RCalendar", () => {
         expect(Array.isArray(last)).toBe(true);
         expect(last).toHaveLength(2);
         expect(last[1]).toBeUndefined();
-        // Day 10 could be from the previous month (outside) or current month.
-        // Either way, the iso string must end with -10.
+        // O dia 10 pode ser do mês anterior ou do corrente; de um jeito ou de outro a
+        // string ISO tem de terminar em -10.
         expect(last[0]).toMatch(/-10$/);
     });
 
-    it("emits a sorted array when mode=multiple — toggles selection on click", async () => {
+    it("emite um array ordenado com mode=multiple — o clique alterna a seleção", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { mode: "multiple", modelValue: ["2026-05-10"] } as never
         });
@@ -72,7 +72,7 @@ describe("RCalendar", () => {
         expect(last).toEqual(["2026-05-10", "2026-05-20"]);
     });
 
-    it("removes the date on second click when mode=multiple (toggle off)", async () => {
+    it("remove a data no segundo clique com mode=multiple", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { mode: "multiple", modelValue: ["2026-05-20"] } as never
         });
@@ -86,7 +86,7 @@ describe("RCalendar", () => {
         expect(last).toEqual([]);
     });
 
-    it("disables day buttons that match disable.before", async () => {
+    it("desabilita os dias que casam com disable.before", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: {
                 modelValue: "2026-05-15",
@@ -94,12 +94,12 @@ describe("RCalendar", () => {
             } as never
         });
 
-        // Day 5 is before May 10 → disabled.
+        // O dia 5 é antes de 10 de maio, então está desabilitado.
         const day5 = wrapper.findAll("button").find((b) => b.text() === "5");
         expect(day5?.attributes("disabled")).toBeDefined();
     });
 
-    it("does not emit when clicking a disabled day", async () => {
+    it("não emite ao clicar num dia desabilitado", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: {
                 modelValue: "2026-05-15",
@@ -112,23 +112,23 @@ describe("RCalendar", () => {
         await day25!.trigger("click");
         await nextTick();
 
-        // Should still hold the initial value, no new emit triggered by the click.
+        // Continua com o valor inicial: o clique não dispara emit novo.
         const emits = wrapper.emitted("update:modelValue") ?? [];
         for (const e of emits) {
             expect(e[0]).not.toBe("2026-05-25");
         }
     });
 
-    it("drills down from days view → months view when month title is clicked", async () => {
+    it("desce da visão de dias para a de meses ao clicar no título do mês", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { modelValue: "2026-05-15" } as never
         });
 
-        // Initially in days view → weekdays row visible
+        // Começa na visão de dias, com a linha de dias da semana visível.
         const weekdaysBefore = wrapper.find('[class*="grid-cols-7"]');
         expect(weekdaysBefore.exists()).toBe(true);
 
-        // The month-title button (capitalized "Maio") opens the months view.
+        // O botão do título do mês ("Maio") abre a visão de meses.
         const titleButtons = wrapper.findAll("button").filter((b) => {
             const text = b.text();
             return text.length > 2 && /^[A-Z]/.test(text);
@@ -138,12 +138,12 @@ describe("RCalendar", () => {
         await titleButtons[0]!.trigger("click");
         await nextTick();
 
-        // After drill-down the months grid is rendered.
+        // Depois de descer, a grade de meses é renderizada.
         const monthsGrid = wrapper.find('[class*="grid-cols-3"]');
         expect(monthsGrid.exists()).toBe(true);
     });
 
-    it("drills down from days view → years view when year title is clicked", async () => {
+    it("desce da visão de dias para a de anos ao clicar no título do ano", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { modelValue: "2026-05-15" } as never
         });
@@ -155,18 +155,15 @@ describe("RCalendar", () => {
 
         const yearsGrid = wrapper.find('[class*="grid-cols-3"]');
         expect(yearsGrid.exists()).toBe(true);
-        // 12-year window centered on view.year should render multiple years.
+        // A janela de 12 anos, centrada em view.year, renderiza vários anos.
         const yearButtons = wrapper.findAll("button").filter((b) => /^\d{4}$/.test(b.text()));
         expect(yearButtons.length).toBeGreaterThanOrEqual(12);
     });
 
-    /**
-     * The clock panel is gated on `props.time`, a boolean the parent field
-     * passes down, while its label is `props.text.time`. The two share a name
-     * and cannot collide: `text` stays a nested object, so nothing prefixed
-     * ever lands on the boolean. These two are the guard.
-     */
-    it("shows the clock, labelled from the pack, when time is on", async () => {
+    // O painel de hora depende de `props.time`, booleano, e o rótulo dele é
+    // `props.text.time`. Os dois têm o mesmo nome e não colidem, porque `text` fica
+    // aninhado — estes dois testes são a guarda.
+    it("mostra o relógio, rotulado pelo pack, quando time está ligado", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { modelValue: "2026-05-15", time: true } as never
         });
@@ -174,7 +171,7 @@ describe("RCalendar", () => {
         expect(wrapper.text()).toContain("Hora");
     });
 
-    it("keeps the clock out when time is off", async () => {
+    it("deixa o relógio de fora quando time está desligado", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: { modelValue: "2026-05-15" } as never
         });
@@ -183,7 +180,7 @@ describe("RCalendar", () => {
         expect(wrapper.text()).not.toContain("rform.utils.calendar");
     });
 
-    it("takes the label from the nested text prop", async () => {
+    it("pega o rótulo da prop text aninhada", async () => {
         const wrapper = await mountSuspended(RCalendar, {
             props: {
                 modelValue: "2026-05-15",

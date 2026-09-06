@@ -9,6 +9,11 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Container aninhado: agrupa os filhos sob a própria chave no model do Form.
+     *
+     * @example <RObject name="endereco"><RText name="rua" /></RObject>
+     */
     import { useField, useProvide } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

@@ -1,28 +1,28 @@
 /**
- * Names the module owns. `Form` provides the root injection and `Dynamic`
- * renders a schema — neither is a field, so neither is replaceable.
+ * Nomes que o módulo possui. `Form` provê a raiz da injeção e `Dynamic` renderiza
+ * um schema — nenhum dos dois é campo, e nenhum é substituível.
  */
 export const RESERVED = ["Form", "Dynamic"];
 
 /**
- * The name is used three ways: as an object key in the generated registry, as a
- * `Components` key the user writes in `defineFieldDefaults`, and lowercased as a
- * `FieldType` member. A dash or a leading digit survives none of those intact.
+ * O nome é usado de três formas: chave de objeto no registry gerado, chave de
+ * `Components` que o app escreve no `defineFieldDefaults`, e — em minúsculas —
+ * membro do `FieldType`. Traço ou dígito inicial não sobrevive a nenhuma delas.
  */
 const VALID_NAME = /^[A-Z][A-Za-z0-9]*$/;
 
 export type ComponentSource = {
-    /** Absolute directory the files were read from. */
+    /** Diretório absoluto de onde os arquivos foram lidos. */
     root: string;
-    /** Directory entries, as returned by `readdir`. */
+    /** As entradas do diretório, como o `readdir` devolveu. */
     files: string[];
-    /** `app/rform/*` rather than the module's own runtime. */
+    /** `app/rform/*`, e não o runtime do próprio módulo. */
     user: boolean;
 };
 
 export type ComponentFile = {
     name: string;
-    /** Path relative to `root`, so the caller owns path joining. */
+    /** Caminho relativo a `root`: quem junta caminho é o chamador. */
     file: string;
     root: string;
     user: boolean;
@@ -31,12 +31,10 @@ export type ComponentFile = {
 const isComponent = (file: string) => file.endsWith(".vue");
 
 /**
- * Pairs every component under the given roots with its name, later sources
- * overriding earlier ones by name.
- *
- * The order carries the whole override rule: built-in roots come first, so a
- * user file of the same name replaces rather than duplicates — the same shape
- * `collectPresets` gives rules and masks.
+ * Pareia todo componente sob as raízes dadas com o nome, e fonte posterior
+ * sobrescreve anterior pelo nome. A ordem carrega a regra inteira de override: as
+ * raízes embutidas vêm primeiro, então arquivo do usuário de mesmo nome substitui
+ * em vez de duplicar — a mesma forma que `collectPresets` dá a rules e masks.
  */
 export const collectComponents = (sources: ComponentSource[]): ComponentFile[] => {
     const merged = new Map<string, ComponentFile>();

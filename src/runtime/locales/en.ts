@@ -1,11 +1,9 @@
 type Messages = typeof import("./pt-BR").default;
 
 /**
- * Typed against the reference pack, so a key added there without a translation
- * here is a compile error rather than a silent fallback at runtime.
- *
- * The `br.*` rules are translated too: an en-US app can perfectly well validate
- * a Brazilian document.
+ * Tipado *contra* o pack de referência, então uma chave nova sem tradução aqui é
+ * erro de compilação em vez de fallback calado em runtime. As rules `br.*` também
+ * são traduzidas: um app en-US valida documento brasileiro sem problema.
  */
 const en: Messages = {
     fields: {

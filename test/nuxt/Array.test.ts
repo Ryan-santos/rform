@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick } from "vue";
 import { RArray } from "#components";
 
 describe("RArray", () => {
-    it("renders one <li> per item plus an add button", async () => {
+    it("renderiza um <li> por item, mais o botão de adicionar", async () => {
         const Item = defineComponent({
             props: ["item", "index"],
             setup: (p) => () => h("span", { "data-testid": `item-${p.index}` }, String(p.item))
@@ -24,7 +24,7 @@ describe("RArray", () => {
         expect(wrapper.find("button").exists()).toBe(true);
     });
 
-    it("pushes a new entry into the model array when add button is clicked", async () => {
+    it("empurra uma entrada nova no array do model ao clicar em adicionar", async () => {
         const arr: unknown[] = ["a"];
         const wrapper = await mountSuspended(RArray, {
             props: { modelValue: arr } as never,
@@ -36,7 +36,7 @@ describe("RArray", () => {
         expect(arr).toHaveLength(2);
     });
 
-    it("hides the add button once max is reached", async () => {
+    it("esconde o botão de adicionar quando o max é atingido", async () => {
         const wrapper = await mountSuspended(RArray, {
             props: { modelValue: ["a", "b"], max: 2 } as never,
             slots: { default: () => h("span") }
@@ -45,7 +45,7 @@ describe("RArray", () => {
         expect(wrapper.find("button").exists()).toBe(false);
     });
 
-    it("hides the remove icon when length equals min", async () => {
+    it("esconde o ícone de remover quando o tamanho iguala o min", async () => {
         const wrapper = await mountSuspended(RArray, {
             props: { modelValue: ["only"], min: 1 } as never,
             slots: { default: () => h("span") }

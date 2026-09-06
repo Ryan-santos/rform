@@ -12,6 +12,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Util do usuário: a prop `hint` que ele declara passa a existir em todo campo, e o
+     * `ui` dele fica em `ui.Utils.Hint`.
+     *
+     * @example <RRating name="nota" hint="De 1 a 5" />
+     */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults } from "#rform/utils";

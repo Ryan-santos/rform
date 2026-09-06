@@ -21,6 +21,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo novo do usuário — cobre o caminho de um `.vue` em `app/rform/fields` que
+     * não substitui nada.
+     *
+     * @example <RRating name="nota" :max="10" />
+     */
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

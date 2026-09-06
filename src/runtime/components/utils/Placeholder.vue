@@ -18,6 +18,10 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Placeholder que vira label flutuante quando o campo tem valor. Emite
+     * `data-floating` nesse estado — é por ele que o reset de autofill se ancora.
+     */
     import { computed } from "vue";
 
     import { useUtil } from "#rform/composables";

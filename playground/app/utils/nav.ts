@@ -10,9 +10,8 @@ export type NavGroup = {
 };
 
 /**
- * The single source of the sidebar. Declared rather than derived from the route
- * table so the order is the one that makes sense to read, not alphabetical by
- * accident of the filesystem.
+ * A fonte única da barra lateral. Declarada, e não derivada da tabela de rotas, para
+ * a ordem ser a que faz sentido ler — e não a alfabética do sistema de arquivos.
  */
 export const nav: NavGroup[] = [
     {

@@ -8,9 +8,9 @@ const camelize = (segment: string) =>
         .join("");
 
 /**
- * Derives a preset name from its path relative to the `rules`/`masks` root.
+ * Deriva o nome de um preset a partir do caminho relativo à raiz `rules`/`masks`.
  *
- * `br/insc-est.ts` -> `brInscEst`
+ * @example presetName("br/insc-est.ts") // → "brInscEst"
  */
 export const presetName = (relativePath: string) => {
     const segments = relativePath.split(/[/\\]+/).filter((segment) => segment !== "");
@@ -30,10 +30,9 @@ export type PresetFile = {
 const isModule = (file: string) => /\.[tj]s$/.test(file) && !/\.d\.[tj]s$/.test(file);
 
 /**
- * Pairs every preset module under a `rules`/`masks` root with its derived name.
- *
- * Two paths collapsing to the same name is a build error — silently dropping one
- * would make the surviving preset depend on directory read order.
+ * Pareia todo módulo de preset sob uma raiz com o nome derivado. Dois caminhos que
+ * colapsam no mesmo nome são erro de build — descartar um calado faria o preset
+ * sobrevivente depender da ordem de leitura do diretório.
  */
 export const collectPresets = (files: string[]): PresetFile[] => {
     const seen = new Map<string, string>();

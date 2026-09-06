@@ -67,8 +67,8 @@ const NumberField = defineComponent({
 const read = (wrapper: { get: (selector: string) => { text: () => string } }, testId: string) =>
     JSON.parse(wrapper.get(`[data-testid="${testId}"]`).text());
 
-describe("user defaults (app/rform/defaults.ts)", () => {
-    it("override the component's own defaults", async () => {
+describe("defaults do usuário (app/rform/defaults.ts)", () => {
+    it("sobrescrevem o defaults do próprio componente", async () => {
         const wrapper = await mountSuspended(TextField, {
             props: { sourceProps: {} }
         });
@@ -79,7 +79,7 @@ describe("user defaults (app/rform/defaults.ts)", () => {
         expect(payload.container).toContain("user-container");
     });
 
-    it("lose to the props passed at the call site", async () => {
+    it("perdem para as props passadas no call site", async () => {
         const wrapper = await mountSuspended(TextField, {
             props: { sourceProps: { default: "from-call-site" } }
         });
@@ -87,18 +87,18 @@ describe("user defaults (app/rform/defaults.ts)", () => {
         expect(read(wrapper, "field").default).toBe("from-call-site");
     });
 
-    it("takes a text value from the user defaults raw, with no prefix", async () => {
+    it("pega um texto dos defaults do usuário cru, sem prefixo", async () => {
         const wrapper = await mountSuspended(RArray, {
             props: { name: "itens", modelValue: [] } as never
         });
 
-        // The prefix only applies to what the component itself declared in
-        // `defaults.text`. Anything the app writes is the app's key.
+        // O prefixo só vale para o que o próprio componente declarou em
+        // `defaults.text`; o que o app escreve é chave do app.
         expect(wrapper.text()).toContain("meu.add");
         expect(wrapper.text()).not.toContain("rform.fields.array.add");
     });
 
-    it("only reach the component they are keyed under", async () => {
+    it("só alcançam o componente sob o qual estão chaveados", async () => {
         const wrapper = await mountSuspended(NumberField, {
             props: { sourceProps: {} }
         });
@@ -112,8 +112,8 @@ describe("user defaults (app/rform/defaults.ts)", () => {
 
 const Util = defineComponent({
     async setup() {
-        // No `defaults` argument: the registry path, which a util written
-        // before the synchronous form still takes.
+        // Sem o argumento `defaults`: o caminho do registry, que um util escrito antes
+        // da forma síncrona ainda toma.
         const { props } = await useUtil(undefined, "Placeholder");
 
         return () =>
@@ -140,8 +140,8 @@ const UtilParent = defineComponent({
     }
 });
 
-describe("user defaults for Utils", () => {
-    it("override the util's own defaults, under the Utils key", async () => {
+describe("defaults do usuário para Utils", () => {
+    it("sobrescrevem o defaults do próprio util, sob a chave Utils", async () => {
         const wrapper = await mountSuspended(UtilParent);
         const payload = read(wrapper, "util");
 

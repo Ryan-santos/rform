@@ -27,6 +27,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Painel flutuante compartilhado por Select, Date e Color. Posiciona com o
+     * floating-ui e só monta o conteúdo no primeiro `open`.
+     *
+     * @example <RUtilsDropdown v-model:open="open"><template #trigger>…</template></RUtilsDropdown>
+     */
     import {
         autoUpdate,
         useFloating,
@@ -189,13 +195,9 @@
 
     const { props } = useUtil<Props>(defaults);
 
-    /**
-     * The popover element itself stays in the tree — `useFloating` needs the
-     * ref, and the `Transition` needs something to animate — but its contents
-     * wait for the first open. A closed `RDate` was rendering a whole month:
-     * 47 buttons and 13 KB of markup, on the server too, for a panel nobody had
-     * asked for. Latching instead of tracking `open` keeps reopening free.
-     */
+    // O popover fica na árvore (o `useFloating` precisa do ref), mas o conteúdo
+    // espera o primeiro `open` — um `RDate` fechado renderizava um mês inteiro.
+    // Travar em vez de rastrear `open` deixa reabrir de graça.
     const everOpened = ref(false);
 
     watch(

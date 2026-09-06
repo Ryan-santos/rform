@@ -5,18 +5,14 @@ import { h } from "vue";
 
 import { RForm, RText } from "#components";
 
-// By path, not `#components`: this one lives in the fixture.
+// Por caminho, não por `#components`: este mora na fixture.
 import RRating from "../fixtures/basic/rform/fields/Rating.vue";
 
 /**
- * The class each field and util carries on its root, prepended to the top-most
- * `ui` entry by `useField` / `useUtil` from the map the module
- * generates into `#rform/registry`. It is the only target the resets in
- * `src/runtime/style.css` have — the spinner reset, the two autofill tricks,
- * and the placeholder hidden under the browser's autofill preview.
- *
- * The failure mode is always the same and always silent: without the class the
- * field still compiles and renders, it just gets no reset at all.
+ * A classe que cada campo e util carrega na raiz, prependida na entrada mais alta
+ * do `ui` pelo `useField` / `useUtil`. É o único alvo que os resets de
+ * `src/runtime/style.css` têm, e o modo de falha é sempre calado: sem a classe o
+ * campo compila e renderiza igual, só que sem reset nenhum.
  */
 describe("classes-gancho na raiz", () => {
     it("marca um campo embutido com a genérica e a do componente", async () => {
@@ -41,13 +37,8 @@ describe("classes-gancho na raiz", () => {
         );
     });
 
-    /**
-     * A razão de a classe entrar **depois** do merge e não de dentro do
-     * `defaults.ui`: `ui` é sobrescrevível por contrato, e o `mergerUI` trata
-     * `null` como "zera esta chave". Declarada nos defaults, o gancho sumiria
-     * junto — e um `container` que só troca classes ficaria à mercê do que o
-     * `twMerge` decide descartar, num namespace que não é do Tailwind.
-     */
+    // A razão de a classe entrar **depois** do merge: o `mergerUI` lê `null` como
+    // "zera esta chave", e declarada nos defaults o gancho sumiria junto.
     it("sobrevive a um ui.container zerado", async () => {
         const wrapper = await mountSuspended(RText, {
             props: { ui: { container: null } } as never

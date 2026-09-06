@@ -8,11 +8,14 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Texto auxiliar do campo. Só renderiza quando o campo tem `description`.
+     */
     import { useUtil } from "#rform/composables";
     import type { TrInput } from "#rform/types";
     import { defineDefaults } from "#rform/utils";
 
-    /** No `description: ""` sentinel — see the note in `utils/Label.vue`. */
+    // Sem sentinela `description: ""` — ver a nota em `utils/Label.vue`.
     export const defaults = defineDefaults({
         ui: "text-xs text-current/50"
     });

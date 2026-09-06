@@ -8,68 +8,68 @@ import {
 } from "../../src/appMessages";
 
 describe("flattenMessages", () => {
-    it("flattens nested objects into dotted paths", () => {
+    it("achata objeto aninhado em caminho pontilhado", () => {
         expect(flattenMessages({ form: { nome: "Nome", max: "Até {n}" } })).toEqual({
             "form.nome": "Nome",
             "form.max": "Até {n}"
         });
     });
 
-    it("drops anything that is not a string leaf", () => {
+    it("descarta o que não é folha string", () => {
         expect(flattenMessages({ a: "x", b: 1, c: null, d: [] })).toEqual({ a: "x" });
     });
 
-    it("returns an empty map for a non-object", () => {
+    it("devolve mapa vazio para o que não é objeto", () => {
         expect(flattenMessages("nope")).toEqual({});
         expect(flattenMessages(null)).toEqual({});
     });
 });
 
 describe("messageParams", () => {
-    it("finds named params", () => {
+    it("acha os params nomeados", () => {
         expect(messageParams("Até {n} de {total}")).toEqual({
             named: ["n", "total"],
             plural: false
         });
     });
 
-    it("tolerates spaces inside the braces", () => {
+    it("tolera espaço dentro das chaves", () => {
         expect(messageParams("Até { n }")).toEqual({ named: ["n"], plural: false });
     });
 
-    it("does not repeat a param used twice", () => {
+    it("não repete um param usado duas vezes", () => {
         expect(messageParams("{a} e {a}")).toEqual({ named: ["a"], plural: false });
     });
 
-    it("ignores a vue-i18n literal interpolation", () => {
+    it("ignora uma interpolação literal do vue-i18n", () => {
         expect(messageParams("{'{{contato_nome}}'}")).toEqual({ named: [], plural: false });
     });
 
-    it("detects a plural", () => {
+    it("detecta um plural", () => {
         expect(messageParams("um item | {n} itens")).toEqual({ named: ["n"], plural: true });
     });
 
-    it("reports neither for a plain message", () => {
+    it("não reporta nenhum dos dois numa mensagem simples", () => {
         expect(messageParams("Nome")).toEqual({ named: [], plural: false });
     });
 });
 
 describe("trTemplate", () => {
-    it("loose is the whole string type", () => {
+    it("loose é o tipo string inteiro", () => {
         const out = trTemplate({ kind: "loose" });
 
         expect(out).toContain("export type TrInput = string;");
         expect(out).not.toContain("interface AppMessages");
     });
 
-    it("moduleOnly keeps the rigour with no app key to offer", () => {
+    it("moduleOnly mantém o rigor sem chave do app a oferecer", () => {
         const out = trTemplate({ kind: "moduleOnly" });
 
         expect(out).toContain("export type TrInput = ModuleKey | Literal;");
         expect(out).not.toContain("interface AppMessages");
     });
 
-    it("strict emits one entry per key, typed by its params", () => {
+    it("strict emite uma entrada por chave, tipada pelos params dela", () => {
         const out = trTemplate({
             kind: "strict",
             messages: {
@@ -89,13 +89,13 @@ describe("trTemplate", () => {
         );
     });
 
-    it("falls back to moduleOnly when the app file has no key at all", () => {
+    it("cai em moduleOnly quando o arquivo do app não tem chave nenhuma", () => {
         expect(trTemplate({ kind: "strict", messages: {} })).toContain(
             "export type TrInput = ModuleKey | Literal;"
         );
     });
 
-    it("every mode declares Literal and ModuleKey", () => {
+    it("todo modo declara Literal e ModuleKey", () => {
         for (const mode of [
             { kind: "loose" } as const,
             { kind: "moduleOnly" } as const,
@@ -120,18 +120,18 @@ const read = (files: Record<string, string>) => (path: string) => {
 };
 
 describe("resolveAppMessages", () => {
-    it("is loose with no @nuxtjs/i18n at all", async () => {
+    it("é loose sem nenhum @nuxtjs/i18n", async () => {
         const warn = vi.fn();
 
         expect(
             await resolveAppMessages({ hasI18n: false, rootDir: "/app", read: read({}), warn })
         ).toEqual({ kind: "loose" });
 
-        // Not a degradation: there is no i18n to be strict about.
+        // Não é degradação: não há i18n sobre o que ser rigoroso.
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it("is moduleOnly when i18n declares no file — and says nothing", async () => {
+    it("é moduleOnly quando o i18n não declara arquivo — e não avisa nada", async () => {
         const warn = vi.fn();
 
         const mode = await resolveAppMessages({
@@ -149,7 +149,7 @@ describe("resolveAppMessages", () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it("reads the defaultLocale's json and flattens it", async () => {
+    it("lê o json do defaultLocale e o achata", async () => {
         const mode = await resolveAppMessages({
             hasI18n: true,
             rootDir: "/app",
@@ -167,7 +167,7 @@ describe("resolveAppMessages", () => {
         expect(mode).toEqual({ kind: "strict", messages: { "form.nome": "Nome" } });
     });
 
-    it("degrades on a .ts file, naming it and the reason", async () => {
+    it("degrada num arquivo .ts, nomeando ele e o motivo", async () => {
         const warn = vi.fn();
 
         const mode = await resolveAppMessages({
@@ -187,7 +187,7 @@ describe("resolveAppMessages", () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining("formato"));
     });
 
-    it("degrades on yaml the same way", async () => {
+    it("degrada em yaml do mesmo jeito", async () => {
         const warn = vi.fn();
 
         const mode = await resolveAppMessages({
@@ -205,7 +205,7 @@ describe("resolveAppMessages", () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining("pt-BR.yaml"));
     });
 
-    it("degrades when the json is there but will not parse", async () => {
+    it("degrada quando o json existe mas não parseia", async () => {
         const warn = vi.fn();
 
         const mode = await resolveAppMessages({
@@ -223,7 +223,7 @@ describe("resolveAppMessages", () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining("pt-BR.json"));
     });
 
-    it("takes the `{ path }` form of `file` and the `files` array", async () => {
+    it("aceita a forma `{ path }` de `file` e o array `files`", async () => {
         const mode = await resolveAppMessages({
             hasI18n: true,
             rootDir: "/app",
@@ -237,7 +237,7 @@ describe("resolveAppMessages", () => {
         expect(mode).toEqual({ kind: "strict", messages: { a: "A", b: "B" } });
     });
 
-    it("falls back to the first locale when defaultLocale names none", async () => {
+    it("cai no primeiro locale quando defaultLocale não nomeia nenhum", async () => {
         const mode = await resolveAppMessages({
             hasI18n: true,
             rootDir: "/app",

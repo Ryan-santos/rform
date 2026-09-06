@@ -4,19 +4,13 @@ import type { TrInput } from "#rform/types/tr";
 export type { TrInput };
 
 /**
- * `default` is optional so that `defineDefaults` types a Utils component too —
- * a Label or an Error has a `ui` but no model of its own, and a second helper
- * just for them would mean two conventions for the same job.
+ * A forma do `defaults` de qualquer componente. `default` é opcional para
+ * `defineDefaults` tipar um util também — um Label tem `ui` e não tem model.
  *
- * `text` is the third reserved key, and it stays a **nested object** all the way
- * through: what is inside it is a translation key of the module, which the
- * composables prefix with `rform.fields.<component>.` (or `rform.utils.<name>.`)
- * and hand back under the same shape, so a template reads `tr(props.text.add)`.
- *
- * Everything outside `text` is left alone — `keyValue: "id"` is a property
- * name, not a message. The two exceptions are `label` and `placeholder`, which
- * live at the top level by contract (an app passes them directly) but are still
- * prefixed when the value came from the component's own defaults.
+ * `text` é a chave que marca o que é chave de tradução do módulo, e continua um
+ * objeto **aninhado** o caminho inteiro; `label` e `placeholder` são as duas
+ * exceções que moram no topo por contrato. Ver "`defaults.text` é o marcador" no
+ * `.claude/CLAUDE.md`.
  */
 export interface Base {
     ui: Record<string, unknown> | string;
@@ -26,7 +20,7 @@ export interface Base {
     placeholder?: unknown;
 }
 
-/** The authoring shape of `defaults.text`: nested groups of message keys. */
+/** A forma de autoria de `defaults.text`: grupos aninhados de chaves de mensagem. */
 export interface TextSource {
     [key: string]: string | TextSource;
 }
@@ -44,8 +38,8 @@ export type ConvertNeverToUnknown<T> = T extends never[]
           : T;
 
 /**
- * What a named schema slot receives from RForm / RDynamic. Typed here so the
- * scope survives the hop through the dynamic `#[slotName]` bindings.
+ * O que um slot nomeado do schema recebe do RForm / RDynamic. Tipado aqui para o
+ * escopo sobreviver ao salto pelos bindings dinâmicos `#[slotName]`.
  */
 export type SlotScope = {
     fieldName: string | number;
@@ -57,28 +51,21 @@ export type DeepPartial<T> = {
 };
 
 /**
- * The inverse of DeepPartial. What a partial `ui` becomes once merged over a
- * complete set of defaults: every key is present, at every depth.
+ * O inverso do `DeepPartial`: o que um `ui` parcial vira depois de mesclado sobre
+ * os defaults completos — toda chave presente, em toda profundidade.
  */
 export type DeepRequired<T> = T extends object
     ? { [P in keyof T]-?: DeepRequired<NonNullable<T[P]>> }
     : T;
 
 /**
- * Mirrors a `defaults.text` tree into the prop that carries it, turning every
- * leaf into a `TrInput` the app may override and every level optional:
+ * Espelha a árvore de `defaults.text` na prop que a carrega, virando toda folha um
+ * `TrInput` e todo nível opcional. Mapped type de propósito, nunca condicional no
+ * nível da prop — ver "O `Element` não deriva os props de texto" no
+ * `.claude/CLAUDE.md`.
  *
- * ```ts
- * TextProp<{ hint: string, teste: { a: string } }>
- * // -> { text?: { hint?: TrInput, teste?: { a?: TrInput } } }
- * ```
- *
- * A component writes `TextProp<typeof defaults.text>` and stops restating its
- * own keys. Deliberately a **mapped** type and not a conditional one at the
- * prop level: `@vue/compiler-sfc` derives runtime props from `Props`, and it
- * cannot resolve a `TSConditionalType` that decides whether a prop exists —
- * it fails with "Unresolvable type" and the whole SFC stops collecting.
- * Here `text` always exists; only its interior is mapped.
+ * @example TextProp<{ hint: string, teste: { a: string } }>
+ * // → { text?: { hint?: TrInput, teste?: { a?: TrInput } } }
  */
 export type TextTree<T> = {
     [K in keyof T]?: T[K] extends string ? TrInput : TextTree<T[K]>;
@@ -89,21 +76,18 @@ export type TextProp<T> = {
 };
 
 /**
- * The same component seen from its own `defaults` instead of from the call
- * site. Everything matches its `Props` except `text`, which still holds the raw
- * key suffixes `prefixText` has yet to expand — `"start"`, not a `TrInput`. In
- * an app with `@nuxtjs/i18n` those two are genuinely different types (`TrInput`
- * narrows to `ModuleKey | Literal` there), so a util handing its `defaults` to
- * `useUtil<Props>` has to say which of the two it is holding.
+ * O mesmo componente visto do próprio `defaults` em vez do call site: igual a
+ * `Props`, menos `text`, que ainda guarda o sufixo cru que o `prefixText` não
+ * expandiu. Ver "`WithTextSource<P>`" no `.claude/CLAUDE.md`.
  */
 export type WithTextSource<P> = Omit<P, "text"> & { text?: TextSource };
 
 /**
- * `C` is the field type the component maps to ("text", "color", ...). It filters
- * which rule presets the `rule` prop accepts, via each preset's `available`.
+ * As props que todo campo tem. `C` é o field type ("text", "color", …) e filtra
+ * quais presets o `rule` aceita, pelo `available` de cada um.
  *
- * `text` is deliberately absent here: a component splices it in itself with
- * `TextProp<typeof defaults.text>`, because only the component knows the tree.
+ * `text` está ausente de propósito: cada componente o intersecciona com
+ * `TextProp<typeof defaults.text>`, porque só ele sabe a forma da própria árvore.
  */
 export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<OBJ["default"]>> = {
     name?: string | number;

@@ -24,6 +24,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo do usuário: entra no `FieldType`, no `components-map` e no `Components`, do
+     * mesmo jeito que um embutido. `max` é o número de estrelas.
+     *
+     * @example <RRating name="nota" label="Nota" :max="10" />
+     */
     import { computed } from "vue";
 
     import { useField } from "#rform/composables";

@@ -4,13 +4,9 @@ import { defineRule, type RuleContext } from "../../utils/definePreset";
 import { trRule } from "../../utils/tr";
 import { check, isBlank } from "../helpers";
 
-/**
- * A number is compared by value, everything else by length — so the schema is
- * picked from the value, not from the field. Two messages, for the same reason.
- *
- * The length message is a plural, and the count that chooses the form is the
- * same `min` it interpolates — the engine reads it out of the named object.
- */
+// O schema é escolhido pelo **valor**, não pelo tipo do campo: número compara por
+// valor, o resto por comprimento. A mensagem de comprimento é plural, e a contagem
+// que escolhe a forma é o mesmo `min` que ela interpola.
 const schema = (value: unknown, min: number) => {
     if (typeof value === "number") {
         return z.number().min(min, trRule({ key: "min.number", params: { min } }));
@@ -23,6 +19,7 @@ const schema = (value: unknown, min: number) => {
         : z.string().min(min, message);
 };
 
+/** Exige um mínimo: valor, se for número; comprimento, no resto. */
 export default defineRule({
     validation: ({ value, min }: RuleContext<{ min: number }>) =>
         isBlank(value) ? undefined : check(schema(value, min), value)

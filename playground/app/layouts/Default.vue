@@ -38,10 +38,6 @@
                 />
             </div>
 
-            <!--
-                O `pt-5` é o que salva o primeiro título: a máscara apaga o primeiro
-                1rem do scroll, e sem folga o “Formulário” nascia cortado nela.
-            -->
             <nav
                 class="mask-transparent-border-y flex grow flex-col gap-5 overflow-y-auto px-5 pt-5 pb-5"
             >
@@ -110,6 +106,11 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * O layout do playground: barra lateral com a navegação e os seletores de tema e
+     * idioma no rodapé. A folga no topo da navegação é o que salva o primeiro título —
+     * a máscara de scroll apaga o primeiro 1rem, e sem ela o item nascia cortado.
+     */
     import { computed, ref, watch } from "vue";
 
     import { nav } from "~/utils/nav";

@@ -42,6 +42,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo booleano em forma de switch. `icon` troca o indicador por ícone, e aceita
+     * um por estado.
+     *
+     * @example <RSwitch name="ativo" label="Ativo" icon />
+     */
     import { computed } from "vue";
 
     import { useField } from "#rform/composables";

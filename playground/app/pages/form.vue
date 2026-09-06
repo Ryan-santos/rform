@@ -310,11 +310,8 @@
         };
     });
 
-    /**
-     * `safeParseAsync`, not `safeParse`: a rule referenced by preset name becomes
-     * `z.any().superRefine(async …)` in the aggregated object, and a sync parse
-     * would throw on it.
-     */
+    // `safeParseAsync`, e não `safeParse`: rule referenciada por nome de preset vira
+    // `z.any().superRefine(async …)` no objeto agregado, e um parse síncrono lançaria.
     const submit = async () => {
         const { rules, data } = active.value;
 

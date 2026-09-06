@@ -10,6 +10,9 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Indicador de carregamento, ligado enquanto uma validação async está em voo.
+     */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults } from "#rform/utils";

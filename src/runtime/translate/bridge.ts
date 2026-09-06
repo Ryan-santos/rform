@@ -7,19 +7,16 @@ import { normalize, pluralOf, type Tr, type TrValue } from "../utils/i18n";
 const LITERAL = "~~";
 
 /**
- * The shape the bridge needs from `@nuxtjs/i18n`. Structural on purpose: the
- * module is optional, so there is no type to import and nothing to declare as a
- * dependency.
+ * A forma que a ponte precisa do i18n do app. Estrutural de propósito: o módulo é
+ * opcional, então não há tipo a importar nem dependência a declarar.
  */
 type Bridge = {
     locale: Ref<string>;
     t: (key: string, params?: unknown, options?: unknown) => string;
 };
 
-/**
- * Only reached when this file is loaded with no `$i18n` around — a unit test,
- * or a component mounted outside a Nuxt app.
- */
+// Só alcançado sem `$i18n` por perto — um teste unitário, ou um `mount()` fora de
+// um app Nuxt.
 const outside = ref("");
 
 const isBridge = (candidate: unknown): candidate is Bridge =>
@@ -39,11 +36,10 @@ const current = (): Bridge | undefined => {
 };
 
 /**
- * The store already holds the module's own packs under `rform`, registered
- * through `i18n:registerModule` — so `rform.fields.array.add` resolves with no
- * special casing here. A literal has to say so with `~~`, and a plain string
- * that is not a key falls through to vue-i18n's own *missing key* warning in
- * dev, which is deliberate noise.
+ * A rota com ponte: `~~` é literal, todo o resto vai pro `t` do app — os packs do
+ * módulo já moram no store dele sob `rform`. String solta que não é chave cai no
+ * aviso de *missing key* do vue-i18n, e esse barulho é de propósito. Ver "As duas
+ * rotas" no `.claude/CLAUDE.md`.
  */
 const run = (bridge: Bridge | undefined, input: TrValue | null | undefined): string => {
     const { key, params } = normalize(input);
@@ -66,11 +62,12 @@ const run = (bridge: Bridge | undefined, input: TrValue | null | undefined): str
 
     const choice = pluralOf(params);
 
-    // `t(key, named, plural)` — the same three-argument overload vue-i18n
-    // documents, and the same fourth-argument position the core `translate` uses.
+    // `t(key, named, plural)` — a sobrecarga de três argumentos que o vue-i18n
+    // documenta, na mesma posição em que o motor sem ponte pede o plural.
     return choice === undefined ? bridge.t(key, params) : bridge.t(key, params, choice);
 };
 
+/** `{ tr, locale }` da ponte. Sem `$i18n` por perto devolve a chave e um ref vazio. */
 export const useTr = (): { tr: Tr; locale: Ref<string> } => {
     const bridge = current();
 
@@ -80,6 +77,7 @@ export const useTr = (): { tr: Tr; locale: Ref<string> } => {
     };
 };
 
+/** O mesmo tradutor, fora de componente — é o que `utils/tr.ts` reexporta. */
 export const tr: Tr = (input) => run(current(), input);
 
 export default { tr, useTr };

@@ -2,24 +2,23 @@ import { tr as engine } from "#rform/translate";
 
 import type { Tr, TrParams } from "./i18n";
 
-/** What a rule preset names: the path **after** `rform.presets.rules.`. */
+/** O que uma rule nomeia: o caminho **depois** de `rform.presets.rules.`. */
 export type RuleMessage = { key: string; params?: TrParams };
 
 /**
- * The whole translator, by full path. A component gets the same function from
- * `useField` / `useUtil` — this export is for the two places that
- * cannot call a composable: a rule preset, and a module component reaching for
- * a shared key like `tr("rform.formats.date")`.
+ * O tradutor inteiro, por caminho completo. Um componente ganha a mesma função de
+ * `useField` / `useUtil`; este export serve aos dois lugares que não podem chamar
+ * composable: uma rule, e um componente buscando chave compartilhada.
+ *
+ * @example tr("rform.formats.date")
  */
 export const tr: Tr = (input) => engine(input);
 
 /**
- * A rule is not a component, so it cannot call a composable — and the context
- * is no longer the channel either. An imported helper solves the same problem
- * without occupying it.
+ * Açúcar do `tr` para rule, que prefixa `rform.presets.rules.` — é assim que a
+ * rule alcança o locale ativo sem receber tradutor no contexto.
  *
- * `trRule({ key: "min.number", params: { min } })`
- *   -> `tr({ key: "rform.presets.rules.min.number", params: { min } })`
+ * @example trRule({ key: "min.number", params: { min } })
  */
 export const trRule = (ref: string | RuleMessage): string => {
     const { key, params } = typeof ref === "string" ? { key: ref, params: undefined } : ref;

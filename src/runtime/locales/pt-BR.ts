@@ -1,20 +1,10 @@
 /**
- * O pack de referência: é o `typeof` dele que vira `Messages` em
- * `#rform/types/locales`, e é ele que responde por uma chave que falta em
- * qualquer outro pack.
+ * O pack de referência: é o `typeof` dele que vira `Messages`, e é ele que responde
+ * por uma chave faltando em qualquer outro. As quatro raízes e a sintaxe de
+ * mensagem estão em "A forma do pack" no `.claude/CLAUDE.md`.
  *
- * Interpolação `{param}` — a mesma sintaxe do vue-i18n, então o arquivo serve
- * tanto à ponte com @nuxtjs/i18n quanto ao resolvedor próprio, sem tradução.
- *
- * `fields.*` e `utils.*` espelham `components/fields` e `components/utils`, que
- * é de onde o prefixo automático sai: o `defaults.text` de um campo vira
- * `rform.fields.<campo>.*` e o de um util vira `rform.utils.<util>.*`. Sem essa
- * separação um campo e um util de mesmo nome (hoje `Calendar` é os dois)
- * disputariam a mesma chave.
- *
- * Um `@` literal numa mensagem precisa ser escrito `{'@'}` — `@:chave` é a
- * sintaxe de mensagem ligada do vue-i18n, e um e-mail cru derruba o parser com
- * "Invalid linked format (error code: 10)".
+ * Um `@` literal aqui precisa ser escrito `{'@'}`: `@:chave` é mensagem ligada, e
+ * um e-mail cru derruba o parser.
  */
 export default {
     fields: {
@@ -53,10 +43,8 @@ export default {
             time: "Hora"
         }
     },
-    /**
-     * Pareia com o layout de `src/runtime/presets/{rules,masks}` e deixa espaço
-     * para `presets.masks.*` se um dia houver mensagem lá.
-     */
+    // Pareia com o layout de `src/runtime/presets/{rules,masks}`, e deixa espaço
+    // para `presets.masks.*` se um dia houver mensagem lá.
     presets: {
         rules: {
             required: "Campo obrigatório.",
@@ -78,10 +66,8 @@ export default {
             }
         }
     },
-    /**
-     * De onde saem máscara, regex de parse e formatação de exibição — tudo o
-     * que `dateFormat` deriva. `formats.date` usa os tokens `D`, `M` e `Y`.
-     */
+    // De onde `dateFormat` deriva máscara, regex de parse e exibição. Tokens `D`,
+    // `M` e `Y`.
     formats: {
         date: "DD/MM/YYYY"
     }

@@ -1,24 +1,26 @@
 import type { ZodType } from "zod";
 
-/**
- * Shared by the built-in rule presets. Lives outside `rules/` on purpose —
- * every module inside `rules/` is scanned as a preset.
- */
+// Compartilhado pelas rules embutidas. Mora fora de `rules/` de propósito: todo
+// módulo lá dentro é escaneado como preset.
 
+/** Coage a string o que der; o resto vira `""`. */
 export const text = (value: unknown) =>
     typeof value === "string" || typeof value === "number" ? String(value) : "";
 
+/** Só os dígitos do valor — é o que as rules de documento comparam. */
 export const digits = (value: unknown) => text(value).replace(/[^0-9]/g, "");
 
 /**
- * Format rules skip blank input so `required` stays the single owner of
- * emptiness — otherwise every field would report two errors at once.
+ * As rules de formato saem cedo por aqui para `required` continuar dona sozinha da
+ * vacuidade — senão todo campo reportaria dois erros de uma vez.
  */
 export const isBlank = (value: unknown) =>
     value === undefined || value === null || (typeof value === "string" && value.trim() === "");
 
+/** `111.111.111-11` e irmãos passam no dígito verificador, e não são documentos. */
 export const allSameDigit = (value: string) => /^(\d)\1+$/.test(value);
 
+/** Dígito verificador módulo 11, o de CPF e CNPJ. O peso decresce e volta a 9. */
 export const checkDigit = (base: string, startWeight: number) => {
     let sum = 0;
     let weight = startWeight;
@@ -38,9 +40,8 @@ export const checkDigit = (base: string, startWeight: number) => {
 };
 
 /**
- * Runs a schema and hands back the first issue message, which is the shape a
- * `validation` returns. Every built-in rule goes through here, so the message a
- * user overrides on the schema is the message the field shows.
+ * Roda um schema e devolve a mensagem do primeiro issue, que é a forma que uma
+ * `validation` retorna — é isso que torna a mensagem do preset a do campo.
  */
 export const check = (schema: ZodType, value: unknown): string | undefined => {
     const result = schema.safeParse(value);

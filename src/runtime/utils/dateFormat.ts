@@ -1,23 +1,22 @@
 const pad = (value: number) => String(value).padStart(2, "0");
 
-/** The separator goes into a regex verbatim, and `.` is a legitimate one. */
+/** O separador entra num regex verbatim, e `.` é um separador legítimo. */
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 export type DateToken = "D" | "M" | "Y";
 
 /**
- * `true` requires the time part, `false` forbids it, `"optional"` accepts both
- * — which is what a value arriving from outside needs, since the same string
- * may or may not carry an hour.
+ * `true` exige a parte de hora, `false` proíbe, `"optional"` aceita as duas — que é
+ * o que um valor vindo de fora precisa, já que a mesma string pode ou não trazer hora.
  */
 export type TimeMode = boolean | "optional";
 
 export type DateFormat = {
-    /** The pattern this was built from, normalised. */
+    /** O pattern de origem, normalizado. */
     pattern: string;
     order: DateToken[];
     separator: string;
-    /** A maska pattern: `##/##/####`, or `##/##/#### ##:##` with time. */
+    /** Pattern maska: `##/##/####`, ou `##/##/#### ##:##` com hora. */
     mask: (time?: boolean) => string;
     format: (date: Date | null | undefined, time?: boolean) => string;
     parse: (input: string | null | undefined, time?: TimeMode) => Date | null;
@@ -26,12 +25,12 @@ export type DateFormat = {
 const FALLBACK = "DD/MM/YYYY";
 
 /**
- * Everything the module used to hardcode as `dd/mm/yyyy` — the maska pattern,
- * the parse regex and the display formatting — derived from one pattern string,
- * which comes from `formats.date` in the active locale pack.
+ * Deriva de um pattern só — o `formats.date` do locale ativo — a máscara maska, o
+ * regex de parse e a formatação de exibição, que antes eram literais `dd/mm/yyyy`
+ * espalhados. Pattern sem exatamente um dia, um mês e um ano cai no `DD/MM/YYYY`,
+ * em vez de gerar um regex que não casa com nada.
  *
- * A pattern that does not yield exactly one day, one month and one year token
- * falls back to `DD/MM/YYYY` rather than producing a regex that matches nothing.
+ * @example dateFormat("YYYY-MM-DD").mask() // → "####-##-##"
  */
 export default function dateFormat(pattern?: string | null): DateFormat {
     const source = (pattern ?? "").trim() || FALLBACK;
@@ -109,10 +108,8 @@ export default function dateFormat(pattern?: string | null): DateFormat {
             return null;
         }
 
-        /**
-         * The roundtrip is what rejects `31/02`: `new Date` rolls it over to
-         * March 3 instead of failing.
-         */
+        // O roundtrip é o que recusa `31/02`: `new Date` rola para 3 de março em
+        // vez de falhar.
         if (
             date.getDate() !== parts.D ||
             date.getMonth() !== parts.M - 1 ||

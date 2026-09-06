@@ -61,6 +61,12 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Renderiza um `schema` de `useRForm`: recursivo em `object` e `array`, e cada
+     * entrada com `slot` vira um slot nomeado que sobe até o `RForm`.
+     *
+     * @example <RDynamic :schema />
+     */
     import { computed } from "vue";
 
     import map from "#rform/components-map";
@@ -74,10 +80,8 @@
 
     const props = defineProps<Props>();
 
-    /**
-     * Declared, not inferred: RDynamic renders RDynamic, so inferring the slot
-     * scope from usage makes it depend on itself (TS7022).
-     */
+    // Declarado, não inferido: RDynamic renderiza RDynamic, e inferir o escopo do
+    // slot pelo uso o faria depender de si mesmo (TS7022).
     defineSlots<Record<string, (scope: SlotScope) => unknown>>();
 
     const isSchema = computed(

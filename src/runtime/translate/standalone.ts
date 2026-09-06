@@ -12,16 +12,10 @@ const packs = locales as Record<string, unknown>;
 const codes = Object.keys(packs);
 
 /**
- * One context for the whole process: compiling a message is the expensive part
- * and intlify caches it per context. The locale is swapped per call instead,
- * which is what makes a `tr` inside a template re-render on a language change.
- *
- * Cast to the plain `CoreContext<string>` rather than left inferred: with the
- * literal `packs` type, `translate`'s overloads walk that type recursively
- * (`PickupPaths`/`PickupKeys`) and TS gives up with "Type instantiation is
- * excessively deep and possibly infinite". The module's own keys are looked up
- * by hand-built path (`path`, below) — the generic key-completion `translate`
- * offers is not something this file's call site benefits from.
+ * Um contexto para o processo inteiro — compilar mensagem é a parte cara e o
+ * intlify cacheia por contexto; o locale é trocado a cada chamada. O cast para
+ * `CoreContext<string>` evita as sobrecargas de `translate` andarem recursivamente
+ * pelo tipo literal dos packs. Ver "As duas rotas" no `.claude/CLAUDE.md`.
  */
 const context = createCoreContext({
     locale: defaultLocale,
@@ -31,16 +25,14 @@ const context = createCoreContext({
     fallbackWarn: false
 }) as CoreContext<string>;
 
-/**
- * Only for a component mounted outside a Nuxt app — a plain `mount()` in a
- * test. Inside Nuxt the locale lives in `useState`, which is per request.
- */
+// Só para um componente montado fora de app Nuxt. Dentro, o locale mora no
+// `useState`, que é por request.
 const outside = ref(defaultLocale);
 
 /**
- * Decision 9: without a bridge there is nothing to resolve an app key against,
- * so anything that is not a module key — `~~Nome` included — comes back
- * untouched. Only `rform.*` reaches the resolver.
+ * A rota sem ponte: só `rform.*` chega ao resolvedor, todo o resto volta intacto —
+ * `~~Nome` inclusive, porque não há contra o que resolver uma chave do app. Ver "A
+ * assimetria do `~~`" no `.claude/CLAUDE.md`.
  */
 const run = (locale: string, input: TrValue | null | undefined): string => {
     const { key, params } = normalize(input);
@@ -53,12 +45,8 @@ const run = (locale: string, input: TrValue | null | undefined): string => {
 
     context.locale = matchLocale(locale, codes) ?? defaultLocale;
 
-    /**
-     * `translate`'s third argument IS the named object or the plural count —
-     * not a `{ named }`/`{ plural }` wrapper, which reads as a param literally
-     * called "named". The plural choice is the **fourth** argument, and without
-     * it intlify stays on branch 0 whatever the count.
-     */
+    // O terceiro argumento É o objeto de params cru; a escolha de plural é o
+    // **quarto**, e sem ele o ramo 0 sai sempre.
     const message =
         params === undefined
             ? translate(context, path)
@@ -68,18 +56,13 @@ const run = (locale: string, input: TrValue | null | undefined): string => {
                 ? translate(context, path, params)
                 : translate(context, path, params, pluralOf(params)!);
 
-    /**
-     * A miss comes back as the bare path. Handing the full key back instead
-     * keeps a missing module message legible as one.
-     */
+    // Uma falta volta como o caminho pelado; devolver a chave inteira mantém uma
+    // mensagem faltando legível como uma.
     return typeof message === "string" && message !== path ? message : key;
 };
 
-/**
- * `useState` needs a Nuxt app in context, and `tr` is also called from a rule
- * validation, which runs long after any setup. Falling back rather than
- * throwing is the point.
- */
+// O `useState` exige app Nuxt no contexto, e `tr` também é chamado de dentro de uma
+// `validation`, muito depois de qualquer setup — cair de volta é o ponto.
 const currentLocale = (): Ref<string> => {
     try {
         return tryUseNuxtApp() ? useState<string>("rform-locale", () => defaultLocale) : outside;
@@ -88,12 +71,14 @@ const currentLocale = (): Ref<string> => {
     }
 };
 
+/** `{ tr, locale }` do resolvedor próprio, sobre os packs de `#rform/locales`. */
 export const useTr = (): { tr: Tr; locale: Ref<string> } => {
     const locale = currentLocale();
 
     return { locale, tr: (input) => run(locale.value, input) };
 };
 
+/** O mesmo tradutor, fora de componente — é o que `utils/tr.ts` reexporta. */
 export const tr: Tr = (input) => run(currentLocale().value, input);
 
 export default { tr, useTr };

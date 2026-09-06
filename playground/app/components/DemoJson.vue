@@ -8,6 +8,9 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * O painel de model: imprime o valor vivo do formulário como JSON.
+     */
     import { computed } from "vue";
 
     const props = withDefaults(
@@ -21,10 +24,8 @@
         }
     );
 
-    /**
-     * A `File` serializes to `{}`, which reads as "the field is empty" — the one
-     * lie this panel exists to prevent.
-     */
+    // Um `File` serializa como `{}`, que se lê como "o campo está vazio" — a única
+    // mentira que este painel existe para evitar.
     const replacer = (_key: string, value: unknown) => {
         if (typeof File !== "undefined" && value instanceof File) {
             return `File(${value.name}, ${value.size} bytes, ${value.type || "sem tipo"})`;

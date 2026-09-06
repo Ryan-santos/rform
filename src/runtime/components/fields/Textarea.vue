@@ -39,6 +39,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de texto multilinha. Aceita `mask` — a diretiva do módulo liga em
+     * `<textarea>`, a do maska não — e `rows`.
+     *
+     * @example <RTextarea name="observacao" :rows="5" />
+     */
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

@@ -7,8 +7,8 @@ import resolveRule from "../utils/resolveRule";
 import { isZodType, zodToFn } from "../utils/zod";
 
 /**
- * A preset validation may be async, so the aggregated object it produces has to
- * be read with `safeParseAsync`. Zod-only schemas stay synchronous.
+ * Envolve um `rule` de schema num `ZodType`. Validação de preset pode ser async,
+ * então o objeto agregado exige `safeParseAsync`; schema só-zod segue síncrono.
  */
 function toZod(rule: unknown): ZodType {
     if (rule === undefined || rule === null) {
@@ -19,15 +19,8 @@ function toZod(rule: unknown): ZodType {
         return rule as unknown as ZodType;
     }
 
-    /**
-     * The preset table is fetched inside the refinement, not at import time.
-     * Statically, this module was the last edge from `#rform/composables` to
-     * `#rform/presets`, and the preset files call `defineRule(...)` at module
-     * scope — a side effect Rollup cannot prove away — so every page that
-     * imported *any* composable from the barrel shipped all nine rule presets
-     * and, with them, zod. The refinement is already async; resolving there
-     * costs an import that is a no-op once the chunk has loaded.
-     */
+    // A tabela de presets é buscada aqui dentro, não no import: estaticamente era a
+    // última aresta que arrastava zod pro barrel (ver "useRForm" no `.claude/CLAUDE.md`).
     return z.any().superRefine(async (value, ctx) => {
         const { rules: presets } = await import("#rform/presets");
 
@@ -46,8 +39,8 @@ function toZod(rule: unknown): ZodType {
 }
 
 /**
- * Only zod schemas need flattening — every other shape is resolved by the field
- * itself, so it must survive untouched.
+ * Só schema zod é achatado — toda outra forma quem resolve é o campo, então tem de
+ * sobreviver intacta.
  */
 function normalizeRule(rule: unknown) {
     return isZodType(rule) ? zodToFn(rule) : rule;
@@ -129,6 +122,12 @@ function normalizeSchema(schema: Schema): Schema {
     return out;
 }
 
+/**
+ * Abre o estado de um formulário: `data`, e — havendo entrada — o `rules` agregado
+ * e o `schema` normalizado que o `RDynamic` renderiza.
+ *
+ * @example const { data, rules, schema } = useRForm({ nome: { type: "text", rule: "required" } });
+ */
 function useRForm<T>(): { data: Ref<T> };
 function useRForm<Z extends Record<string, ZodType>>(
     input: Z

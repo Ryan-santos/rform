@@ -1,3 +1,5 @@
+@rules/comentarios.md
+
 # rform
 
 Nuxt module that ships form components (`RForm`, `RText`, `RSelect`, `RArray`, etc.) built around an injection-based composition pattern.
@@ -54,6 +56,19 @@ Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compil
 - Mescla `defaults` + defaults do usuário + `localProps` + `sourceProps` via `merger` — depois de passar o `defaults` do componente pelo `prefixText`, que é o que dá procedência de graça ao texto (ver `defaults.text`, na seção de i18n).
 - Carrega os defaults do componente pelo `#rform/registry` gerado (`nome → () => import(path)`). **Não** pode ser `import('../components/${name}.vue')`: o Vite compila isso num glob ancorado no arquivo da composable, e um campo em `app/rform/fields` não faz parte dele. As entradas são thunks, então o ciclo `Text.vue → useField → registry → Text.vue` não fecha em tempo de carga.
 - `componentName` vem do `src/vite.plugin.ts`. Nome ausente ou fora do registry **lança**. Havia um fallback `"Text"` (e `"Label"` no `useUtil`) que renderizava o campo com os defaults de outro componente sem dizer nada.
+- O `useModel` recebe `sourceProps`, **não** `props.value`: este é o snapshot que o `merger` devolveu durante o setup, um objeto simples que o `useModel` não rastreia — o `localValue` congelaria no `modelValue` inicial, e toda mudança posterior no objeto ligado (um reset, uma carga async) deixaria o campo escrevendo num objeto destacado.
+- O `get()` **clona** o `default` no fallback. `props.value.default` é o próprio objeto que o componente declarou em escopo de módulo — o `merger` copia objeto e array por referência quando a chave existe numa fonte só. Entregá-lo cru deixava um filho escrever direto nele (um `RObject` destacado, cujo índice acabou de ser removido, ainda lê por ali), poluindo o default de toda instância seguinte no processo. O `??` mantém o clone preguiçoso.
+- O `seed()` desiste quando o índice está **além do fim** do array — o array acabou de encolher (um splice do botão de remover, ou um reset que devolveu o default vazio). Semear ali ressuscitaria o slot: o watcher é `flush: "sync"`, então roda antes de o `v-for` desmontar o item, e `arr[length] = default` cresce o array de novo.
+- `#rform/presets` é importado **dinamicamente**, e só quando o campo declara `rule` ou `mask`. O barrel importa todo preset estaticamente e toda rule importa zod, então um import estático aqui poria zod no caminho crítico de qualquer página com campo, validado ou não. A carga inicial é aguardada dentro do `setup`, onde o registry já é aguardado; um `rule` que aparece depois resolve pelo `loadPresets` no watcher, um microtask atrás — que a validação, sendo async, não percebe.
+
+### useUtil (`src/runtime/composables/useUtil.ts`)
+
+- A sobrecarga que recebe o `defaults` do componente é **síncrona**, e é esse o ponto: um campo renderiza seis utils, e todo `await` num `setup` transforma o componente em async — uma boundary de Suspense e um salto de microtask antes de a subárvore existir, pagos até pelos cinco utils que decidem não renderizar nada. O `<script setup>` compartilha escopo com o `<script>`, então o objeto já está em mão; buscá-lo no registry era ida e volta para pegar o que o chamador estava pisando. A forma sem argumento continua resolvendo pelo registry e continua devolvendo promise, porque um util escrito antes disso chama assim.
+- As três leituras — `inject`, `userDefaults` e `useTranslate` — acontecem **antes de qualquer `await`**: as duas primeiras precisam da instância do componente ainda corrente, e no caminho legado a continuação roda num microtask, muito depois de o Vue tê-la limpado.
+
+### useRForm (`src/runtime/composables/useRForm.ts`)
+
+- A tabela de presets é buscada **dentro** do `superRefine`, não no import. Estaticamente, este módulo era a última aresta de `#rform/composables` para `#rform/presets`, e os arquivos de preset chamam `defineRule(...)` em escopo de módulo — efeito colateral que o Rollup não consegue provar inócuo — então toda página que importasse *qualquer* composable do barrel embarcava as nove rules e, com elas, zod. O refinement já é async, e o import é no-op depois que o chunk carregou.
 
 ### Defaults do usuário (`app/rform/defaults.ts`)
 
@@ -134,6 +149,12 @@ Fica literal de propósito: `*-current/*` (já é `currentColor`), `bg-transpare
 **`test/unit/theme.test.ts` é a guarda, e cobre o modo de falha novo.** `bg-(--rf-color-primry)` (typo) compila, passa na lint e renderiza `var(--undefined)` → transparente, calado em todo ambiente inclusive nos testes — pior que o `bg-primry` de antes, que ao menos não emitia regra. Os cinco casos: (a) nenhum token semântico cru voltou, (b) o conjunto de `--rf-*` usado nos componentes é **igual** ao declarado, nos dois sentidos, (c) o template tem exatamente um `@source` absoluto apontando para um diretório que de fato contém `fields/`, `utils/` e `Form.vue`, mais o `@import` dos tokens, (d) todo token mora dentro de `@layer rform`, (e) o `style.css` não tem at-rule do Tailwind. O (a) tokeniza o arquivo inteiro por whitespace e tira a pontuação das pontas — sem isso a última classe de cada literal chega como `text-white",` e escapa de todo padrão ancorado em `$`.
 
 `src/runtime/style.css` mora em `src/runtime/` porque o `@nuxt/module-builder` só constrói `src/module` e `src/runtime/` — um `.css` na raiz de `src/` nunca chega ao `dist`. O mkdist passa cssnano nele, então o arquivo publicado sai minificado (`@layer` sobrevive).
+
+### RArray: um render effect por linha
+
+O `v-for` do `RArray` itera `length` e passa cada item por um componente de linha, em vez de `v-for="(item, index) in model"`. Aquela forma lia **todo** elemento no render *deste* componente, então uma tecla — uma escrita em `array[i]` — invalidava a lista inteira e repatchava todo irmão: 0,6 ms com 10 linhas e 4,1 ms com 100, crescendo com a lista onde um form plano ficava plano.
+
+Iterar `length` e passar `item` por um getter **não basta sozinho**: o `v-bind` num `<slot>` normaliza o objeto e lê o getter do mesmo jeito. Só a fronteira de componente escopa a dependência de verdade.
 
 ### Presets (rules e masks)
 

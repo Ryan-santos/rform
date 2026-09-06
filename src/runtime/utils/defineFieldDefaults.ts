@@ -3,12 +3,9 @@ import type Components from "#rform/types/components";
 import type { DeepPartial } from "../../type";
 
 /**
- * A util contributes presentation, not content. Narrowing its entry to `ui`
- * makes that the contract instead of an accident: the fields decide whether to
- * mount `RUtilsLabel` at all by reading their own `label`, and a default that
- * could conjure a label out of `Utils` would make that decision wrong. The
- * built-in utils already declared those keys empty, so nothing that worked
- * stops working.
+ * Um util contribui apresentação, não conteúdo — daí a entrada dele ficar restrita
+ * a `ui`. Os campos decidem montar `RUtilsLabel` lendo o próprio `label`, e um
+ * default capaz de inventar label pelo `Utils` tornaria essa decisão errada.
  */
 type UtilDefaults<U> = {
     [K in keyof U]?: U[K] extends { ui?: infer _ } ? Pick<DeepPartial<U[K]>, "ui"> : never;
@@ -19,18 +16,15 @@ type FieldDefaults = DeepPartial<Omit<Components, "Utils">> & {
 };
 
 /**
- * Types `app/rform/defaults.ts` — the user's overrides for what every component
- * declares in its own `defaults`, keyed by component name:
+ * Tipa o `app/rform/defaults.ts` — os overrides do app sobre o `defaults` que cada
+ * componente declara, chaveados por nome. Entram entre o `defaults` do componente
+ * e as props do call site, então prop no campo sempre ganha.
  *
- * ```ts
+ * @example
  * export default defineFieldDefaults({
  *     Text: { default: "", ui: { container: "gap-2" } },
  *     Utils: { Placeholder: { ui: { default: "text-xs" } } }
  * });
- * ```
- *
- * They sit between the component's defaults and the props passed at the call
- * site, so a prop on the field always wins.
  */
 export default function <const T extends FieldDefaults>(defaults: T) {
     return defaults;

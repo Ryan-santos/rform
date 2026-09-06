@@ -2,6 +2,13 @@ import { twMerge } from "tailwind-merge";
 
 import type { Base } from "#rform/types";
 
+/**
+ * Mescla blocos de `ui` folha a folha, passando cada classe pelo `twMerge`.
+ * Numa fonte, `undefined` é "não passei"; `null` é "zera esta chave".
+ *
+ * @example mergerUI({ container: "p-2 gap-1" }, { container: "p-4" }) // → { container: "gap-1 p-4" }
+ * @example mergerUI({ container: "p-2" }, { container: null }) // → { container: null }
+ */
 export default function mergerUI<T extends (Base["ui"] | undefined)[], I = NonNullable<T[number]>>(
     ...objects: T
 ): I | undefined {

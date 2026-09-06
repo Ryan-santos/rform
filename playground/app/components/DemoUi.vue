@@ -14,10 +14,6 @@
             </p>
         </header>
 
-        <!--
-            Fica acima do diagrama, e não ao lado: em coluna única a caixa de foco
-            some do campo de visão justamente quando o clique acontece lá embaixo.
-        -->
         <div
             class="sticky top-2 z-10 flex flex-col gap-1 rounded-xl border p-3 backdrop-blur-sm transition-colors duration-300"
             :class="
@@ -55,7 +51,6 @@
             </p>
         </div>
 
-        <!-- Empilhado: lado a lado, nem a árvore nem o código tinham largura para respirar. -->
         <div class="flex flex-col gap-4">
             <div
                 class="flex flex-col gap-3 rounded-xl border border-contrast/10 bg-background-50 p-4"
@@ -70,7 +65,6 @@
                     :nodes="nodes"
                 />
 
-                <!-- Sem camadas o painel ficaria em branco, e branco parece bug em vez de aviso. -->
                 <p
                     v-else
                     class="text-sm text-contrast/40"
@@ -92,6 +86,14 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Página de `ui` de um campo: a árvore de camadas que o componente declara, mais o
+     * recorte de `defaults.ts` pronto para copiar.
+     *
+     * A caixa de foco fica acima do diagrama, e não ao lado: em coluna única ela sairia
+     * do campo de visão justamente quando o clique acontece lá embaixo. Árvore e código
+     * ficam empilhados pelo mesmo motivo — lado a lado, nenhum dos dois respira.
+     */
     import { computed, provide, ref } from "vue";
 
     import { fieldTree, uiFocusKey, uiSnippet, type UiNode } from "~/utils/ui";
@@ -111,10 +113,8 @@
         path.value = path.value === next ? null : next;
     };
 
-    /**
-     * Ancestral e descendente da camada presa continuam acesos: sem isso o foco
-     * apagaria justamente a moldura que dá contexto a ele.
-     */
+    // Ancestral e descendente da camada presa continuam acesos: sem isso o foco
+    // apagaria justamente a moldura que dá contexto a ele.
     const state = (candidate: string) => {
         const current = path.value;
 

@@ -96,6 +96,11 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de cor com dropdown: matiz, saturação, alfa e entrada em hexadecimal.
+     *
+     * @example <RColor name="cor" />
+     */
     import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from "vue";
 
     import { useField } from "#rform/composables";

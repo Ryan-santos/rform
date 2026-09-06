@@ -7,55 +7,55 @@ import {
 import { normalize } from "../../src/runtime/utils/i18n";
 
 describe("normalize", () => {
-    it("turns a bare string into a key with no params", () => {
+    it("transforma string pelada em chave sem params", () => {
         expect(normalize("form.nome")).toEqual({ key: "form.nome" });
     });
 
-    it("keeps key and params of an object input", () => {
+    it("mantém key e params de uma entrada objeto", () => {
         expect(normalize({ key: "form.max", params: { n: 30 } })).toEqual({
             key: "form.max",
             params: { n: 30 }
         });
     });
 
-    it("accepts a number as params, which is the plural choice", () => {
+    it("aceita número como params, que é a escolha de plural", () => {
         expect(normalize({ key: "table.items", params: 3 })).toEqual({
             key: "table.items",
             params: 3
         });
     });
 
-    it("treats null and undefined as the empty key", () => {
+    it("trata null e undefined como a chave vazia", () => {
         expect(normalize(null)).toEqual({ key: "" });
         expect(normalize(undefined)).toEqual({ key: "" });
     });
 });
 
-describe("the standalone engine", () => {
-    it("resolves a module key against the built-in pack", () => {
+describe("o motor sem ponte", () => {
+    it("resolve uma chave do módulo contra o pack embutido", () => {
         expect(standaloneTr("rform.presets.rules.required")).toBe("Campo obrigatório.");
     });
 
-    it("interpolates named params", () => {
+    it("interpola params nomeados", () => {
         expect(standaloneTr({ key: "rform.presets.rules.min.number", params: { min: 3 } })).toBe(
             "Valor mínimo: 3."
         );
     });
 
-    it("is the identity for anything that is not a module key", () => {
+    it("é a identidade para tudo que não é chave do módulo", () => {
         expect(standaloneTr("form.nome")).toBe("form.nome");
         expect(standaloneTr("Nome")).toBe("Nome");
     });
 
-    it("is the identity for `~~` too — the asymmetry decision 9 accepts", () => {
+    it("é a identidade para `~~` também — a assimetria aceita", () => {
         expect(standaloneTr("~~Nome")).toBe("~~Nome");
     });
 
-    it("hands the full key back when the module pack misses it", () => {
+    it("devolve a chave inteira quando o pack do módulo não a tem", () => {
         expect(standaloneTr("rform.nao.existe")).toBe("rform.nao.existe");
     });
 
-    it("follows the locale ref returned by useTr", () => {
+    it("segue o ref de locale que o useTr devolve", () => {
         const { tr, locale } = standaloneUseTr();
 
         locale.value = "en";
@@ -65,7 +65,7 @@ describe("the standalone engine", () => {
         expect(tr("rform.presets.rules.required")).toBe("Campo obrigatório.");
     });
 
-    it("widens a bare language code to the pack that ships", () => {
+    it("alarga um code de língua pelada para o pack que existe", () => {
         const { tr, locale } = standaloneUseTr();
 
         locale.value = "en-GB";
@@ -74,7 +74,7 @@ describe("the standalone engine", () => {
         locale.value = "pt-BR";
     });
 
-    it("lets a named number choose the plural form", () => {
+    it("deixa um número nomeado escolher a forma do plural", () => {
         expect(standaloneTr({ key: "rform.presets.rules.min.length", params: { min: 1 } })).toBe(
             "Mínimo de 1 caractere."
         );

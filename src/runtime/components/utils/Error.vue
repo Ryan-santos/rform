@@ -13,6 +13,9 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Mensagem de erro do campo, alimentada pelo `error` que a validação escreve.
+     */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
     import { defineDefaults } from "#rform/utils";

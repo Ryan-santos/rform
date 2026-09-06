@@ -7,8 +7,10 @@ export type Masks = Record<string, MaskPreset>;
 export type MaskRef = string | MaskPreset;
 
 /**
- * Resolves a `mask` prop: a preset name wins, anything else goes straight to
- * maska as a raw pattern or options object.
+ * Resolve o `mask`: nome de preset ganha, o resto vai cru pro maska.
+ *
+ * @example resolveMask("brCpf", masks) // → { mask: "###.###.###-##" }
+ * @example resolveMask("##/##", masks) // → "##/##"
  */
 export default function resolveMask(
     ref: MaskRef | null | undefined,

@@ -73,6 +73,11 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de hora `HH:mm`: input mascarado mais as roletas de hora e minuto.
+     *
+     * @example <RHour name="inicio" />
+     */
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useField } from "#rform/composables";

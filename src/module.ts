@@ -19,18 +19,15 @@ import { collectPresets } from "./presets";
 import { collectComponents, type ComponentFile } from "./scan";
 import vitePlugin from "./vite.plugin";
 
-/**
- * Bound, not destructured: `@nuxt/kit` types `resolve` as a method, so pulling
- * it off the object trips `unbound-method`. It closes over the base url and
- * never touches `this`, but binding says so without a lint exception.
- */
+// Ligado, não desestruturado: o kit tipa `resolve` como método, e arrancá-lo do
+// objeto dispara `unbound-method`.
 const resolver = createResolver(import.meta.url);
 const resolve = resolver.resolve.bind(resolver);
 
 /**
- * A module specifier for a generated template. Backslashes would be escapes in
- * the emitted source, and a `.ts` suffix needs `allowImportingTsExtensions`,
- * which a consumer app has no reason to set. `.vue` is kept — it is required.
+ * Um module specifier para template gerado. Barra invertida seria escape no fonte
+ * emitido, e sufixo `.ts` exigiria `allowImportingTsExtensions`, que um app
+ * consumidor não tem por que ligar. O `.vue` fica — ali é obrigatório.
  */
 const specifier = (path: string) =>
     JSON.stringify(
@@ -41,12 +38,10 @@ const specifier = (path: string) =>
     );
 
 /**
- * True when `source` has an import declaration that pulls a *value* (not just
- * a type, erased at compile time) from `#rform/...`. Used to single out a
- * `src/runtime/utils/*.ts` helper that can re-enter `#rform/utils` mid-load —
- * see the comment on the `utils.ts` template below. A `type`-only import (the
- * common case: `import type { Base } from "#rform/types"`) is excluded on
- * purpose, because it is erased and never runs any code.
+ * Verdadeiro quando o fonte importa um *valor* de `#rform/...`. Import só de tipo é
+ * apagado e nunca roda código, então fica de fora de propósito. Serve para separar
+ * o helper que pode reentrar no barrel; ver "O `import` vem pareado com o próprio
+ * `export *`" no `.claude/CLAUDE.md`.
  */
 const importsRformValue = (source: string) =>
     source.split("\n").some((line) => {
@@ -56,9 +51,9 @@ const importsRformValue = (source: string) =>
     });
 
 /**
- * Forward-slashed: this path is both written into generated source, where a
- * backslash is an escape, and handed to `addComponent`, which — unlike
- * `addComponentsDir` — does not normalize it before it becomes an import.
+ * Com barra normal: este caminho é escrito em fonte gerado, onde barra invertida é
+ * escape, e entregue ao `addComponent`, que — ao contrário do `addComponentsDir` —
+ * não normaliza antes de virar import.
  */
 const filePath = ({ root, file }: ComponentFile) => join(root, file).split("\\").join("/");
 
@@ -108,23 +103,13 @@ export default defineNuxtModule<ModuleOptions>({
     async setup(options, nuxt) {
         const componentsPath = resolve("runtime/components");
 
-        /**
-         * Qual dos dois motores do `tr` o app recebe. Escolhido aqui e não em
-         * runtime: o corpo da ponte não escreve o import do `@intlify/core`,
-         * então o app que tem @nuxtjs/i18n não paga os ~137 kB dele. A exclusão
-         * é estrutural, não uma otimização de bundler que pode falhar.
-         *
-         * `hasNuxtModule` lê a lista declarada de módulos, então não depende de
-         * o rform ser registrado antes ou depois do i18n no `modules:` — ao
-         * contrário do hook, que só resolve tarde.
-         *
-         * Declarado no topo porque o template de `types/tr.d.ts` (bem acima da
-         * região de aliases) também o lê.
-         */
+        // Qual dos dois motores do `tr` entra no bundle. `hasNuxtModule` lê a lista
+        // *declarada* de módulos, então não depende da ordem do `modules:`. Ver "O
+        // corte do bundle é estrutural" no `.claude/CLAUDE.md`.
         const hasI18n = hasNuxtModule("@nuxtjs/i18n", nuxt);
 
         const roots = {
-            /** Form and Dynamic — neither is a field, so neither is replaceable. */
+            /** Form e Dynamic — nenhum dos dois é campo, nenhum é substituível. */
             containers: componentsPath,
             fields: resolve("runtime/components/fields"),
             utils: resolve("runtime/components/utils"),
@@ -132,7 +117,7 @@ export default defineNuxtModule<ModuleOptions>({
             userUtils: join(nuxt.options.srcDir, name, "utils")
         };
 
-        /** `null` when the directory is absent — the two user roots are optional. */
+        /** `null` quando o diretório não existe; as duas raízes do usuário são opcionais. */
         const listing = Object.fromEntries(
             await Promise.all(
                 Object.entries(roots).map(
@@ -141,10 +126,8 @@ export default defineNuxtModule<ModuleOptions>({
             )
         ) as Record<keyof typeof roots, string[] | null>;
 
-        /**
-         * Built-in root first, so a user component of the same name replaces it
-         * — the same precedence the presets already use.
-         */
+        // Raiz embutida primeiro, para componente do usuário de mesmo nome substituir
+        // — a mesma precedência dos presets.
         const scan = (...keys: Array<keyof typeof roots>) =>
             collectComponents(
                 keys.map((key) => ({
@@ -158,17 +141,14 @@ export default defineNuxtModule<ModuleOptions>({
         const fields = scan("fields", "userFields");
         const utils = scan("utils", "userUtils");
 
-        /** Everything with a `Props` type: what `defineFieldDefaults` is keyed by. */
+        /** Tudo que tem um tipo `Props` — é por isso que o `defineFieldDefaults` é chaveado. */
         const components = [...containers, ...fields];
 
         /**
-         * Relative, not absolute — and only here, where a `.vue` file's `Props`
-         * is read back as a type.
-         *
-         * `@vue/compiler-sfc` resolves a relative type import with plain `fs`,
-         * but sends anything else through TypeScript's module resolution, which
-         * does not resolve a bare `.vue` specifier on its own. Staying relative
-         * keeps this hop off that path entirely.
+         * Relativo, não absoluto — e só aqui, onde o `Props` de um `.vue` é lido de
+         * volta como tipo. O compiler-sfc resolve import relativo com `fs` puro, e
+         * manda qualquer outra coisa para a resolução de módulos do TypeScript, que
+         * sozinha não resolve um specifier `.vue`.
          */
         const relativeSpecifier = (template: string, target: string) => {
             const from = dirname(join(nuxt.options.buildDir, template));
@@ -249,13 +229,10 @@ export default defineNuxtModule<ModuleOptions>({
         });
 
         /**
-         * Name -> module, resolved across both roots. `useField` reads a
-         * component's own `defaults` through this: a relative dynamic import
-         * inside the composable compiles to a glob rooted at the module, which
-         * a component under `app/rform` would never be part of.
-         *
-         * The entries are thunks, so `Text.vue -> useField -> registry ->
-         * Text.vue` never closes at load time.
+         * Nome → módulo, resolvido nas duas raízes: é por aqui que `useField` lê o
+         * `defaults` de um componente. As entradas são thunks, então o ciclo
+         * `Text.vue → useField → registry → Text.vue` não fecha em tempo de carga.
+         * Ver "useField" no `.claude/CLAUDE.md`.
          */
         addTemplate({
             filename: `${name}/registry.ts`,
@@ -270,14 +247,10 @@ export default defineNuxtModule<ModuleOptions>({
                         .join(",\n");
 
                 /**
-                 * The hook class every field and util carries. The composables
-                 * prepend it to the top-most `ui` entry, and `style.css` selects
-                 * on it. Generated here rather than derived in the composable
-                 * because this is the last place the three lists are still told
-                 * apart: containers get none — `Form` writes its own `RForm` and
-                 * `Dynamic` renders no element of its own — and the prefixes are
-                 * the same ones `addComponentsDir` registers below, so the class
-                 * mirrors the tag the app writes (`<RText>` → `.RText`).
+                 * A classe-gancho que cada campo e util carrega. Gerada aqui, e não
+                 * derivada na composable, porque este é o último lugar em que as três
+                 * listas ainda se distinguem — container não recebe gancho. Ver "As
+                 * classes-gancho entram pelo `ui`" no `.claude/CLAUDE.md`.
                  */
                 const hooks = (list: ComponentFile[], generic: string, prefix: string) =>
                     list
@@ -288,7 +261,7 @@ export default defineNuxtModule<ModuleOptions>({
                         .join(",\n");
 
                 return [
-                    "// auto-generated — component name → module, for runtime defaults lookup",
+                    "// gerado — nome do componente → módulo, para buscar os defaults em runtime",
                     "export const components = {",
                     record(components),
                     "};",
@@ -297,7 +270,7 @@ export default defineNuxtModule<ModuleOptions>({
                     record(utils),
                     "};",
                     "",
-                    "// the class each one carries, for the resets in style.css",
+                    "// a classe que cada um carrega, para os resets do style.css",
                     "export const hooks = {",
                     "    fields: {",
                     hooks(fields, "RField", "R"),
@@ -322,7 +295,7 @@ export default defineNuxtModule<ModuleOptions>({
             write: true,
             getContents: () =>
                 [
-                    "// auto-generated — type → component module",
+                    "// gerado — field type → módulo do componente",
                     ...fields.map(
                         (component) =>
                             `import ${component.name} from ${specifier(filePath(component))};`
@@ -336,19 +309,15 @@ export default defineNuxtModule<ModuleOptions>({
                 ].join("\n")
         });
 
-        /**
-         * Standalone on purpose: `available` in a rule preset is typed against
-         * this, and the presets are themselves read back by `types/presets.d.ts`.
-         * Deriving it from the component Props would close that loop — which is
-         * also why this is a literal union built from file names, and stays that
-         * way now that user components feed it.
-         */
+        // Sem import nenhum de propósito: `available` é tipado contra este union, e
+        // os presets são lidos de volta pelo `types/presets.d.ts` — derivá-lo do
+        // `Props` dos componentes fecharia esse ciclo.
         addTypeTemplate({
             filename: `${name}/types/fields.d.ts`,
             write: true,
             getContents: () =>
                 [
-                    "// auto-generated — the field type each component maps to",
+                    "// gerado — o field type de cada componente",
                     "export type FieldType =",
                     ...fields.map(
                         ({ name }, index) =>
@@ -415,11 +384,8 @@ export default defineNuxtModule<ModuleOptions>({
             join(nuxt.options.srcDir, name, "presets")
         ];
 
-        /**
-         * `app/rform/defaults.ts` — what the user overrides on top of each
-         * component's own `defaults`. The template exists either way, so the
-         * composables can import it unconditionally.
-         */
+        // `app/rform/defaults.ts` — os overrides do app. O template existe nos dois
+        // casos, então as composables importam sem guarda.
         const userDefaultsFile = async () => {
             const dir = join(nuxt.options.srcDir, name);
             const files = await readdir(dir).catch(() => [] as string[]);
@@ -435,7 +401,7 @@ export default defineNuxtModule<ModuleOptions>({
                 const file = await userDefaultsFile();
 
                 return [
-                    "// auto-generated — user overrides for each component's defaults",
+                    "// gerado — os overrides do app sobre o defaults de cada componente",
                     `import type Components from "#${name}/types/components";`,
                     `import type { DeepPartial } from ${specifier(resolve("type"))};`,
                     "",
@@ -456,16 +422,14 @@ export default defineNuxtModule<ModuleOptions>({
                     path: join(dir, preset.file)
                 }));
             } catch (error) {
-                // Nuxt reports a template failure without its cause, so the
-                // collision details would otherwise never reach the terminal.
+                // O Nuxt reporta falha de template sem a causa, então o detalhe da
+                // colisão nunca chegaria ao terminal.
                 console.error((error as Error).message, `\n  in ${dir}`);
                 throw error;
             }
         };
 
-        /**
-         * Built-ins first, so a user preset with the same name wins.
-         */
+        // Embutidos primeiro, para um preset do usuário de mesmo nome ganhar.
         const presetsOf = async (kind: "rules" | "masks") => {
             const merged = new Map<string, string>();
 
@@ -581,15 +545,9 @@ export default defineNuxtModule<ModuleOptions>({
             }
         });
 
-        /**
-         * Message packs. `src/runtime/locales/<code>.ts` são os embutidos;
-         * `app/rform/locales/<code>.ts` são os do usuário. Mesmo code não
-         * substitui — **mescla**, com o do usuário por cima, então um pack que
-         * traduz três chaves continua completo.
-         *
-         * O nome do arquivo é o code (`pt-BR.ts` -> `pt-BR`), e a lista é
-         * varrida a cada `getContents`, para editar um pack regenerar o template.
-         */
+        // O nome do arquivo é o code (`pt-BR.ts` → `pt-BR`). Mesmo code **mescla**,
+        // não substitui, e a lista é varrida a cada `getContents` para editar um pack
+        // regenerar o template.
         const localeRoots = [
             resolve("runtime/locales"),
             join(nuxt.options.srcDir, name, "locales")
@@ -640,7 +598,7 @@ export default defineNuxtModule<ModuleOptions>({
                 const needsMerger = entries.some(([, files]) => files.length > 1);
 
                 return [
-                    "// auto-generated — message packs discovered on disk",
+                    "// gerado — os packs de mensagem encontrados no disco",
                     ...(needsMerger
                         ? [`import merger from ${specifier(resolve("runtime/utils/merger"))};`]
                         : []),
@@ -666,11 +624,11 @@ export default defineNuxtModule<ModuleOptions>({
                 const entries = await localeFiles();
 
                 return [
-                    "// auto-generated — the shape of a message pack",
+                    "// gerado — a forma de um pack de mensagem",
                     "",
                     `export type Messages = typeof import(${specifier(referenceLocale)}).default;`,
                     ``,
-                    `/** Every dotted path that ends in a string: \`"rules.min.length"\`. */`,
+                    `/** Todo caminho pontilhado que termina em string: \`"rules.min.length"\`. */`,
                     `type Leaves<T> = {`,
                     `    [K in keyof T & string]: T[K] extends string ? K : \`\${K}.\${Leaves<T[K]>}\`;`,
                     `}[keyof T & string];`,
@@ -686,22 +644,9 @@ export default defineNuxtModule<ModuleOptions>({
             }
         });
 
-        /**
-         * O mapa de chaves do app.
-         *
-         * A config é lida dentro do `getContents`, e não no `setup`: o
-         * @nuxtjs/i18n resolve `langDir` durante o setup **dele**, e
-         * `getContents` só roda no `builder:generateApp` — mesmo truque que o
-         * `localeFiles()` acima já usa.
-         *
-         * É uma leitura diferente da do `declaredLocales()`: aquela precisa só
-         * dos *codes*, e por isso também olha as opções inline do `modules:`;
-         * esta precisa de `langDir` + `file` já **resolvidos**, e por isso lê o
-         * `nuxt.options.i18n` mesclado, tarde.
-         *
-         * A decisão de modo mora no `appMessages.ts` com o disco injetado —
-         * aqui não há costura para testar as degradações.
-         */
+        // O mapa de chaves do app. A config é lida dentro do `getContents`, e não no
+        // `setup`, porque só ali o `langDir` já está resolvido. Ver "O mapa de chaves
+        // do app" no `.claude/CLAUDE.md`.
         addTypeTemplate({
             filename: `${name}/types/tr.d.ts`,
             write: true,
@@ -717,30 +662,14 @@ export default defineNuxtModule<ModuleOptions>({
                 )
         });
 
-        /**
-         * A ponte com @nuxtjs/i18n.
-         *
-         * Um arquivo por locale no `buildDir`, reexportando o pack já mesclado
-         * sob a chave `rform` — `.ts`, não `.json`, porque os packs são módulos
-         * (o do usuário pode importar `defineLocale`) e quem os avalia é o Vite,
-         * não o Node que roda este módulo.
-         *
-         * `i18n:registerModule` é a API documentada para isso. O hook
-         * simplesmente nunca dispara se o @nuxtjs/i18n não estiver instalado —
-         * daí não haver guarda a escrever nem dependência a declarar.
-         */
+        // A ponte: um arquivo por locale no `buildDir`, reexportando o pack sob a
+        // chave `rform`. `.ts` e não `.json` porque os packs são módulos, e quem os
+        // avalia é o Vite. Ver "A ponte é hook" no `.claude/CLAUDE.md`.
         const localeEntries = await localeFiles();
 
-        /**
-         * Os codes que o **app** declarou.
-         *
-         * Registrar um code que ele não declarou não é neutro: o
-         * `mergeConfigLocales` do i18n junta todos os configs num Map por code,
-         * então um code que só a ponte cita **entra** na lista de locales do
-         * app — e sai de lá no seletor de idioma, no `localeCodes` e no
-         * prerender. Um app de `pt` e `es` não pode ganhar um `en` de brinde
-         * só porque o módulo tem um pack `en`.
-         */
+        // Os codes que o **app** declarou. Registrar um que ele não declarou não é
+        // neutro: o code entraria na lista de locales dele, e de lá no seletor de
+        // idioma e no prerender.
         const declaredLocales = (): string[] => {
             const inline = (nuxt.options.modules ?? []).find(
                 (entry) => Array.isArray(entry) && entry[0] === "@nuxtjs/i18n"
@@ -758,15 +687,8 @@ export default defineNuxtModule<ModuleOptions>({
             return [...new Set(codes)];
         };
 
-        /**
-         * Gêmeo em build time do `matchLocale` (`runtime/utils/i18n.ts`): code
-         * exato, senão o pack da mesma língua — é o que faz um app de `pt` ou
-         * de `en-GB` receber mensagem, sem que nenhum code novo apareça.
-         *
-         * Não é um import porque `runtime/utils/i18n.ts` só resolve pelo alias
-         * `#rform/types/locales`, que não existe em build time — trazer o
-         * arquivo para cá arrastaria o grafo de tipos gerado junto.
-         */
+        // Gêmeo em build time do `matchLocale`, e não um import dele: aquele arquivo
+        // só resolve pelo alias `#rform/types/locales`, que não existe aqui.
         const packFor = (code: string): string | undefined => {
             const wanted = code.toLowerCase();
             const primary = wanted.split("-")[0] ?? wanted;
@@ -782,7 +704,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         const langFile = (code: string) =>
             [
-                "// auto-generated — o pack deste locale, no namespace `rform`",
+                "// gerado — o pack deste locale, no namespace `rform`",
                 `import { locales } from "#${name}/locales";`,
                 "",
                 `export default { ${name}: locales[${JSON.stringify(code)}] ?? {} };`
@@ -796,28 +718,17 @@ export default defineNuxtModule<ModuleOptions>({
             });
         }
 
-        /**
-         * E também **agora**, na mão: o @nuxtjs/i18n lê cada arquivo do
-         * `langDir` com `readFileSync` durante o setup dele, para descobrir se
-         * é objeto ou loader. Template do Nuxt só chega ao disco no
-         * `builder:generateApp`, bem depois — o sintoma é um `ENOENT` apontando
-         * para um caminho dentro do próprio `buildDir`.
-         *
-         * O `addTemplate` acima continua existindo para o arquivo sobreviver a
-         * uma regeneração; o conteúdo é o mesmo, então escrever duas vezes não
-         * diverge.
-         */
+        // E também **agora**, na mão: o i18n lê cada arquivo do `langDir` com
+        // `readFileSync` durante o setup dele, e template do Nuxt só chega ao disco
+        // muito depois. O `addTemplate` acima fica para sobreviver a uma regeneração.
         await mkdir(langDir, { recursive: true });
 
         await Promise.all(
             localeEntries.map(([code]) => writeFile(join(langDir, `${code}.ts`), langFile(code)))
         );
 
-        /**
-         * Cast: `i18n:registerModule` não está no `NuxtHooks`, e augmentar a
-         * interface exigiria depender dos tipos do @nuxtjs/i18n — que é
-         * justamente o que a ponte evita.
-         */
+        // Cast: o hook não está no `NuxtHooks`, e augmentar a interface exigiria
+        // depender dos tipos do i18n — que é justamente o que a ponte evita.
         type RegisterI18n = (
             register: (config: {
                 langDir: string;
@@ -833,15 +744,9 @@ export default defineNuxtModule<ModuleOptions>({
         hookI18n("i18n:registerModule", (register) => {
             const declared = declaredLocales();
 
-            /**
-             * Um code declarado que nenhum pack atende — `es` — fica de fora, e
-             * o vue-i18n resolve pelo `fallbackLocale` do app, que é a
-             * precedência normal dele.
-             *
-             * Sem nenhum code legível (a config do i18n num layer, por exemplo)
-             * cada pack entra sob o próprio code: é o mínimo que faz a ponte
-             * funcionar, e são os codes do módulo, não apelidos inventados.
-             */
+            // Code declarado que nenhum pack atende fica de fora, e o vue-i18n resolve
+            // pelo `fallbackLocale` do app. Sem nenhum code legível, cada pack entra
+            // sob o próprio code.
             const locales =
                 declared.length === 0
                     ? localeEntries.map(([code]) => ({ code, file: `${code}.ts` }))
@@ -855,11 +760,8 @@ export default defineNuxtModule<ModuleOptions>({
         });
 
         nuxt.hook("builder:watch", (event, path) => {
-            /**
-             * O arquivo de mensagens do app mora fora do `srcDir`
-             * (`<rootDir>/i18n` por padrão do @nuxtjs/i18n), e uma edição — não
-             * só um add/unlink — muda as chaves que o `types/tr.d.ts` oferece.
-             */
+            // O arquivo de mensagens do app mora fora do `srcDir`, e uma **edição** já
+            // muda as chaves que o `types/tr.d.ts` oferece.
             if (/(^|[\\/])i18n[\\/].*\.json$/.test(path)) {
                 return nuxt.callHook("builder:generateApp");
             }
@@ -875,7 +777,7 @@ export default defineNuxtModule<ModuleOptions>({
                 roots.userFields,
                 roots.userUtils,
                 join(nuxt.options.srcDir, name, "locales"),
-                // `defaults` with no extension, so `defaults.ts` and `defaults.js` both hit.
+                // `defaults` sem extensão, para pegar tanto `.ts` quanto `.js`.
                 join(nuxt.options.srcDir, name, "defaults")
             ];
 
@@ -917,9 +819,8 @@ export default defineNuxtModule<ModuleOptions>({
                 return {
                     name: basename(file, ".ts"),
                     path,
-                    // See the comment on the template below — this is the
-                    // invariant the interleaving relies on, not alphabetical
-                    // luck.
+                    // O que a intercalação do template abaixo usa, e não sorte
+                    // alfabética.
                     reentrant: importsRformValue(await readFile(path, "utf8"))
                 };
             })
@@ -929,49 +830,21 @@ export default defineNuxtModule<ModuleOptions>({
             filename: `${name}/utils.ts`,
             write: true,
             getContents: () => {
-                /**
-                 * A helper that value-imports `#rform/*` — today, only
-                 * `tr.ts`, via `#rform/translate` — can re-enter this very
-                 * barrel mid-evaluation: `#rform/utils` -> `tr.ts` ->
-                 * `#rform/translate` -> `standalone.ts` -> `#rform/locales`
-                 * -> a user locale pack -> `import { defineLocale } from
-                 * "#rform/utils"`. Vite's SSR module runner lowers `export *
-                 * from` to a positional `__vite_ssr_exportAll__` call rather
-                 * than a live binding, so on that reentrant call only the
-                 * `export *` statements that have already RUN are visible —
-                 * not merely the ones declared later in the file. A `type`
-                 * import doesn't count (it is erased, never runs any code),
-                 * which is why `importsRformValue` excludes it — otherwise
-                 * every helper here would qualify, since most reach
-                 * `#rform/types` for a type.
-                 *
-                 * Stable-sorting the reentrant helpers to the end — instead
-                 * of relying on `readdir`'s order putting `i18n.ts` (which
-                 * owns `defineLocale`) before `tr.ts` — is what actually
-                 * guarantees every non-reentrant helper's `export *` has run
-                 * by the time a reentrant one loops back, regardless of what
-                 * gets added to this directory later or what it gets renamed
-                 * to.
-                 */
+                // Os reentrantes vão para o fim: é isso que garante que o `export *`
+                // de todo helper comum já rodou quando um deles volta pelo ciclo. Ver
+                // "O `import` vem pareado com o próprio `export *`" no
+                // `.claude/CLAUDE.md`.
                 const ordered = [...helpers].sort(
                     (a, b) => Number(a.reentrant) - Number(b.reentrant)
                 );
 
                 return [
-                    // Named exports too, so `#rform/utils` is the single
-                    // public entry — `defineRule` and friends are imported,
-                    // not global. Below, the `import` line keeps the `.ts`
-                    // suffix (it is an absolute filesystem path, not a bare
-                    // specifier); only the `export *` line goes through
-                    // `specifier()` to drop it — a `.ts` module specifier
-                    // needs `allowImportingTsExtensions`, which a consumer
-                    // app has no reason to set, and the barrel is the only
-                    // place that specifier reaches the consumer.
-                    //
-                    // Each `import` is paired with its own `export *` right
-                    // below it, rather than one block of imports followed by
-                    // one block of `export *` — see `ordered`, above, for why
-                    // the pairs are reordered rather than left alphabetical.
+                    // O `export *` é o que faz `import { defineRule } from
+                    // "#rform/utils"` funcionar, e ele passa pelo `specifier()` para
+                    // sair sem extensão; a linha de `import` mantém o `.ts` porque é
+                    // caminho absoluto de disco, não specifier. Cada `import` vem
+                    // colado ao `export *` do mesmo arquivo, e não em dois blocos —
+                    // ver `ordered`, acima.
                     ordered
                         .map(
                             ({ name, path }) =>
@@ -990,34 +863,10 @@ export default defineNuxtModule<ModuleOptions>({
             }
         });
 
-        /**
-         * A única linha que um app precisa escrever no CSS dele:
-         *
-         *     @import "tailwindcss";
-         *     @import "#rform/tailwindcss";
-         *
-         * Traz as duas coisas: o `@source` dos componentes (o Tailwind não varre
-         * `node_modules`, então sem ele nenhuma classe do módulo é emitida) e os
-         * tokens `--rf-*`.
-         *
-         * A ordem das duas linhas só decide quem ganha quando **as duas** declaram a
-         * mesma variável, porque ordem de layer é ordem de primeira aparição. Medido
-         * no browser, sobrescrevendo `--rf-color-primary`: `@theme { --color-primary }`
-         * (encadeia, o módulo nunca declara essa), `@layer rform { :root }` (mesma
-         * layer, o app vem depois) e `:root` fora de layer (ganha de toda layer)
-         * funcionam nas **duas** ordens. Só declarar `--rf-*` fora da `@layer rform`
-         * — num `@theme` ou num `@layer base` — depende de `#rform` vir antes, e aí
-         * falha calado. Antes faz as cinco formas funcionarem; é a recomendação.
-         *
-         * Tem de ser `@import` do entry do app, não `nuxt.options.css`: num arquivo
-         * que o Tailwind não trata como parte de um entry, `@source` é ignorado e a
-         * at-rule vaza crua para o browser.
-         *
-         * Template em vez de um `.css` do `dist`, porque o caminho sai absoluto e
-         * resolvido: funciona igual com o pacote instalado, com link de workspace ou
-         * com o módulo apontado por caminho relativo (o caso do playground, que não
-         * tem `node_modules/rform`).
-         */
+        // A única linha que o app escreve no CSS dele, e ela traz o `@source` dos
+        // componentes mais os tokens. Template, e não um `.css` do `dist`, porque o
+        // caminho sai absoluto e resolvido. Ver "A linha que o app escreve" no
+        // `.claude/CLAUDE.md`.
         addTemplate({
             filename: `${name}/tailwind.css`,
             write: true,
@@ -1033,22 +882,16 @@ export default defineNuxtModule<ModuleOptions>({
 
         nuxt.options.alias ||= {};
 
-        /**
-         * Registered before `#rform`: Vite matches aliases in insertion order,
-         * so the shorter prefix would otherwise swallow this one into the build
-         * directory. It is what lets a replacement wrap the original —
-         * `import Base from "#rform/builtin/fields/Text.vue"`.
-         */
+        // Registrado antes de `#rform`: o Vite casa aliases na ordem de inserção, e
+        // o prefixo mais curto engoliria este. É o que deixa uma substituição
+        // embrulhar o original em vez de reescrevê-lo.
         nuxt.options.alias[`#${name}/builtin`] = componentsPath;
         nuxt.options.alias[`#${name}/builtin/*`] = `${componentsPath}/*`;
 
         const alias = `${nuxt.options.buildDir}/${name}`;
 
-        /**
-         * Espelha o `@import "tailwindcss"` do app: sem extensão, o resolver de CSS do
-         * Vite não acha o arquivo, então o apelido é explícito. Antes de `#rform/*`,
-         * que senão engole o caminho e devolve um arquivo que não existe.
-         */
+        // Alias **exato**, antes de `#rform/*`: sem extensão o resolver de CSS do Vite
+        // não acha o arquivo, e o prefixo mais curto engoliria o caminho.
         nuxt.options.alias[`#${name}/tailwindcss`] = `${alias}/tailwind.css`;
 
         /**
@@ -1062,11 +905,9 @@ export default defineNuxtModule<ModuleOptions>({
         nuxt.options.alias[`#${name}`] = alias;
         nuxt.options.alias[`#${name}/*`] = `${alias}/*`;
 
-        /**
-         * One by one, not as a directory. Nuxt's scanner skips any file under a
-         * path it has already scanned, so registering `components/` would claim
-         * `components/fields` and `components/utils` and leave both empty.
-         */
+        // Um a um, não como diretório: o scanner do Nuxt pula todo arquivo sob um
+        // caminho já varrido, então registrar `components/` deixaria `fields` e
+        // `utils` vazios, sem erro nenhum.
         for (const component of containers) {
             addComponent({
                 name: `R${component.name}`,
@@ -1092,17 +933,14 @@ export default defineNuxtModule<ModuleOptions>({
             path: roots.utils
         });
 
-        /**
-         * Higher priority than the built-ins, so a same-named user component
-         * wins every `<RText>` / `<RUtilsLabel>` in the app — including the ones
-         * inside the module's own templates.
-         */
+        // Prioridade maior que a dos embutidos, para um componente do usuário de
+        // mesmo nome vencer todo `<RText>` do app — inclusive os que estão dentro dos
+        // templates do próprio módulo.
         for (const [key, prefix] of [
             ["userFields", "R"],
             ["userUtils", "RUtils"]
         ] as const) {
-            // Both are optional, and registering an absent directory only earns
-            // a Nuxt warning.
+            // As duas são opcionais, e registrar diretório ausente só rende um aviso.
             if (!listing[key]) {
                 continue;
             }

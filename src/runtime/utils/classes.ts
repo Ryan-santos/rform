@@ -1,9 +1,8 @@
 type ClassValue = string | { [key: string]: ClassValue | null };
 
 /**
- * Widens string literals back to `string`, keeping the object's shape. Without
- * it the inferred `T` pins each default to its exact class string, and a `ui`
- * override — the whole point of the prop — fails to type-check.
+ * Alarga literal de volta pra `string`, mantendo a forma do objeto. Sem isso o `T`
+ * inferido prende cada default na classe exata, e sobrescrever `ui` não tipa.
  */
 type Widen<T> = T extends string
     ? string
@@ -13,6 +12,10 @@ type Widen<T> = T extends string
         ? Array<Widen<U>>
         : { [K in keyof T]: Widen<T[K]> };
 
+/**
+ * Marca um bloco de classes como `ui`, alargando os literais para o call site
+ * poder sobrescrever chave a chave.
+ */
 export default function <T extends ClassValue | Array<ClassValue>>(classes: T): Widen<T> {
     return classes as unknown as Widen<T>;
 }

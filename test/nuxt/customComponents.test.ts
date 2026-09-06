@@ -7,38 +7,35 @@ import { describe, expect, it } from "vitest";
 
 import useField from "../../src/runtime/composables/useField";
 import useUtil from "../../src/runtime/composables/useUtil";
-// By path, not `#components`: these live in the fixture, and the module's own
-// type-check resolves `#components` against the module's generated types.
+// Por caminho, não por `#components`: estes moram na fixture, e o type-check do
+// módulo resolve `#components` contra os tipos gerados dele.
 import RRating from "../fixtures/basic/rform/fields/Rating.vue";
 import RSwitch from "../fixtures/basic/rform/fields/Switch.vue";
 
-// Vite rewrites `new URL(<template literal>, import.meta.url)`, so paths are
-// built from the repo root instead.
+// O Vite reescreve `new URL(<template literal>, import.meta.url)`, então os
+// caminhos são montados a partir da raiz do repo.
 const root = process.cwd();
 
 const read = (path: string) => readFile(join(root, "test/fixtures/basic/.nuxt", path), "utf8");
 
-/**
- * The fixture ships `rform/fields/Rating.vue` (a field the module does not
- * have), `rform/fields/Switch.vue` (a replacement for one it does) and
- * `rform/utils/Hint.vue` (a util the module does not have).
- */
-describe("a field from app/rform/fields", () => {
-    it("is registered under the R prefix and renders", async () => {
+// A fixture traz `fields/Rating.vue` (campo que o módulo não tem),
+// `fields/Switch.vue` (substituição de um que ele tem) e `utils/Hint.vue`.
+describe("um campo de app/rform/fields", () => {
+    it("é registrado sob o prefixo R e renderiza", async () => {
         const wrapper = await mountSuspended(RRating);
 
         expect(wrapper.find("[data-testid='rating-1']").exists()).toBe(true);
     });
 
-    it("gets its own defaults, not another component's", async () => {
+    it("ganha os próprios defaults, não os de outro componente", async () => {
         const wrapper = await mountSuspended(RRating);
 
-        // `max: 5` comes from the file's own `defineDefaults`.
+        // `max: 5` vem do `defineDefaults` do próprio arquivo.
         expect(wrapper.findAll("[data-testid^='rating-']")).toHaveLength(5);
         expect(wrapper.find("div").classes()).toContain("rating");
     });
 
-    it("takes a prop declared only in that file", async () => {
+    it("aceita uma prop declarada só naquele arquivo", async () => {
         const wrapper = await mountSuspended(RRating, {
             props: { max: 3 } as never
         });
@@ -46,7 +43,7 @@ describe("a field from app/rform/fields", () => {
         expect(wrapper.findAll("[data-testid^='rating-']")).toHaveLength(3);
     });
 
-    it("drives a model like any built-in field", async () => {
+    it("conduz um model como qualquer campo embutido", async () => {
         const wrapper = await mountSuspended(RRating, {
             props: { modelValue: 0 } as never
         });
@@ -57,8 +54,8 @@ describe("a field from app/rform/fields", () => {
     });
 });
 
-describe("a util from app/rform/utils", () => {
-    it("renders inside the field that includes it, reading the parent's props", async () => {
+describe("um util de app/rform/utils", () => {
+    it("renderiza dentro do campo que o inclui, lendo as props do pai", async () => {
         const wrapper = await mountSuspended(RRating, {
             props: { hint: "escolha de 1 a 5" } as never
         });
@@ -66,34 +63,34 @@ describe("a util from app/rform/utils", () => {
         expect(wrapper.find("[data-testid='hint']").text()).toBe("escolha de 1 a 5");
     });
 
-    it("stays out of the way when the parent passes nothing", async () => {
+    it("sai da frente quando o pai não passa nada", async () => {
         const wrapper = await mountSuspended(RRating);
 
         expect(wrapper.find("[data-testid='hint']").exists()).toBe(false);
     });
 });
 
-describe("a file named after a built-in", () => {
-    it("replaces it — the R tag resolves to the user's component", async () => {
+describe("um arquivo com o nome de um embutido", () => {
+    it("substitui o embutido — a tag R resolve para o componente do usuário", async () => {
         const wrapper = await mountSuspended(RSwitch);
 
         expect(wrapper.find("[data-testid='custom-switch']").exists()).toBe(true);
-        // The built-in renders a checkbox; the replacement does not.
+        // O embutido renderiza um checkbox; a substituição não.
         expect(wrapper.find("input").exists()).toBe(false);
     });
 
-    it("can build on the original through #rform/builtin", async () => {
+    it("consegue partir do original pelo #rform/builtin", async () => {
         const wrapper = await mountSuspended(RSwitch);
 
-        // `default: true` is the replacement's; reaching the button at all means
-        // the spread of the built-in `defaults` resolved.
+        // O `default: true` é da substituição; chegar ao botão já prova que o spread
+        // do `defaults` embutido resolveu.
         expect(wrapper.find("[data-testid='custom-switch-toggle']").text()).toBe("on");
         expect(wrapper.find("[data-testid='custom-switch']").classes()).toContain("custom-switch");
     });
 });
 
-describe("the generated artifacts", () => {
-    it("resolve a replaced component to the user's file, only once", async () => {
+describe("os artefatos gerados", () => {
+    it("resolvem um componente substituído para o arquivo do usuário, uma vez só", async () => {
         const registry = await read("rform/registry.ts");
         const entries = [...registry.matchAll(/^ {4}Switch:/gm)];
 
@@ -102,7 +99,7 @@ describe("the generated artifacts", () => {
         expect(registry).not.toContain("src/runtime/components/fields/Switch.vue");
     });
 
-    it("list the user's components alongside the built-ins", async () => {
+    it("listam os componentes do usuário ao lado dos embutidos", async () => {
         const registry = await read("rform/registry.ts");
 
         expect(registry).toContain("Rating: () => import");
@@ -110,14 +107,14 @@ describe("the generated artifacts", () => {
         expect(registry).toContain("Text: () => import");
     });
 
-    it("register the user's components under the R and RUtils prefixes", async () => {
+    it("registram os componentes do usuário sob os prefixos R e RUtils", async () => {
         const components = await read("components.d.ts");
 
         expect(components).toContain("export const RRating:");
         expect(components).toContain("export const RUtilsHint:");
     });
 
-    it("point the R tag of a replaced component at the user's file", async () => {
+    it("apontam a tag R de um componente substituído para o arquivo do usuário", async () => {
         const components = await read("components.d.ts");
         const line = components
             .split("\n")
@@ -127,13 +124,13 @@ describe("the generated artifacts", () => {
         expect(line).not.toContain("src/runtime/components");
     });
 
-    it("let RDynamic resolve the new field by its type", async () => {
+    it("deixam o RDynamic resolver o campo novo pelo type", async () => {
         const map = await read("rform/components-map.ts");
 
         expect(map).toContain(`"rating": Rating`);
     });
 
-    it("give the new field and util a Props entry", async () => {
+    it("dão uma entrada de Props ao campo e ao util novos", async () => {
         const components = await read("rform/types/components/index.ts");
         const utils = await read("rform/types/components/utils/index.ts");
 
@@ -141,26 +138,23 @@ describe("the generated artifacts", () => {
         expect(utils).toContain("export type Hint =");
     });
 
-    it("expose the new util as a `ui.Utils` slot on every field", async () => {
+    it("expõem o util novo como um espaço em `ui.Utils` de todo campo", async () => {
         const props = await read("rform/types/components/utils/props.ts");
 
         expect(props).toContain(`Hint?: Utils["Hint"]["ui"]`);
     });
 });
 
-describe("an unresolvable component name", () => {
-    it("fails loudly in useField instead of borrowing Text's defaults", async () => {
+describe("um nome de componente que não resolve", () => {
+    it("falha alto no useField em vez de tomar emprestado os defaults do Text", async () => {
         await expect(useField({})).rejects.toThrow(/could not resolve a component name/);
 
         await expect(useField({}, undefined, "Nope" as never)).rejects.toThrow(/got "Nope"/);
     });
 
-    /**
-     * Synchronously, not as a rejection: the name is injected at build time, so
-     * a missing one is a build fault and there is nothing to await before
-     * saying so.
-     */
-    it("fails loudly in useUtil instead of borrowing Label's defaults", () => {
+    // Síncrono, não como rejeição: o nome é injetado em build time, então a falta
+    // dele é falha de build e não há o que aguardar antes de dizer.
+    it("falha alto no useUtil em vez de tomar emprestado os defaults do Label", () => {
         expect(() => useUtil()).toThrow(/could not resolve a component name/);
 
         expect(() => useUtil(undefined, "Nope" as never)).toThrow(/got "Nope"/);

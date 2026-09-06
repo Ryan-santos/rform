@@ -8,6 +8,9 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Contador de caracteres: quanto já foi digitado sobre o `length` do campo.
+     */
     import { computed, watch } from "vue";
 
     import { useUtil } from "#rform/composables";

@@ -39,6 +39,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de texto de uma linha. Aceita `mask` e os utils de label, descrição, erro,
+     * contador e placeholder.
+     *
+     * @example <RText name="cpf" label="CPF" mask="brCpf" />
+     */
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

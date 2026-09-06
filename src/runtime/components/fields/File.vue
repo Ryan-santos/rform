@@ -33,7 +33,6 @@
             </div>
 
             <slot>
-                <!-- Multiple mode: list of files -->
                 <div
                     v-if="props.multiple && files.length > 0"
                     class="flex w-full flex-col gap-2"
@@ -61,7 +60,6 @@
                     </div>
                 </div>
 
-                <!-- Single mode: existing preview -->
                 <div
                     v-else-if="!props.multiple && ((!!file && !loading) || url)"
                     :class="props.ui?.group?.preview?.container"
@@ -128,6 +126,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de arquivo com dropzone, pré-visualização e tamanho formatado. `accept` é
+     * obrigatório; `multiple` troca o model por um array de `File`.
+     *
+     * @example <RFile name="anexo" accept="image/*" multiple />
+     */
     import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
     import { useField } from "#rform/composables";
@@ -199,14 +203,12 @@
         TextProp<typeof defaults.text> & {
             accept: string;
             multiple?: Multiple;
-            /** Top level by contract, like `label` — never inside `text`. */
+            /** No topo por contrato, como `label` — nunca dentro de `text`. */
             placeholder?: TrInput;
         };
 
-    /**
-     * Generic-free mirror of `Props` for `useField`, as in Select.vue: the
-     * conditional model type cascades into a union the checker cannot represent.
-     */
+    // Espelho de `Props` sem generic, para o `useField`, como no Select: o tipo
+    // condicional do model cascateia numa união que o checker não representa.
     type InternalProps = Omit<
         Element<typeof defaults, "file">,
         "modelValue" | "onUpdate:modelValue" | "default"
@@ -331,10 +333,8 @@
         }
     };
 
-    /**
-     * A tuple, so what the exponent picks stays a key of `text.bytes` — an
-     * indexed `string[]` would widen to `string` and stop resolving.
-     */
+    // Tupla, para o que o expoente escolhe continuar sendo chave de `text.bytes`:
+    // um `string[]` indexado alargaria para `string` e pararia de resolver.
     const UNITS = ["b", "kb", "mb", "gb", "tb"] as const;
 
     const formatBytes = (bytes: number): string => {

@@ -6,6 +6,7 @@ import { check, digits, isBlank } from "../../helpers";
 
 const schema = () => z.string().length(8, trRule("br.cep"));
 
+/** Exige um CEP com 8 dígitos. Aceita com ou sem pontuação. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

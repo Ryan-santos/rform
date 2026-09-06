@@ -4,20 +4,13 @@ import { describe, expect, it } from "vitest";
 import dropdownMiddleware, { dropdownFit } from "../../src/runtime/utils/dropdownMiddleware";
 
 /**
- * `size()` and `flip()` fight over the same element, and `size()` wins by
- * default: it returns `reset: { rects: true }` whenever `apply` changed the
- * panel's dimensions, which restarts the whole middleware chain — so on the
- * next pass `flip()` measures a panel that was *already* clamped to whatever
- * fits below, sees no overflow, and keeps `bottom-start` forever.
+ * O `size()` e o `flip()` disputam o mesmo elemento e o `size()` ganha — ver
+ * "`size()` do floating-ui sempre ganha do `flip()`" no `.claude/CLAUDE.md`.
  *
- * The state is real and not hypothetical: `autoUpdate` keeps recomputing while
- * the panel is closed (`v-show` leaves it in the tree at 0×0), so it opens with
- * a `maxHeight` measured for the space below.
- *
- * The whole loop lives in the DOM's layout, which no test environment here has,
- * so these drive the real `computePosition` over a synthetic platform: a fixed
- * viewport as the clipping rect, and a panel whose height is its content height
- * clamped by the `maxHeight` that `apply` wrote — exactly what a browser does.
+ * O laço inteiro mora no layout do DOM, que nenhum ambiente de teste daqui tem,
+ * então estes rodam o `computePosition` de verdade sobre uma plataforma sintética:
+ * viewport fixa como clipping rect, e altura do painel limitada pelo `maxHeight`
+ * que o `apply` escreveu.
  */
 
 const VIEWPORT = { x: 0, y: 0, width: 1000, height: 800 };
@@ -94,7 +87,7 @@ const place = (reference: ReturnType<typeof field>, floating: Panel, middleware:
     });
 };
 
-/** Opening is the second computation: the first one ran with the panel hidden. */
+/** Abrir é a segunda computação: a primeira rodou com o painel escondido. */
 const open = async (reference: ReturnType<typeof field>, content: number) => {
     const floating = panel(0);
     const middleware = dropdownMiddleware({ middleware: [dropdownFit()] });
@@ -108,34 +101,34 @@ const open = async (reference: ReturnType<typeof field>, content: number) => {
 };
 
 describe("dropdownMiddleware", () => {
-    it("keeps the panel below the field when the space below fits it", async () => {
+    it("mantém o painel abaixo do campo quando o espaço de baixo cabe", async () => {
         const { placement } = await open(field(100), 600);
 
         expect(placement).toBe("bottom-start");
     });
 
-    it("flips the panel above a field sitting at the bottom of the viewport", async () => {
+    it("vira o painel para cima num campo no fim da viewport", async () => {
         const { placement } = await open(field(700), 600);
 
         expect(placement).toBe("top-start");
     });
 
-    it("gives the flipped panel the room above instead of the minimum", async () => {
+    it("dá ao painel virado o espaço de cima, e não o mínimo", async () => {
         const { maxHeight } = await open(field(700), 600);
 
-        // 700 - 5 of offset - 10 of gap
+        // 700 menos 5 de offset menos 10 de folga.
         expect(maxHeight).toBe(685);
     });
 
-    it("shrinks to the room below when the field has some, without flipping", async () => {
+    it("encolhe para o espaço de baixo quando o campo tem algum, sem virar", async () => {
         const { placement, maxHeight } = await open(field(400), 600);
 
         expect(placement).toBe("bottom-start");
-        // 800 - 450 - 5 of offset - 10 of gap
+        // 800 menos 450 menos 5 de offset menos 10 de folga.
         expect(maxHeight).toBe(335);
     });
 
-    it("hands the reference width over as --width, not as an inline width", async () => {
+    it("entrega a largura da referência como --width, e não como width inline", async () => {
         const { style } = await open(field(100), 600);
 
         expect(style["--width"]).toBe("300px");

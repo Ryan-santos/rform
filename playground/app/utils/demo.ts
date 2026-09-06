@@ -1,21 +1,19 @@
 import type { InjectionKey, Ref } from "vue";
 
 /**
- * The raw text of the page file, handed down by `<DemoPage>`. Each `<Demo>`
- * slices its own snippet out of it, so the code on screen is literally the code
- * that ran — there is no second copy to forget to update.
+ * O texto cru do arquivo da página, descido pelo `<DemoPage>`. Cada `<Demo>` fatia
+ * dali o próprio recorte, então o código na tela é literalmente o que rodou — não há
+ * segunda cópia para esquecer de atualizar.
  */
 export const demoSourceKey = Symbol("demo-source") as InjectionKey<Ref<string>>;
 
-/**
- * `<Demo` only: the lookahead is what keeps `<DemoPage` and `<DemoJson` from
- * matching, since both start with the same five characters.
- */
+// Só `<Demo`: o lookahead é o que impede `<DemoPage` e `<DemoJson` de casarem, já
+// que os três começam com os mesmos cinco caracteres.
 const TAG = /<Demo(?=[\s/>])|<\/Demo\s*>/g;
 
 /**
- * Walks to the `>` that closes an opening tag, skipping the ones that live
- * inside attribute values — `:rule="({ value }) => value"` carries two.
+ * Anda até o `>` que fecha a tag de abertura, pulando os que moram dentro de valor
+ * de atributo — `:rule="({ value }) => value"` carrega dois.
  */
 function endOfTag(source: string, from: number): number {
     let quote: string | null = null;
@@ -70,9 +68,8 @@ function dedent(block: string): string {
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
- * Pulls a `// #region <id>` … `// #endregion` block out of the page's script.
- * The markers are the ones the editor already folds on, so they earn their keep
- * even when nobody is reading the rendered page.
+ * Recorta um bloco `// #region <id>` … `// #endregion` do script da página. Os
+ * marcadores são os mesmos em que o editor já dobra, então pagam o próprio custo.
  */
 export function extractRegion(source: string, id: string): string {
     if (!source) {
@@ -98,9 +95,9 @@ export function extractRegion(source: string, id: string): string {
 }
 
 /**
- * Pulls the children of `<Demo id="...">` out of a page's own source. Matching
- * is by depth over the token stream rather than by regex, so a `<Demo>` nested
- * inside another one closes the right tag.
+ * Recorta os filhos de `<Demo id="...">` do fonte da própria página. O casamento é
+ * por profundidade sobre o fluxo de tokens, e não por regex, então um `<Demo>`
+ * aninhado em outro fecha a tag certa.
  */
 export function extractDemo(source: string, id: string): string {
     if (!source) {

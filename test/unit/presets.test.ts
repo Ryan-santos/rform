@@ -3,54 +3,54 @@ import { describe, expect, it } from "vitest";
 import { collectPresets, presetName } from "../../src/presets";
 
 describe("presetName", () => {
-    it("uses the file basename when the preset sits at the root", () => {
+    it("usa o nome do arquivo quando o preset está na raiz", () => {
         expect(presetName("cpf.ts")).toBe("cpf");
     });
 
-    it("prefixes each parent folder in camelCase", () => {
+    it("prefixa cada pasta pai em camelCase", () => {
         expect(presetName("br/cpf.ts")).toBe("brCpf");
         expect(presetName("br/fiscal/inscricao.ts")).toBe("brFiscalInscricao");
     });
 
-    it("camelCases kebab-case and snake_case segments", () => {
+    it("converte segmento kebab-case e snake_case para camelCase", () => {
         expect(presetName("br/insc-est.ts")).toBe("brInscEst");
         expect(presetName("br/insc_est.ts")).toBe("brInscEst");
     });
 
-    it("keeps an already camelCased basename intact", () => {
+    it("mantém intacto um nome que já é camelCase", () => {
         expect(presetName("cpfCnpj.ts")).toBe("cpfCnpj");
         expect(presetName("br/cpfCnpj.ts")).toBe("brCpfCnpj");
     });
 
-    it("normalises windows path separators", () => {
+    it("normaliza separador de caminho do Windows", () => {
         expect(presetName("br\\cpf.ts")).toBe("brCpf");
     });
 
-    it("strips the extension only from the final segment", () => {
+    it("tira a extensão só do último segmento", () => {
         expect(presetName("v1.2/cpf.ts")).toBe("v1.2Cpf");
     });
 });
 
 describe("collectPresets", () => {
-    it("pairs every file with its derived name", () => {
+    it("pareia todo arquivo com o nome derivado", () => {
         expect(collectPresets(["cpf.ts", "br/insc-est.ts"])).toEqual([
             { name: "cpf", file: "cpf.ts" },
             { name: "brInscEst", file: "br/insc-est.ts" }
         ]);
     });
 
-    it("ignores files that are not typescript or javascript modules", () => {
+    it("ignora arquivo que não é módulo typescript ou javascript", () => {
         expect(collectPresets(["cpf.ts", "notes.md", "types.d.ts", "legacy.js"])).toEqual([
             { name: "cpf", file: "cpf.ts" },
             { name: "legacy", file: "legacy.js" }
         ]);
     });
 
-    it("returns an empty list when there are no files", () => {
+    it("devolve lista vazia quando não há arquivo", () => {
         expect(collectPresets([])).toEqual([]);
     });
 
-    it("throws naming both files when two paths collapse to the same name", () => {
+    it("lança nomeando os dois arquivos quando dois caminhos colapsam no mesmo nome", () => {
         expect(() => collectPresets(["br/cpf.ts", "brCpf.ts"])).toThrowError(
             /brCpf.*br\/cpf\.ts.*brCpf\.ts/s
         );

@@ -53,6 +53,11 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo numérico com controles de passo. `step`, `min` e `max` vão pro input.
+     *
+     * @example <RNumber name="quantidade" :step="0.5" :min="0" />
+     */
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

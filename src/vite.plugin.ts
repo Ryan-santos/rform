@@ -1,28 +1,22 @@
 import type { Plugin } from "vite";
 
-/**
- * Vite ids are always forward-slashed; `resolve()` and `join()` hand back
- * backslashes on Windows. Comparing the two raw makes every user root miss.
- */
+// Id do Vite é sempre com barra normal; `resolve()` e `join()` devolvem barra
+// invertida no Windows, e comparar os dois crus faz toda raiz do usuário errar.
 const normalize = (path: string) => path.split("\\").join("/");
 
-/**
- * An optional type-argument list, captured so the rewrite can put it back.
- * Running before the Vue plugin means seeing `useUtil<Props>()` with the
- * generic still on it — a pattern that demanded `(` right after the name found
- * nothing to rewrite. One level of nesting covers `<Props<M>>`.
- */
+// Lista de argumentos de tipo, capturada para a reescrita devolvê-la: rodando antes
+// do plugin do Vue, o que se vê é `useUtil<Props>()` com o generic ainda no meio.
 const GENERIC = String.raw`\s*(<[^<>]*(?:<[^<>]*>[^<>]*)*>)?\s*`;
 
-/** A call's arguments, tolerating one level of nested parentheses. */
+/** Os argumentos de uma chamada, tolerando um nível de parênteses aninhado. */
 const ARGS = String.raw`\(([^()]*(?:\([^()]*\)[^()]*)*)\)`;
 
 /**
- * Rewrites `useField(props)` into `useField(props, undefined, "Text")`,
- * so a component learns its own name without repeating it in the file.
+ * Reescreve `useField(props)` como `useField(props, undefined, "Text")`, para o
+ * componente aprender o próprio nome sem repeti-lo no arquivo.
  *
- * @param roots Directories whose `.vue` files get the name injected — the
- * module's own components plus `app/rform/{fields,utils}`.
+ * @param roots Diretórios cujos `.vue` recebem a injeção — os componentes do módulo
+ * mais `app/rform/{fields,utils}`.
  */
 export default (roots: string[]): Plugin => {
     const prefixes = roots.map((root) => `${normalize(root).replace(/\/+$/, "")}/`);
@@ -30,13 +24,8 @@ export default (roots: string[]): Plugin => {
     return {
         name: "rform-component-name-injector",
 
-        /**
-         * Before `@vitejs/plugin-vue`, not after. Running after, the bare `.vue`
-         * id has already been compiled down to an import of
-         * `?vue&type=script&setup=true` — the composable call lives in that
-         * sub-request, and rewriting the leftover wrapper changes nothing.
-         * Running first, the descriptor plugin-vue parses is the rewritten one.
-         */
+        // Antes do plugin do Vue, não depois: depois, o id `.vue` já virou import de
+        // um sub-request, e reescrever o que sobrou não muda nada.
         enforce: "pre",
 
         transform(code, id) {
@@ -49,8 +38,8 @@ export default (roots: string[]): Plugin => {
             const fileName = path.split("/").pop()!.replace(".vue", "");
 
             const replaceCode = code
-                // Global on purpose: a second, unrewritten call would silently
-                // fall through to another component's defaults.
+                // Global de propósito: uma segunda chamada não reescrita cairia
+                // calada nos defaults de outro componente.
                 .replace(
                     new RegExp(`\\buseField${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {
@@ -68,12 +57,9 @@ export default (roots: string[]): Plugin => {
                         }
                     }
                 )
-                /**
-                 * The name goes *after* whatever was passed, not instead of it:
-                 * the first argument is the component's own `defaults`, and
-                 * dropping it sent the composable back to the registry for an
-                 * object the caller already had — asynchronously.
-                 */
+                // O nome vai *depois* do que foi passado, não no lugar: o primeiro
+                // argumento é o `defaults` do componente, e descartá-lo mandava a
+                // composable buscar no registry, async, o que o chamador já tinha.
                 .replace(
                     new RegExp(`\\buseUtil${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {

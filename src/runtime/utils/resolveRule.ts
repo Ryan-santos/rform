@@ -1,12 +1,9 @@
 import { isZodType, zodToFn } from "./zod";
 
 /**
- * Every validator takes a single object: `value`, `form`, and the preset's own
- * named arguments alongside them. `never` keeps any concrete context shape
- * assignable here.
- *
- * The translator is **not** here: a rule reaches the active locale through the
- * imported `trRule`, which keeps the context to what the field actually holds.
+ * Todo validador recebe um objeto só: `value`, `form` e os args nomeados do preset
+ * ao lado. O tradutor **não** está aqui — uma rule chega ao locale ativo pelo
+ * `trRule` importado, e o contexto fica sendo só o que o campo de fato tem.
  */
 export type BaseContext = { value: unknown; form: unknown };
 
@@ -50,8 +47,8 @@ const fromPreset = (
         );
     }
 
-    // `value` and `form` last: an argument named after either of them cannot
-    // shadow what the field actually holds.
+    // `value` e `form` por último: um arg com esses nomes não pode sombrear o que o
+    // campo realmente tem.
     return async (value, form) => call(preset.validation, { ...args, value, form });
 };
 
@@ -79,11 +76,11 @@ const single = (ref: RuleRef, rules: Rules, field: string | undefined): Resolved
 };
 
 /**
- * Normalises every accepted `rule` shape — preset name, `{ name, ...args }`,
- * plain function, zod schema, or an array of those — into one async validator.
+ * Normaliza toda forma aceita em `rule` — nome de preset, `{ name, ...args }`,
+ * função, schema zod ou um array deles — num validador async só. O preset é
+ * procurado na hora, para um typo falhar alto em vez de pular a validação calado.
  *
- * Preset lookup happens eagerly so a typo fails loudly instead of silently
- * skipping validation.
+ * @example resolveRule(["required", { name: "min", min: 3 }], rules, "text")
  */
 export default function resolveRule(
     ref: RuleRef | readonly RuleRef[] | null | undefined,

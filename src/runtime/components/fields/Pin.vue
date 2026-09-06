@@ -35,6 +35,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de código em células separadas. `length` diz quantas, `type` restringe a
+     * numérico ou alfanumérico, `secret` esconde o valor digitado.
+     *
+     * @example <RPin name="codigo" :length="4" @complete="confirmar" />
+     */
     import { computed, onMounted, ref, watch } from "vue";
 
     import { useField } from "#rform/composables";
@@ -82,12 +88,9 @@
 
     const count = computed(() => props.value.length ?? defaults.length);
 
-    /**
-     * A synchronous mirror of the model. Under a controlled `v-model`, `useModel`
-     * only emits — `model.value` still reads the old string until the parent
-     * re-renders — so two writes in the same tick would drop a character. Reads
-     * go through here; the watcher takes the model back as the source of truth.
-     */
+    // Espelho síncrono do model: sob `v-model` controlado o `useModel` só emite, e
+    // duas escritas no mesmo tick perderiam um caractere. O watcher devolve a
+    // verdade ao model.
     const value = ref("");
 
     watch(model, (current) => (value.value = String(current ?? "")), { immediate: true });
@@ -192,10 +195,8 @@
         focus(start + pasted.length);
     };
 
-    /**
-     * The value is always dense: focusing past its end walks back to the first
-     * empty box, so no interaction can leave a hole in the middle.
-     */
+    // O valor é sempre denso: focar além do fim volta pra primeira célula vazia,
+    // então nenhuma interação deixa buraco no meio.
     const onFocus = (index: number) => {
         if (index > chars.value.length) {
             focus(chars.value.length);
@@ -207,10 +208,8 @@
         return !!every && (index + 1) % every === 0 && index < count.value - 1;
     };
 
-    /**
-     * Fires on the transition into a full value, not on every change while it
-     * stays full — overwriting a box of a complete code is not a new completion.
-     */
+    // Dispara na transição para valor completo, não a cada mudança enquanto ele
+    // continua completo.
     watch(value, (current, previous) => {
         if (current.length < count.value || (previous?.length ?? 0) >= count.value) {
             return;

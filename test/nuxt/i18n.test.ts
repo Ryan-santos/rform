@@ -7,18 +7,17 @@ import { useState } from "#app";
 import { RArray, RCalendar, RDate, RForm, RHour, RText } from "#components";
 
 /**
- * The fixture ships **no** `@nuxtjs/i18n`, on purpose: it is what covers the
- * module's own resolver. The bridge is exercised by the playground.
- *
- * `rform-locale` is the `useState` key `useTranslate` falls back to.
+ * A fixture **não** tem i18n, de propósito: é ela que cobre o resolvedor próprio,
+ * e a ponte quem exercita é o playground. `rform-locale` é a chave de `useState`
+ * em que o `useTranslate` cai.
  */
 const setLocale = async (code: string) => {
     useState<string>("rform-locale").value = code;
     await nextTick();
 };
 
-describe("locale switching", () => {
-    it("renders in pt-BR by default", async () => {
+describe("troca de idioma", () => {
+    it("renderiza em pt-BR por padrão", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
@@ -28,7 +27,7 @@ describe("locale switching", () => {
         expect(wrapper.text()).toContain("Incluir");
     });
 
-    it("re-renders a field when the locale changes", async () => {
+    it("re-renderiza um campo quando o locale muda", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
@@ -47,20 +46,20 @@ describe("locale switching", () => {
         expect(wrapper.text()).toContain("Incluir");
     });
 
-    it("takes a user pack over the built-in for the same code", async () => {
+    it("prefere o pack do usuário ao embutido, no mesmo code", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
             props: { name: "itens", modelValue: [] } as never
         });
 
-        // `test/fixtures/basic/rform/locales/pt-BR.ts` only overrides this key;
-        // everything else still comes from the built-in pack.
+        // O pack da fixture sobrescreve só esta chave; todo o resto continua vindo do
+        // pack embutido.
         expect(wrapper.text()).toContain("Incluir");
         expect(wrapper.text()).not.toContain("Adicionar");
     });
 
-    it("widens a bare language code to the pack that ships", async () => {
+    it("alarga um code de língua pelada para o pack que existe", async () => {
         await setLocale("en-GB");
 
         const wrapper = await mountSuspended(RArray, {
@@ -73,8 +72,8 @@ describe("locale switching", () => {
     });
 });
 
-describe("the text prop and its provenance", () => {
-    it("renders the module's own pack when nothing is passed", async () => {
+describe("a prop text e a procedência dela", () => {
+    it("renderiza o pack do próprio módulo quando nada é passado", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
@@ -84,7 +83,7 @@ describe("the text prop and its provenance", () => {
         expect(wrapper.text()).toContain("Incluir");
     });
 
-    it("takes a prop raw — no prefix, and the fixture has no bridge, so it prints", async () => {
+    it("pega a prop crua — sem prefixo, e a fixture não tem ponte, então imprime", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
@@ -95,7 +94,7 @@ describe("the text prop and its provenance", () => {
         expect(wrapper.text()).not.toContain("Incluir");
     });
 
-    it("is the identity for `~~` without a bridge — decision 9", async () => {
+    it("é a identidade para `~~` sem ponte — a assimetria aceita", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RArray, {
@@ -106,10 +105,8 @@ describe("the text prop and its provenance", () => {
     });
 });
 
-/**
- * A field only registers its validator when a Form provides the rules list, so
- * this goes through the real chain: useField → resolveRule → validation.
- */
+// Um campo só registra o validador quando um Form provê o registro de rules, então
+// isto passa pela cadeia de verdade: useField → resolveRule → validation.
 const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     let scope: { validate: () => Promise<void> } | undefined;
 
@@ -127,8 +124,8 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
         try {
             await scope!.validate();
         } catch {
-            // `validate` rejects on the first failing field; the message is what
-            // this asserts on, and it lands on the field itself.
+            // O `validate` rejeita no primeiro campo que falha; o que se asserta é a
+            // mensagem, e ela pousa no próprio campo.
         }
 
         await nextTick();
@@ -137,8 +134,8 @@ const mountField = async (rule: unknown, model: Record<string, unknown>) => {
     };
 };
 
-describe("rule messages", () => {
-    it("reports in the active locale", async () => {
+describe("mensagens de rule", () => {
+    it("reporta no locale ativo", async () => {
         await setLocale("en");
 
         const validate = await mountField("required", { campo: "" });
@@ -150,7 +147,7 @@ describe("rule messages", () => {
         expect(await other()).toContain("Campo obrigatório.");
     });
 
-    it("interpolates the arg into the translated message", async () => {
+    it("interpola o arg na mensagem traduzida", async () => {
         await setLocale("en");
 
         const validate = await mountField({ name: "min", min: 8 }, { campo: "ab" });
@@ -160,8 +157,8 @@ describe("rule messages", () => {
     });
 });
 
-describe("date formatting", () => {
-    it("follows formats.date when the locale changes", async () => {
+describe("formatação de data", () => {
+    it("segue o formats.date quando o locale muda", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RDate, {
@@ -181,7 +178,7 @@ describe("date formatting", () => {
         await setLocale("pt-BR");
     });
 
-    it("keeps the model in ISO whatever the display format is", async () => {
+    it("mantém o model em ISO qualquer que seja o formato de exibição", async () => {
         await setLocale("en");
 
         const wrapper = await mountSuspended(RDate, {
@@ -196,7 +193,7 @@ describe("date formatting", () => {
         await setLocale("pt-BR");
     });
 
-    it("names months and weekdays through Intl of the active locale", async () => {
+    it("nomeia meses e dias da semana pelo Intl do locale ativo", async () => {
         await setLocale("pt-BR");
 
         const wrapper = await mountSuspended(RCalendar, {
@@ -216,7 +213,7 @@ describe("date formatting", () => {
         await setLocale("pt-BR");
     });
 
-    it("translates the range separator", async () => {
+    it("traduz o separador do range", async () => {
         await setLocale("en");
 
         const wrapper = await mountSuspended(RHour, {

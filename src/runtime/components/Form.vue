@@ -27,6 +27,13 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Raiz do formulário: provê o model, o `form` que toda `validation` recebe e o
+     * registro de rules aos campos aninhados. Renderiza um `schema` pelo `RDynamic` e
+     * expõe `model`, `submit` e `validate` no slot default.
+     *
+     * @example <RForm v-model="data" :schema @submit="salvar"><RText name="nome" /></RForm>
+     */
     import { computed, useSlots } from "vue";
 
     import { useField, useProvide } from "#rform/composables";
@@ -45,8 +52,8 @@
         schema: {} as Schema
     });
 
-    // No field type: Form lives outside `components/fields`, so it has no
-    // member in `FieldType` to narrow `rule` against.
+    // Sem field type: o Form mora fora de `components/fields`, então não tem membro
+    // no `FieldType` contra o qual estreitar o `rule`.
     export type Props<T extends Base = Base> = Element<typeof defaults> & {
         schema?: Schema;
         onSubmit?: (data: T) => unknown | Promise<unknown>;

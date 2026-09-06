@@ -27,17 +27,12 @@
                 >
             </div>
 
-            <!--
-                A classe é o conteúdo da camada, então ganha fundo próprio: sobre a
-                cor da caixa, mono em 11px cinza, ela sumia.
-            -->
             <code
                 v-if="node.value !== undefined"
                 class="mt-2 block rounded-md bg-contrast/[0.06] px-2 py-1 font-mono text-xs leading-relaxed break-words text-contrast/70"
                 >{{ node.value || '"" — sem classe por padrão' }}</code
             >
 
-            <!-- Util com árvore grande fica fechado: o ui do Calendar tem mais camadas que o campo. -->
             <details
                 v-if="node.children?.length && node.collapsed"
                 class="mt-2"
@@ -67,6 +62,11 @@
 </template>
 
 <script setup lang="ts">
+    /**
+     * Um nível da árvore de `ui`, recursivo. A classe da camada ganha fundo próprio,
+     * senão sumiria sobre a cor da caixa; e um util de árvore grande nasce fechado,
+     * porque o `ui` do Calendar tem mais camadas que o campo inteiro.
+     */
     import { inject } from "vue";
 
     import { uiFocusKey, type UiNode } from "~/utils/ui";
@@ -81,17 +81,12 @@
         }
     );
 
-    /**
-     * O foco é do `DemoUi`, não de cada nível: injetar em vez de descer por prop
-     * é o que deixa uma camada saber que outra, em outra ramificação, está presa.
-     */
+    // O foco é do `DemoUi`, não de cada nível: injetar em vez de descer por prop é o
+    // que deixa uma camada saber que outra, em outra ramificação, está presa.
     const focus = inject(uiFocusKey, undefined);
 
-    /**
-     * O fundo alterna a cada nível — é o que faz a caixa aninhada se destacar da
-     * caixa que a contém. Tinta de cor fica reservada ao foco e aos Utils, senão
-     * tudo vira um borrão azul.
-     */
+    // O fundo alterna a cada nível, e é o que faz a caixa aninhada se destacar da que
+    // a contém. Tinta de cor fica reservada ao foco e aos Utils.
     const surface = () => (props.depth % 2 === 0 ? "bg-background" : "bg-background-100");
 
     const frames = {

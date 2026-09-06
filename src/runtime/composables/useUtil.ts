@@ -12,9 +12,9 @@ import { keyProp } from "./useField";
 import useTranslate from "./useTranslate";
 
 /**
- * What a Utils component actually receives: the parent field's `Element` props,
- * its own props, and a `ui` merged over the complete defaults — so every `ui`
- * key is present, which is what the templates already assume.
+ * O que um util de fato recebe: as props `Element` do campo pai, as próprias, e um
+ * `ui` mesclado sobre os defaults completos — então toda chave de `ui` existe, que
+ * é o que os templates já assumem.
  */
 export type UtilProps<P> = Omit<Element & P, "ui"> & {
     ui: DeepRequired<NonNullable<P extends { ui?: infer U } ? U : never>>;
@@ -28,8 +28,8 @@ export type UtilContext<P extends Record<string, unknown>> = {
 };
 
 const assertName: (name?: keyof Utils) => asserts name is keyof Utils = (name) => {
-    // No fallback: defaulting to another component's name renders with the
-    // wrong defaults and never says so.
+    // Sem fallback: cair no nome de outro componente renderiza com os defaults
+    // errados e nunca diz nada.
     if (!name || !(name in registry)) {
         throw new Error(
             `[rform] useUtil could not resolve a component name${name ? ` (got "${name}")` : ""}. A util has to live in the module's own components/utils directory or in app/rform/utils for the build to inject it.`
@@ -44,10 +44,8 @@ const build = <P extends Record<string, unknown>>(
     componentName: keyof Utils,
     translate: Pick<UtilContext<P>, "tr" | "locale">
 ): UtilContext<P> => {
-    /**
-     * Once, outside the computed: `prefixText` copies, and the component's own
-     * `defaults` object — shared by every instance — must not be touched.
-     */
+    // Uma vez, fora do computed: o `prefixText` copia, e o objeto `defaults` do
+    // componente é compartilhado por todas as instâncias.
     const prefixed = prefixText(defaults, componentName, "utils") as P;
 
     const props = computed((): UtilProps<P> => {
@@ -74,16 +72,11 @@ const build = <P extends Record<string, unknown>>(
 };
 
 /**
- * Handing the component's own `defaults` in keeps this synchronous, which is
- * the point: a field renders six of these, and every `await` in a `setup` turns
- * the component into an async one — a Suspense boundary, a microtask hop before
- * its subtree exists, and all of it paid even by the five utils that decide to
- * render nothing. `<script setup>` shares scope with `<script>`, so the object
- * is already in hand; reaching into the registry for it was a round trip to
- * fetch what the caller was standing on.
+ * A composable de todo util: devolve `{ props, upper, tr, locale }`. Passar o
+ * `defaults` do componente mantém a chamada síncrona — ver "useUtil" no
+ * `.claude/CLAUDE.md`; a forma sem argumento resolve pelo registry e é async.
  *
- * The no-argument form still resolves through the registry and still returns a
- * promise, because a util written before this existed calls it that way.
+ * @example const { props, upper, tr } = useUtil<Props>(defaults);
  */
 export default function useUtil<P extends Record<string, unknown>>(
     defaults: WithTextSource<P>,
@@ -97,26 +90,20 @@ export default function useUtil<P extends Record<string, unknown>>(
 
 export default function useUtil<P extends Record<string, unknown>>(
     defaults?: WithTextSource<P>,
-    /**
-     * Injected by the vite plugin from the component's own file name.
-     */
+    /** Injetado pelo vite plugin, a partir do nome do arquivo do componente. */
     componentName?: keyof Utils
 ): UtilContext<P> | Promise<UtilContext<P>> {
     assertName(componentName);
 
-    /**
-     * All three reads happen here, before any `await`: `inject` and
-     * `useTranslate` need the component instance to still be current, and on
-     * the legacy path the continuation runs in a microtask, long after Vue has
-     * cleared it.
-     */
+    // As três leituras antes de qualquer `await`: precisam da instância ainda
+    // corrente (ver "useUtil" no `.claude/CLAUDE.md`).
     const upper = inject<ValueProp<P>>(keyProp, {} as ValueProp<P>);
     const overrides = userDefaults.Utils?.[componentName] as P;
     const translate = useTranslate();
 
     if (defaults) {
-        // `prefixText` is what turns the raw suffixes into keys, so the two
-        // shapes meet on the other side of it.
+        // O `prefixText` é o que transforma os sufixos crus em chaves, e é do outro
+        // lado dele que as duas formas se encontram.
         return build(upper, overrides, defaults as P, componentName, translate);
     }
 

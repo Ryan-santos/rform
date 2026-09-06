@@ -40,6 +40,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Container de lista: repete o próprio slot por item do model, e cuida de
+     * adicionar e remover respeitando `min` e `max`.
+     *
+     * @example <RArray name="telefones"><RText mask="brTelefone" /></RArray>
+     */
     import { computed, defineComponent, useSlots } from "vue";
 
     import { useField, useProvide } from "#rform/composables";
@@ -105,17 +111,9 @@
 
     const length = computed(() => model.value?.length ?? 0);
 
-    /**
-     * One render effect per row, so `item` is read inside the row that owns it.
-     *
-     * `v-for="(item, index) in model"` read every element in *this* component's
-     * render, which made one keystroke — a write to `array[i]` — invalidate the
-     * whole list and repatch every sibling: 0,6 ms at 10 rows and 4,1 ms at 100,
-     * growing with the list where a flat form stayed flat. Iterating `length`
-     * and passing `item` through a getter is not enough on its own, because
-     * `v-bind` on a `<slot>` normalises the object and reads the getter anyway.
-     * A component boundary is what actually scopes the dependency.
-     */
+    // Um render effect por linha, para `item` ser lido dentro da linha que o possui
+    // — só a fronteira de componente escopa a dependência (ver "RArray" no
+    // `.claude/CLAUDE.md`).
     const slots = useSlots();
 
     const Row = defineComponent({

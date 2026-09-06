@@ -308,10 +308,8 @@
     const apiSchema = computed(() => api.value.schema);
     // #endregion
 
-    /**
-     * Two `useRForm` calls, one live: the schema is a plain value, so swapping
-     * which one the `RDynamic` receives is all it takes to change the form.
-     */
+    // Dois `useRForm`, um vivo: o schema é um valor simples, então trocar qual deles
+    // o `RDynamic` recebe já troca o formulário.
     const apiData = computed({
         get: () => api.value.data.value as Record<string, unknown>,
         set: (value) => {
@@ -364,11 +362,8 @@
         };
     });
 
-    /**
-     * `safeParseAsync`, not `safeParse`: a rule referenced by preset name becomes
-     * `z.any().superRefine(async …)` in the aggregated object, and a sync parse
-     * would throw on it.
-     */
+    // `safeParseAsync`, e não `safeParse`: rule referenciada por nome de preset vira
+    // `z.any().superRefine(async …)` no objeto agregado, e um parse síncrono lançaria.
     const submit = async () => {
         const { rules, data, key } = active.value;
 

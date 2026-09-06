@@ -103,6 +103,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de data: input mascarado mais calendário em dropdown. O model é ISO; o que
+     * se digita e o que se exibe seguem o `formats.date` do locale ativo.
+     *
+     * @example <RDate name="nascimento" mode="range" />
+     */
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useField } from "#rform/composables";
@@ -210,14 +216,9 @@
 
     const { model, props, tr } = await useField(_props as unknown as InternalProps);
 
-    /**
-     * Máscara, regex de parse e formatação de exibição saem todas do mesmo
-     * pattern — `formats.date` do pack ativo. É um `computed` porque `tr` lê o
-     * locale a cada chamada, então trocar de idioma re-deriva as três.
-     *
-     * `formatIso` e o ramo ISO de `parseIncoming` ficam de fora de propósito:
-     * ISO é o formato do model, e é locale-independente por definição.
-     */
+    // Máscara, regex de parse e exibição saem todas do `formats.date` do pack ativo.
+    // `computed` porque `tr` lê o locale a cada chamada, então trocar de idioma
+    // re-deriva as três; só o model, que é ISO, não muda.
     const pattern = computed(() => dateFormat(tr("rform.formats.date")));
 
     const formatLocal = (d: Date | null): string => pattern.value.format(d, !!props.value.time);
@@ -274,14 +275,8 @@
 
     let internalWrite = false;
 
-    /**
-     * `pattern` is a source too, not just `model`: trocar de idioma não mexe no
-     * model (que é ISO), mas muda como ele se escreve. Sem isso o campo ficava
-     * exibindo `15/05/2026` depois de virar para `MM/DD/YYYY`.
-     *
-     * A ordem é segura porque o watcher de `typed` só dispara quando `typed`
-     * muda — ou seja, depois deste, já com o pattern novo dos dois lados.
-     */
+    // O `pattern` também é fonte, não só o `model`: trocar de idioma não muda o
+    // model, mas muda como ele se escreve.
     watch(
         [model, pattern],
         ([val]) => {

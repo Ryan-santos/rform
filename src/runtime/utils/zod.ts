@@ -1,7 +1,6 @@
 /**
- * Duck-typed rather than `instanceof`: the schema a user hands to `rule` may
- * come from a different copy of zod than the one this module resolves, and
- * `instanceof` would say no to a perfectly good schema.
+ * Duck typing em vez de `instanceof`: o schema que o app passa em `rule` pode vir
+ * de outra cópia do zod, e o `instanceof` recusaria um schema perfeitamente bom.
  */
 export const isZodType = (
     value: unknown
@@ -16,6 +15,10 @@ export const isZodType = (
     "safeParse" in value &&
     typeof (value as { safeParse: unknown }).safeParse === "function";
 
+/**
+ * Adapta um schema zod à função de validação do campo: `undefined` se não for um,
+ * senão a mensagem do primeiro issue.
+ */
 export const zodToFn = (schema: unknown) => {
     if (!isZodType(schema)) {
         return undefined;

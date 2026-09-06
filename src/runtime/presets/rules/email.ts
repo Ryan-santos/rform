@@ -6,6 +6,7 @@ import { check, isBlank, text } from "../helpers";
 
 const schema = () => z.email(trRule("email"));
 
+/** Exige um e-mail válido. */
 export default defineRule({
     available: ["text"],
     validation: ({ value }: RuleContext) =>

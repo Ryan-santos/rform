@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import prefixText from "../../src/runtime/utils/prefixText";
 
 describe("prefixText", () => {
-    it("prefixes every leaf of text and keeps the tree nested", () => {
+    it("prefixa toda folha de text e mantém a árvore aninhada", () => {
         expect(
             prefixText(
                 { ui: { container: "flex" }, default: [], text: { button: "add" } },
@@ -17,14 +17,14 @@ describe("prefixText", () => {
         });
     });
 
-    it("puts the scope in the prefix, so a field and a util of one name do not clash", () => {
+    it("põe o scope no prefixo, para campo e util de mesmo nome não colidirem", () => {
         expect(prefixText({ ui: {}, text: { start: "start" } }, "Calendar", "utils")).toEqual({
             ui: {},
             text: { start: "rform.utils.calendar.start" }
         });
     });
 
-    it("prefixes a nested group at every depth", () => {
+    it("prefixa um grupo aninhado em toda profundidade", () => {
         expect(
             prefixText(
                 {
@@ -49,13 +49,13 @@ describe("prefixText", () => {
         });
     });
 
-    it("keeps the whole dotted path of the value", () => {
+    it("mantém o caminho pontilhado inteiro do valor", () => {
         expect(
             prefixText({ ui: {}, text: { falback: "test.falback" } }, "Array", "fields")
         ).toEqual({ ui: {}, text: { falback: "rform.fields.array.test.falback" } });
     });
 
-    it("prefixes label and placeholder, which live outside text by contract", () => {
+    it("prefixa label e placeholder, que moram fora de text por contrato", () => {
         expect(
             prefixText({ ui: {}, label: "label", placeholder: "placeholder" }, "File", "fields")
         ).toEqual({
@@ -65,7 +65,7 @@ describe("prefixText", () => {
         });
     });
 
-    it("leaves an empty string alone — it is the `nothing to render` sentinel", () => {
+    it("deixa a string vazia em paz — é o sentinela de `não renderiza nada`", () => {
         expect(prefixText({ ui: {}, label: "", placeholder: "" }, "Text", "fields")).toEqual({
             ui: {},
             label: "",
@@ -73,19 +73,19 @@ describe("prefixText", () => {
         });
     });
 
-    it("does not touch a string that lives outside text", () => {
+    it("não toca numa string que mora fora de text", () => {
         expect(
             prefixText({ ui: {}, keyValue: "id", keyLabel: "name" }, "Select", "fields")
         ).toEqual({ ui: {}, keyValue: "id", keyLabel: "name" });
     });
 
-    it("passes an object with no text through unchanged", () => {
+    it("repassa sem mudar um objeto que não tem text", () => {
         expect(
             prefixText({ ui: { container: "flex" }, default: 0, max: 5 }, "Rating", "fields")
         ).toEqual({ ui: { container: "flex" }, default: 0, max: 5 });
     });
 
-    it("does not mutate the object it was handed", () => {
+    it("não muta o objeto que recebeu", () => {
         const defaults = { ui: {}, label: "label", text: { button: "add", bytes: { b: "b" } } };
 
         prefixText(defaults, "Array", "fields");

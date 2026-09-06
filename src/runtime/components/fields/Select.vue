@@ -104,6 +104,13 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Campo de seleção com dropdown e busca. As `options` podem ser array primitivo,
+     * array de objetos (`keyValue` / `keyLabel`) ou objeto `{ chave: rótulo }`;
+     * `multiple` e `modelFull` decidem o que chega ao model.
+     *
+     * @example <RSelect name="uf" :options="ufs" multiple />
+     */
     import { computed, ref } from "vue";
 
     import { useField } from "#rform/composables";

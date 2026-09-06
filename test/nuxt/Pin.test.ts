@@ -30,23 +30,23 @@ const mountPin = async (props: Record<string, unknown> = {}) => {
 };
 
 describe("RPin", () => {
-    it("renders six boxes by default", async () => {
+    it("renderiza seis células por padrão", async () => {
         const wrapper = await mountSuspended(RPin);
         expect(wrapper.findAll("input")).toHaveLength(6);
     });
 
-    it("renders the number of boxes given by length", async () => {
+    it("renderiza o número de células que length pede", async () => {
         const { boxes } = await mountPin({ length: 4 });
         expect(boxes()).toHaveLength(4);
     });
 
-    it("spreads the model across the boxes", async () => {
+    it("espalha o model pelas células", async () => {
         const { boxes } = await mountPin({ modelValue: "123" });
 
         expect(boxes().map((box) => box.element.value)).toEqual(["1", "2", "3", "", "", ""]);
     });
 
-    it("writes a typed character into the model", async () => {
+    it("escreve no model o caractere digitado", async () => {
         const { boxes, model } = await mountPin();
 
         await boxes()[0]!.setValue("7");
@@ -54,7 +54,7 @@ describe("RPin", () => {
         expect(model.value).toBe("7");
     });
 
-    it("moves focus to the next box after typing", async () => {
+    it("move o foco para a célula seguinte depois de digitar", async () => {
         const { boxes } = await mountPin();
 
         await boxes()[0]!.setValue("7");
@@ -63,13 +63,13 @@ describe("RPin", () => {
     });
 });
 
-describe("RPin charset", () => {
-    it("marks numeric boxes with a numeric inputmode", async () => {
+describe("RPin, conjunto de caracteres", () => {
+    it("marca célula numérica com inputmode numérico", async () => {
         const { boxes } = await mountPin();
         expect(boxes()[0]!.attributes("inputmode")).toBe("numeric");
     });
 
-    it("ignores a letter when the charset is numeric", async () => {
+    it("ignora uma letra quando o tipo é numérico", async () => {
         const { boxes, model } = await mountPin();
 
         await boxes()[0]!.setValue("a");
@@ -77,7 +77,7 @@ describe("RPin charset", () => {
         expect(model.value).toBe("");
     });
 
-    it("keeps focus on the box when the character is rejected", async () => {
+    it("mantém o foco na célula quando o caractere é recusado", async () => {
         const { boxes } = await mountPin();
 
         boxes()[0]!.element.focus();
@@ -86,7 +86,7 @@ describe("RPin charset", () => {
         expect(document.activeElement).toBe(boxes()[0]!.element);
     });
 
-    it("uppercases letters when the charset is alphanumeric", async () => {
+    it("põe as letras em maiúscula quando o tipo é alfanumérico", async () => {
         const { boxes, model } = await mountPin({ type: "alphanumeric" });
 
         await boxes()[0]!.setValue("a");
@@ -94,7 +94,7 @@ describe("RPin charset", () => {
         expect(model.value).toBe("A");
     });
 
-    it("ignores punctuation when the charset is alphanumeric", async () => {
+    it("ignora pontuação quando o tipo é alfanumérico", async () => {
         const { boxes, model } = await mountPin({ type: "alphanumeric" });
 
         await boxes()[0]!.setValue("-");
@@ -102,14 +102,14 @@ describe("RPin charset", () => {
         expect(model.value).toBe("");
     });
 
-    it("marks alphanumeric boxes with a text inputmode", async () => {
+    it("marca célula alfanumérica com inputmode de texto", async () => {
         const { boxes } = await mountPin({ type: "alphanumeric" });
         expect(boxes()[0]!.attributes("inputmode")).toBe("text");
     });
 });
 
-describe("RPin keyboard", () => {
-    it("removes the character of the focused box on backspace", async () => {
+describe("RPin, teclado", () => {
+    it("remove o caractere da célula focada no backspace", async () => {
         const { boxes, model } = await mountPin({ modelValue: "12" });
 
         await boxes()[1]!.trigger("keydown", { key: "Backspace" });
@@ -117,7 +117,7 @@ describe("RPin keyboard", () => {
         expect(model.value).toBe("1");
     });
 
-    it("keeps focus in place when backspacing a filled box", async () => {
+    it("mantém o foco no lugar ao apagar uma célula preenchida", async () => {
         const { boxes } = await mountPin({ modelValue: "12" });
 
         boxes()[1]!.element.focus();
@@ -126,7 +126,7 @@ describe("RPin keyboard", () => {
         expect(document.activeElement).toBe(boxes()[1]!.element);
     });
 
-    it("clears the previous box when backspacing an empty one", async () => {
+    it("limpa a célula anterior ao apagar numa vazia", async () => {
         const { boxes, model } = await mountPin({ modelValue: "12" });
 
         await boxes()[2]!.trigger("keydown", { key: "Backspace" });
@@ -134,7 +134,7 @@ describe("RPin keyboard", () => {
         expect(model.value).toBe("1");
     });
 
-    it("moves focus back when backspacing an empty box", async () => {
+    it("volta o foco ao apagar numa célula vazia", async () => {
         const { boxes } = await mountPin({ modelValue: "12" });
 
         await boxes()[2]!.trigger("keydown", { key: "Backspace" });
@@ -142,7 +142,7 @@ describe("RPin keyboard", () => {
         expect(document.activeElement).toBe(boxes()[1]!.element);
     });
 
-    it("moves focus with the left arrow", async () => {
+    it("move o foco com a seta esquerda", async () => {
         const { boxes } = await mountPin({ modelValue: "123" });
 
         await boxes()[2]!.trigger("keydown", { key: "ArrowLeft" });
@@ -150,7 +150,7 @@ describe("RPin keyboard", () => {
         expect(document.activeElement).toBe(boxes()[1]!.element);
     });
 
-    it("moves focus with the right arrow", async () => {
+    it("move o foco com a seta direita", async () => {
         const { boxes } = await mountPin({ modelValue: "123" });
 
         await boxes()[0]!.trigger("keydown", { key: "ArrowRight" });
@@ -158,7 +158,7 @@ describe("RPin keyboard", () => {
         expect(document.activeElement).toBe(boxes()[1]!.element);
     });
 
-    it("redirects focus to the first empty box, so the value never has a gap", async () => {
+    it("redireciona o foco para a primeira célula vazia, para o valor nunca ter buraco", async () => {
         const { boxes } = await mountPin({ modelValue: "12" });
 
         boxes()[4]!.element.focus();
@@ -167,7 +167,7 @@ describe("RPin keyboard", () => {
         expect(document.activeElement).toBe(boxes()[2]!.element);
     });
 
-    it("leaves focus alone on a box inside the value", async () => {
+    it("deixa o foco em paz numa célula dentro do valor", async () => {
         const { boxes } = await mountPin({ modelValue: "123" });
 
         boxes()[1]!.element.focus();
@@ -177,8 +177,8 @@ describe("RPin keyboard", () => {
     });
 });
 
-describe("RPin paste", () => {
-    it("keeps both characters when two are typed in the same tick", async () => {
+describe("RPin, colar", () => {
+    it("mantém os dois caracteres quando dois são digitados no mesmo tick", async () => {
         const { boxes, model } = await mountPin();
 
         void boxes()[0]!.setValue("1");
@@ -188,7 +188,7 @@ describe("RPin paste", () => {
         expect(model.value).toBe("12");
     });
 
-    it("distributes a pasted code across the boxes", async () => {
+    it("distribui um código colado pelas células", async () => {
         const { boxes, model } = await mountPin();
 
         await boxes()[0]!.trigger("paste", {
@@ -198,7 +198,7 @@ describe("RPin paste", () => {
         expect(model.value).toBe("123456");
     });
 
-    it("drops pasted characters outside the charset", async () => {
+    it("descarta caractere colado fora do conjunto", async () => {
         const { boxes, model } = await mountPin();
 
         await boxes()[0]!.trigger("paste", {
@@ -208,7 +208,7 @@ describe("RPin paste", () => {
         expect(model.value).toBe("1234");
     });
 
-    it("caps a pasted value at length", async () => {
+    it("corta o valor colado no length", async () => {
         const { boxes, model } = await mountPin();
 
         await boxes()[0]!.trigger("paste", {
@@ -218,7 +218,7 @@ describe("RPin paste", () => {
         expect(model.value).toBe("123456");
     });
 
-    it("focuses the box after the pasted value", async () => {
+    it("foca a célula seguinte ao valor colado", async () => {
         const { boxes } = await mountPin();
 
         await boxes()[0]!.trigger("paste", {
@@ -229,54 +229,54 @@ describe("RPin paste", () => {
     });
 });
 
-describe("RPin secret", () => {
-    it("renders plain boxes by default", async () => {
+describe("RPin, secreto", () => {
+    it("renderiza células comuns por padrão", async () => {
         const { boxes } = await mountPin();
         expect(boxes()[0]!.attributes("type")).toBe("text");
     });
 
-    it("renders password boxes when secret", async () => {
+    it("renderiza células de senha quando secret", async () => {
         const { boxes } = await mountPin({ secret: true });
         expect(boxes()[0]!.attributes("type")).toBe("password");
     });
 });
 
-describe("RPin autofocus", () => {
-    it("does not steal focus by default", async () => {
+describe("RPin, autofoco", () => {
+    it("não rouba o foco por padrão", async () => {
         const { boxes } = await mountPin();
         expect(document.activeElement).not.toBe(boxes()[0]!.element);
     });
 
-    it("focuses the first box on mount", async () => {
+    it("foca a primeira célula na montagem", async () => {
         const { boxes } = await mountPin({ autofocus: true });
         expect(document.activeElement).toBe(boxes()[0]!.element);
     });
 
-    it("focuses the first empty box on mount", async () => {
+    it("foca a primeira célula vazia na montagem", async () => {
         const { boxes } = await mountPin({ autofocus: true, modelValue: "12" });
         expect(document.activeElement).toBe(boxes()[2]!.element);
     });
 });
 
-describe("RPin separator", () => {
-    it("renders no separator by default", async () => {
+describe("RPin, separador", () => {
+    it("não renderiza separador por padrão", async () => {
         const { wrapper } = await mountPin();
         expect(wrapper.findAll("[aria-hidden='true']")).toHaveLength(0);
     });
 
-    it("renders a separator every N boxes", async () => {
+    it("renderiza um separador a cada N células", async () => {
         const { wrapper } = await mountPin({ separator: 2 });
         expect(wrapper.findAll("[aria-hidden='true']")).toHaveLength(2);
     });
 
-    it("does not render a separator after the last box", async () => {
+    it("não renderiza separador depois da última célula", async () => {
         const { wrapper } = await mountPin({ length: 6, separator: 3 });
         expect(wrapper.findAll("[aria-hidden='true']")).toHaveLength(1);
     });
 });
 
-describe("RPin completion", () => {
-    it("calls onComplete with the full value", async () => {
+describe("RPin, conclusão", () => {
+    it("chama onComplete com o valor completo", async () => {
         const onComplete = vi.fn();
         const { boxes } = await mountPin({ length: 3, onComplete });
 
@@ -285,7 +285,7 @@ describe("RPin completion", () => {
         expect(onComplete).toHaveBeenCalledWith("123");
     });
 
-    it("does not call onComplete while the value is incomplete", async () => {
+    it("não chama onComplete enquanto o valor está incompleto", async () => {
         const onComplete = vi.fn();
         const { boxes } = await mountPin({ length: 3, onComplete });
 
@@ -294,7 +294,7 @@ describe("RPin completion", () => {
         expect(onComplete).not.toHaveBeenCalled();
     });
 
-    it("does not call onComplete again while the value stays full", async () => {
+    it("não chama onComplete de novo enquanto o valor continua completo", async () => {
         const onComplete = vi.fn();
         const { boxes } = await mountPin({ length: 3, onComplete });
 

@@ -23,9 +23,13 @@ export default defineConfig({
                 classesPerLine: 7,
                 indent: 4
             }
-        ]
+        ],
+        "jsdoc/check-tag-names": "error",
+        "jsdoc/empty-tags": "error",
+        "jsdoc/no-defaults": "error",
+        "jsdoc/check-access": "error"
     },
-    plugins: ["eslint", "typescript", "unicorn", "oxc", "vue", "import"],
+    plugins: ["eslint", "typescript", "unicorn", "oxc", "vue", "import", "jsdoc"],
     jsPlugins: ["eslint-plugin-better-tailwindcss"],
     settings: {
         "better-tailwindcss": {

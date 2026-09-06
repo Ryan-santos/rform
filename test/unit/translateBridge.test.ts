@@ -12,8 +12,8 @@ vi.mock("#app", async () => {
     return { ...actual, tryUseNuxtApp: () => (nuxtApp.$i18n ? nuxtApp : undefined) };
 });
 
-describe("the bridge engine", () => {
-    it("does not reach for @intlify — the bundle cut is structural", () => {
+describe("o motor com ponte", () => {
+    it("não busca o @intlify — o corte do bundle é estrutural", () => {
         const source = readFileSync(
             fileURLToPath(new URL("../../src/runtime/translate/bridge.ts", import.meta.url)),
             "utf8"
@@ -23,7 +23,7 @@ describe("the bridge engine", () => {
     });
 });
 
-describe("the bridge engine, translating", () => {
+describe("o motor com ponte, traduzindo", () => {
     beforeEach(() => {
         const locale = ref("pt-BR");
 
@@ -34,28 +34,28 @@ describe("the bridge engine, translating", () => {
         };
     });
 
-    it("strips `~~` and returns the literal", async () => {
+    it("tira o `~~` e devolve o literal", async () => {
         const { tr } = await import("../../src/runtime/translate/bridge");
 
         expect(tr("~~Nome")).toBe("Nome");
         expect(tr("~~  Nome")).toBe("Nome");
     });
 
-    it("sends everything else to $i18n.t, module keys included", async () => {
+    it("manda todo o resto pro $i18n.t, chaves do módulo inclusive", async () => {
         const { tr } = await import("../../src/runtime/translate/bridge");
 
         expect(tr("form.nome")).toBe("[pt-BR] form.nome");
         expect(tr("rform.fields.array.add")).toBe("[pt-BR] rform.fields.array.add");
     });
 
-    it("passes params straight through", async () => {
+    it("repassa os params direto", async () => {
         const { tr } = await import("../../src/runtime/translate/bridge");
 
         expect(tr({ key: "form.max", params: { n: 30 } })).toBe(`[pt-BR] form.max {"n":30}`);
         expect(tr({ key: "table.items", params: 3 })).toBe("[pt-BR] table.items 3");
     });
 
-    it("useTr exposes the app's own locale ref", async () => {
+    it("o useTr expõe o ref de locale do próprio app", async () => {
         const { useTr } = await import("../../src/runtime/translate/bridge");
         const { tr, locale } = useTr();
 
@@ -63,7 +63,7 @@ describe("the bridge engine, translating", () => {
         expect(tr("form.nome")).toBe("[en] form.nome");
     });
 
-    it("hands the plural choice to $i18n as an option", async () => {
+    it("entrega a escolha de plural ao $i18n como opção", async () => {
         const { tr } = await import("../../src/runtime/translate/bridge");
 
         expect(tr({ key: "form.itens", params: { n: 1 } })).toBe(`[pt-BR] form.itens {"n":1}`);

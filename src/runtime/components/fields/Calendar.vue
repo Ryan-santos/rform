@@ -7,6 +7,12 @@
 </template>
 
 <script lang="ts">
+    /**
+     * Calendário inline, sem dropdown — o mesmo `RUtilsCalendar` que o `RDate` abre,
+     * exposto como campo.
+     *
+     * @example <RCalendar name="dia" mode="multiple" />
+     */
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";

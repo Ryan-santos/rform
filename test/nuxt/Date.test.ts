@@ -6,7 +6,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import { RDate, RForm } from "#components";
 
 describe("RDate", () => {
-    it("emits ISO date when user types a valid date in single mode", async () => {
+    it("emite data ISO quando se digita uma data válida no modo single", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { modelValue: "" } as never
         });
@@ -20,7 +20,7 @@ describe("RDate", () => {
         expect(emits?.at(-1)?.[0]).toBe("2026-01-01");
     });
 
-    it("renders an external modelValue formatted as dd/mm/yyyy", async () => {
+    it("renderiza um modelValue externo formatado como dd/mm/yyyy", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { modelValue: "2026-05-15" } as never
         });
@@ -29,7 +29,7 @@ describe("RDate", () => {
         expect((input.element as HTMLInputElement).value).toBe("15/05/2026");
     });
 
-    it("emits empty string (not default) when input is cleared", async () => {
+    it("emite string vazia — e não o default — quando o input é limpo", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { default: "2003-11-24", modelValue: "2026-05-15" } as never
         });
@@ -42,7 +42,7 @@ describe("RDate", () => {
         expect(emits?.at(-1)?.[0]).toBe("");
     });
 
-    it("clears partial input on blur", async () => {
+    it("limpa entrada parcial no blur", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { modelValue: "" } as never
         });
@@ -55,7 +55,7 @@ describe("RDate", () => {
         expect((input.element as HTMLInputElement).value).toBe("");
     });
 
-    it("renders two inputs and an 'até' separator in range mode", async () => {
+    it("renderiza dois inputs e um separador 'até' no modo range", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { mode: "range", modelValue: [undefined, undefined] } as never
         });
@@ -65,7 +65,7 @@ describe("RDate", () => {
         expect(wrapper.text()).toContain("até");
     });
 
-    it("emits a tuple when both range inputs are filled", async () => {
+    it("emite uma tupla quando os dois inputs do range estão preenchidos", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { mode: "range", modelValue: [undefined, undefined] } as never
         });
@@ -82,7 +82,7 @@ describe("RDate", () => {
         expect(last).toEqual(["2026-01-01", "2026-12-31"]);
     });
 
-    it("keeps range as a tuple when one side is cleared", async () => {
+    it("mantém o range como tupla quando um lado é limpo", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { mode: "range", modelValue: ["2026-01-01", "2026-12-31"] } as never
         });
@@ -99,7 +99,7 @@ describe("RDate", () => {
         expect(last[1]).toBeUndefined();
     });
 
-    it("renders a readonly input in multiple mode and joins values with comma", async () => {
+    it("renderiza um input somente leitura no modo multiple, juntando os valores por vírgula", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: {
                 mode: "multiple",
@@ -112,7 +112,7 @@ describe("RDate", () => {
         expect((input.element as HTMLInputElement).value).toBe("01/01/2026, 15/02/2026");
     });
 
-    it("does not emit on typing while in multiple mode", async () => {
+    it("não emite ao digitar no modo multiple", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: {
                 mode: "multiple",
@@ -125,13 +125,13 @@ describe("RDate", () => {
         await nextTick();
 
         const emits = wrapper.emitted("update:modelValue") ?? [];
-        // No emit should change the multiple model from typed input.
+        // Nenhum emit deve mudar o model do modo multiple por digitação.
         for (const e of emits) {
             expect(e[0]).not.toEqual(["2026-12-31"]);
         }
     });
 
-    it("uses the dd/mm/aaaa hh:mm placeholder when time prop is set", async () => {
+    it("usa o placeholder dd/mm/aaaa hh:mm quando a prop time está ligada", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { time: true, modelValue: "" } as never
         });
@@ -140,7 +140,7 @@ describe("RDate", () => {
         expect(input.attributes("placeholder")).toBe("dd/mm/aaaa hh:mm");
     });
 
-    it("emits ISO datetime when a valid datetime is typed (time mode)", async () => {
+    it("emite data e hora ISO quando se digita uma data-hora válida", async () => {
         const wrapper = await mountSuspended(RDate, {
             props: { time: true, modelValue: "" } as never
         });
@@ -153,7 +153,7 @@ describe("RDate", () => {
         expect(emits?.at(-1)?.[0]).toBe("2026-01-01T14:30");
     });
 
-    it("updates the parent RForm model when typed inside <RForm>", async () => {
+    it("atualiza o model do RForm pai quando digitado dentro de <RForm>", async () => {
         const form = ref<Record<string, unknown>>({});
 
         const Parent = defineComponent({

@@ -5,19 +5,6 @@ type Target = HTMLInputElement | HTMLTextAreaElement;
 
 export type MaskBinding = MaskInputOptions | string | null | undefined;
 
-/**
- * maska's own `vMaska` bails on anything that is not an `<input>`
- * (`e instanceof HTMLInputElement ? e : e.querySelector("input")`), so a
- * `<textarea>` never gets bound. `MaskInput` itself only needs `value`,
- * `selectionStart` and an `input` event, all of which a textarea has — so this
- * directive drives it directly and covers both elements.
- *
- * It binds ONLY the element it sits on: no descendant lookup. maska's fallback
- * lets a wrapper (or a directive Vue forwards onto a component's root) hijack a
- * field another binding already owns, and makes mount and unmount resolve
- * different nodes, which leaks listeners. Resolving to `el` or nothing keeps
- * every hook talking about the same element for the binding's whole life.
- */
 const instances = new WeakMap<Target, MaskInput>();
 
 const isField = (el: HTMLElement): el is Target =>
@@ -56,10 +43,17 @@ const apply = (el: HTMLElement, binding: DirectiveBinding<MaskBinding>) => {
         return;
     }
 
-    // MaskaTarget is typed as HTMLInputElement only; the runtime is element-agnostic.
+    // `MaskaTarget` é tipado só para input; o runtime é agnóstico de elemento.
     instances.set(el, new MaskInput(el as HTMLInputElement, options));
 };
 
+/**
+ * A diretiva de máscara do módulo — não a do maska, que ignora `<textarea>`. Liga
+ * só no elemento em que está, sem procurar descendente; ver "`v-mask` é nosso, não
+ * o `v-maska`" no `.claude/CLAUDE.md`.
+ *
+ * @example <input v-mask="{ mask: '###.###.###-##' }">
+ */
 export default {
     mounted: apply,
     updated: apply,

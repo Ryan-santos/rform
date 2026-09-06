@@ -29,7 +29,7 @@ const Harness = defineComponent({
 });
 
 describe("useField", () => {
-    it("loads component defaults and merges over source props", async () => {
+    it("carrega os defaults do componente e mescla sobre as props de origem", async () => {
         const wrapper = await mountSuspended(Harness, {
             props: { sourceProps: { name: "field-a" } }
         });
@@ -39,7 +39,7 @@ describe("useField", () => {
         expect(payload.name).toBe("field-a");
     });
 
-    it("returns id as null when no parent + no name", async () => {
+    it("devolve id nulo sem pai e sem name", async () => {
         const wrapper = await mountSuspended(Harness, {
             props: { sourceProps: {} }
         });
@@ -48,7 +48,7 @@ describe("useField", () => {
         expect(payload.id).toBeNull();
     });
 
-    it("syncs the child model into the parent model when name is set", async () => {
+    it("sincroniza o model do filho no do pai quando há name", async () => {
         const parentModel = ref<Record<string, unknown>>({ child: "from-parent" });
 
         const Child = defineComponent({

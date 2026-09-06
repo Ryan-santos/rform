@@ -9,18 +9,10 @@ const STYLESHEET = path.join("src", "runtime", "style.css");
 const FIXTURE = path.join("test", "fixtures", "basic", ".nuxt", "rform");
 
 /**
- * Toda cor e todo radius do módulo vêm de `--rf-*` (ver `src/runtime/style.css`), e
- * não de um token `@theme` que só o playground define. Estes testes existem porque as
- * duas formas de quebrar isso são silenciosas:
- *
- * - `text-danger` volta a compilar no playground e some em qualquer outro app;
- * - `bg-(--rf-color-primry)` (typo) compila, passa na lint, e renderiza
- *   `var(--undefined)` — transparente, sem erro, em todo ambiente inclusive nos testes.
- *
- * A lint não cobre nem o primeiro: o matcher `objectValues` do `better-tailwindcss`
- * em `oxlint.config.ts` recebe um shorthand cujo valor é um `Identifier` nos cinco
- * utils que fazem `const ui = {…}` + `defineDefaults({ ui })`, então não tem object
- * literal para percorrer. É por ali que o drift entrou.
+ * Toda cor e todo radius do módulo vêm de `--rf-*`, e não de um token `@theme` que
+ * só o playground define. Estes testes existem porque as duas formas de quebrar
+ * isso são silenciosas, e a lint não cobre nenhuma — ver "Tema: cores e radius" no
+ * `.claude/CLAUDE.md`.
  */
 
 const sources = async () => {
@@ -40,27 +32,19 @@ const sources = async () => {
     return found;
 };
 
-/**
- * Tokenizar o arquivo inteiro, não linha a linha: as classes quebram linha dentro dos
- * template strings, então um regex por linha erra nas bordas do wrap.
- */
+// Tokeniza o arquivo inteiro, não linha a linha: as classes quebram linha dentro dos
+// template strings, e um regex por linha erraria nas bordas do wrap.
 const classTokens = (text: string) =>
     text
         .split(/\s+/)
-        /**
-         * Tirar a pontuação que delimita a string, senão a última classe de cada literal
-         * chega como `text-white",` e escapa de todo padrão ancorado em `$`. Só nas
-         * pontas: `(`/`)`/`[`/`]` fazem parte de `bg-(--rf-…)` e `has-[:focus]:`, e o `!`
-         * de `bg-(--rf-color-primary)!` também precisa sobreviver.
-         */
+        // Tira a pontuação que delimita a string, senão a última classe de cada literal
+        // escapa de todo padrão ancorado em `$`. Só nas pontas: parêntese e colchete
+        // fazem parte da sintaxe, e o `!` final também precisa sobreviver.
         .map((token) => token.replace(/^[`'"{[,;]+/, "").replace(/[`'"},;:]+$/, ""))
         .filter(Boolean);
 
-/**
- * Tirar variante (`hover:`, `has-[:focus]:`), o `!` final e o `/NN` final antes de
- * casar. Normalizar primeiro é o que impede `-primary` de pegar o próprio
- * `bg-(--rf-color-primary)`.
- */
+// Tira variante, o `!` final e o `/NN` final antes de casar. Normalizar primeiro é o
+// que impede o padrão de pegar a própria arbitrary property.
 const core = (token: string) =>
     token
         .replace(/^(?:[a-z0-9-]+|[a-z-]+\[[^\]]*\]|(?:group|peer)-[a-z-]+):(?=\S)/g, "")
@@ -81,8 +65,8 @@ const BANNED = [
     /^rounded(?:-[trblxyse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl|4xl)$/
 ];
 
-describe("theme tokens", () => {
-    it("keeps every colour and radius on a --rf-* variable", async () => {
+describe("tokens de tema", () => {
+    it("mantém toda cor e todo radius numa variável --rf-*", async () => {
         const offenders: string[] = [];
 
         for (const { file, text } of await sources()) {
@@ -98,7 +82,7 @@ describe("theme tokens", () => {
         expect(offenders).toEqual([]);
     });
 
-    it("declares every --rf-* the components read, and reads every one it declares", async () => {
+    it("declara todo --rf-* que os componentes leem, e lê todo o que declara", async () => {
         const used = new Set<string>();
 
         for (const { text } of await sources()) {
@@ -113,12 +97,8 @@ describe("theme tokens", () => {
             [...stylesheet.matchAll(/--rf-[a-z0-9-]+(?=\s*:)/g)].map((match) => match[0])
         );
 
-        /**
-         * Degraus que existem para o app, não para o módulo: a escala
-         * `-100/-200/-300` é oferecida inteira, mas nenhum `ui` embutido lê o `-200`
-         * hoje. Fora desta lista, token declarado sem uso é bug — é o que sobra
-         * quando um `ui` para de usar uma cor e ninguém tira a variável.
-         */
+        // Degraus que existem para o app, não para o módulo: a escala é oferecida
+        // inteira. Fora desta lista, token declarado sem uso é bug.
         const orphans = new Set(["--rf-color-background-200"]);
 
         // Os dois sentidos: nada usado sem declarar (renderiza transparente, calado),
@@ -130,18 +110,9 @@ describe("theme tokens", () => {
         expect([...orphans].filter((name) => used.has(name) || !declared.has(name))).toEqual([]);
     });
 
-    it("generates a #rform/tailwindcss carrying both the @source and the tokens", async () => {
-        /**
-         * A única linha que um app escreve no CSS dele, e ela traz as duas coisas. Se
-         * o `@source` faltar ou apontar errado a falha é a pior possível: o app
-         * compila, nada avisa, e todo campo renderiza sem fundo, sem raio e sem cor —
-         * o Tailwind não varre `node_modules`, então nenhuma classe do módulo é emitida.
-         *
-         * O caminho sai absoluto de propósito. Um `@source` relativo dentro de um
-         * arquivo publicado só funcionaria com o pacote instalado em `node_modules`, e
-         * o playground carrega o módulo por caminho relativo — não tem
-         * `node_modules/rform`.
-         */
+    it("gera um #rform/tailwindcss com o @source e os tokens", async () => {
+        // A única linha que um app escreve no CSS dele. `@source` faltando ou errado
+        // é a falha pior: compila, nada avisa, e todo campo renderiza sem estilo.
         // Sem comentários: o do template cita `@import "tailwindcss"` e entraria no match.
         const source = (await readFile(path.join(FIXTURE, "tailwind.css"), "utf8")).replace(
             /\/\*[\s\S]*?\*\//g,
@@ -177,18 +148,9 @@ describe("theme tokens", () => {
         expect(await readFile(tokens, "utf8")).toContain("--rf-color-primary");
     });
 
-    it("declares every token inside @layer rform", async () => {
-        /**
-         * É esta a invariante que faz o override funcionar, e a única que funciona
-         * independente de onde o app põe o `@import "#rform/tailwindcss"`. Estando os
-         * tokens numa layer *nomeada*, o app tem dois alvos imunes à ordem: repetir
-         * `@layer rform { :root { … } }` (mesma layer, e o bloco do app vem depois,
-         * então ganha por ordem de declaração) ou declarar fora de layer.
-         *
-         * Um `:root` solto **aqui** inverteria tudo, nas duas ordens: declaração de
-         * autor fora de layer ganha de *toda* layer de autor, antes de especificidade
-         * entrar na conta, e o override do app pararia de pegar sem nenhum aviso.
-         */
+    it("declara todo token dentro da @layer rform", async () => {
+        // A invariante que faz o override funcionar independente de onde o app põe o
+        // `@import`. Um `:root` solto aqui inverteria tudo, calado.
         const stylesheet = await readFile(STYLESHEET, "utf8");
         const stripped = stylesheet.replace(/\/\*[\s\S]*?\*\//g, "");
 
@@ -221,13 +183,9 @@ describe("theme tokens", () => {
         expect(stripped.trimStart()).toMatch(/^@layer\s+rform\s*;/);
     });
 
-    it("keeps the stylesheet from contributing Tailwind theme tokens", async () => {
-        /**
-         * O arquivo agora é `@import`ado do entry do Tailwind, então `@theme` e
-         * `@apply` ali **seriam** processados — e é justamente o que não se quer: um
-         * `@theme` do módulo despejaria variáveis e utilitários no namespace do design
-         * system do app (`--color-foo` viraria `bg-foo` lá).
-         */
+    it("impede a folha de contribuir token de tema do Tailwind", async () => {
+        // O arquivo é `@import`ado do entry, então `@theme` e `@apply` ali seriam
+        // processados — e despejariam variáveis no design system do app.
         const stylesheet = await readFile(STYLESHEET, "utf8");
         const stripped = stylesheet.replace(/\/\*[\s\S]*?\*\//g, "");
         const atRules = [...stripped.matchAll(/@[a-z-]+/g)].map((match) => match[0].slice(1));

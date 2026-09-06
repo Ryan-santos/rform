@@ -11,10 +11,8 @@ import useRForm from "../../src/runtime/composables/useRForm";
 
 type Obj = Record<string, unknown>;
 
-/**
- * RForm mutates the bound object in place for child writes, but replaces it on
- * reset — so the harness has to follow the emit to keep reading the live model.
- */
+// O RForm muta o objeto ligado no lugar para escrita de filho, mas o substitui no
+// reset — então o harness segue o emit para continuar lendo o model vivo.
 function harness(initial: Obj, children: () => unknown) {
     const model = ref<Obj>(initial);
 

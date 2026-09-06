@@ -5,14 +5,15 @@ type FormRoot = Ref<unknown>;
 const formRootKey: InjectionKey<FormRoot> = Symbol("form-root");
 
 /**
- * Only the Form provides it — Array and Object deliberately do not, so a nested
- * field's `validation(value, form)` always sees the whole form, not its branch.
+ * Só o Form provê — Array e Object de propósito não, para o `form` que uma
+ * `validation` recebe ser sempre o form inteiro, nunca o ramo.
  */
 export function defineFormRoot(model: FormRoot): FormRoot {
     provide(formRootKey, model);
     return model;
 }
 
+/** O model do Form ancestral, ou `undefined` num campo usado solto. */
 export function injectFormRoot(): FormRoot | undefined {
     return inject<FormRoot | undefined>(formRootKey, undefined);
 }

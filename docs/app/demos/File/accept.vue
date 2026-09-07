@@ -1,12 +1,17 @@
 <template>
     <RFile
-        name="somenteImagem"
+        name="porExtensao"
         label='~~accept="png, jpg, webp"'
         accept="png, jpg, webp"
     />
     <RFile
-        name="somenteDocumento"
-        label='~~accept="pdf, doc, docx"'
-        accept="pdf, doc, docx"
+        name="porFamilia"
+        label='~~accept="image/*"'
+        accept="image/*"
+    />
+    <RFile
+        name="porMime"
+        label='~~accept="application/pdf"'
+        accept="application/pdf"
     />
 </template>

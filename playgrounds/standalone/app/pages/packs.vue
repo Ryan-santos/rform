@@ -32,6 +32,7 @@
                 name="anexo"
                 label="Anexo"
                 accept="png, jpg"
+                :max-size="1024"
             />
 
             <button

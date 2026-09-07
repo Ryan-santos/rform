@@ -47,6 +47,7 @@
 
     import { defineErrorsBag } from "../composables/errorsBag";
     import { defineFormRoot } from "../composables/formRoot";
+    import { definePendingList } from "../composables/pendingList";
     import { defineRulesList } from "../composables/rulesList";
 
     type Base = Record<string, unknown>;
@@ -92,6 +93,8 @@
 
     const rulesList = defineRulesList();
 
+    const pendingList = definePendingList();
+
     const errors = defineErrorsBag();
 
     const formEl = useTemplateRef<HTMLFormElement>("form");
@@ -127,6 +130,12 @@
     };
 
     const validate = async () => {
+        // Antes de tudo: o `safeParseAsync` do `:rules` precisa rodar sobre o model já
+        // assentado, e um upload em voo ainda não escreveu nele.
+        const pending = await Promise.all(
+            [...pendingList.value.entries()].map(async ([key, fn]) => [key, await fn()] as const)
+        );
+
         const entries = [...rulesList.value.entries()];
 
         const results = await Promise.all(
@@ -155,6 +164,14 @@
         for (const [key, message] of results) {
             if (message) {
                 messages[key] = message;
+            }
+        }
+
+        // A menor precedência de todas: "o upload falhou" só aparece se nada mais
+        // tiver o que dizer sobre aquele campo.
+        for (const [key, message] of pending) {
+            if (message) {
+                messages[key] ??= message;
             }
         }
 

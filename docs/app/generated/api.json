@@ -60,7 +60,7 @@
             },
             {
                 "name": "ui",
-                "type": "(DeepPartial<{ container: string; list: { transitionGroup: { name: string; enterActiveClass: string; moveClass: string; enterFromClass: string; enterToClass: string; leaveActiveClass: string; leaveFromClass: string; leaveToClass: string; }; container: string; item: { container: string; remove: string; }; add: string; }; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; }) | undefined",
+                "type": "(DeepPartial<{ container: string; list: { transitionGroup: { name: string; enterActiveClass: string; moveClass: string; enterFromClass: string; enterToClass: string; leaveActiveClass: string; leaveFromClass: string; leaveToClass: string; }; container: string; item: { container: string; remove: string; }; add: string; }; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; } & { Utils?: { Error?: DeepPartial<{ container: string; icon: { name: string; class: string; }; }> | undefined; } | undefined; }) | undefined",
                 "required": false
             }
         ],
@@ -311,17 +311,22 @@
         "props": [
             {
                 "name": "accept",
-                "type": "string",
-                "required": true
+                "type": "string | undefined",
+                "required": false
             },
             {
                 "name": "default",
-                "type": "(Multiple extends true ? File[] : File) | null | undefined",
+                "type": "(Multiple extends true ? (U | File)[] : U | File) | null | undefined",
                 "required": false
             },
             {
                 "name": "description",
                 "type": "TrInput | undefined",
+                "required": false
+            },
+            {
+                "name": "disabled",
+                "type": "boolean | undefined",
                 "required": false
             },
             {
@@ -340,8 +345,18 @@
                 "required": false
             },
             {
+                "name": "maxFiles",
+                "type": "number | undefined",
+                "required": false
+            },
+            {
+                "name": "maxSize",
+                "type": "number | undefined",
+                "required": false
+            },
+            {
                 "name": "modelValue",
-                "type": "(Multiple extends true ? File[] : File) | null | undefined",
+                "type": "(Multiple extends true ? (U | File)[] : U | File) | null | undefined",
                 "required": false
             },
             {
@@ -360,6 +375,11 @@
                 "required": false
             },
             {
+                "name": "remove",
+                "type": "false | ((value: U) => unknown) | undefined",
+                "required": false
+            },
+            {
                 "name": "required",
                 "type": "boolean | undefined",
                 "required": false
@@ -371,17 +391,23 @@
             },
             {
                 "name": "text",
-                "type": "TextTree<{ loading: string; zero: string; bytes: { b: string; kb: string; mb: string; gb: string; tb: string; }; }> | undefined",
+                "type": "TextTree<{ loading: string; uploading: string; failed: string; rejected: string; tooBig: string; tooMany: string; retry: string; cancel: string; remove: string; zero: string; bytes: { b: string; kb: string; mb: string; gb: string; tb: string; }; }> | undefined",
                 "required": false
             },
             {
                 "name": "ui",
-                "type": "(DeepPartial<{ container: string; group: { dropzone: string; hasFile: string; dragging: string; input: string; close: string; closeButton: string; preview: { container: string; image: string; size: string; }; info: { container: string; text: string; list: string; badge: string; }; loading: { container: string; }; }; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; } & { Utils?: { Description?: string | undefined; } | undefined; } & { Utils?: { Error?: DeepPartial<{ container: string; icon: { name: string; class: string; }; }> | undefined; } | undefined; }) | undefined",
+                "type": "(DeepPartial<{ container: string; group: { dropzone: string; hasFile: string; dragging: string; disabled: string; input: string; icon: string; info: { container: string; text: string; list: string; badge: string; }; loading: { container: string; }; }; list: string; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; } & { Utils?: { Description?: string | undefined; } | undefined; } & { Utils?: { Error?: DeepPartial<{ container: string; icon: { name: string; class: string; }; }> | undefined; } | undefined; }) | undefined",
+                "required": false
+            },
+            {
+                "name": "upload",
+                "type": "false | UploadFn<U> | undefined",
                 "required": false
             }
         ],
         "slots": [
-            "default"
+            "empty",
+            "item"
         ],
         "events": [
             "update:modelValue"
@@ -594,7 +620,7 @@
             },
             {
                 "name": "ui",
-                "type": "(DeepPartial<{ container: string; group: string; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; }) | undefined",
+                "type": "(DeepPartial<{ container: string; group: string; }> & { Utils?: { Label?: DeepPartial<{ container: string; required: string; }> | undefined; } | undefined; } & { Utils?: { Error?: DeepPartial<{ container: string; icon: { name: string; class: string; }; }> | undefined; } | undefined; }) | undefined",
                 "required": false
             }
         ],
@@ -1090,6 +1116,23 @@
         "props": [],
         "slots": [],
         "events": []
+    },
+    {
+        "name": "FileItem",
+        "kind": "util",
+        "props": [
+            {
+                "name": "entry",
+                "type": "FileEntry",
+                "required": true
+            }
+        ],
+        "slots": [],
+        "events": [
+            "cancel",
+            "remove",
+            "retry"
+        ]
     },
     {
         "name": "Label",

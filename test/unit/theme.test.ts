@@ -98,15 +98,18 @@ describe("tokens de tema", () => {
         );
 
         // Degraus que existem para o app, não para o módulo: a escala é oferecida
-        // inteira. Fora desta lista, token declarado sem uso é bug.
-        const orphans = new Set(["--rf-color-background-200"]);
+        // inteira. Fora desta lista, token declarado sem uso é bug. O
+        // `--rf-color-background-200` saiu daqui ao virar o trilho da barra de
+        // progresso do RUtilsFileItem; o `2xl` entrou quando o overlay do RFile passou
+        // a casar o raio da própria dropzone.
+        const orphans = new Set<string>(["--rf-radius-2xl"]);
 
         // Os dois sentidos: nada usado sem declarar (renderiza transparente, calado),
         // nada declarado sem uso (token morto que ninguém sabe que não faz nada).
         expect([...used].filter((name) => !declared.has(name))).toEqual([]);
         expect([...declared].filter((name) => !used.has(name) && !orphans.has(name))).toEqual([]);
 
-        // E a lista não pode envelhecer: um `ui` que passe a ler o `-200` tira ele daqui.
+        // E a lista não pode envelhecer: um `ui` que passe a ler o token tira ele daqui.
         expect([...orphans].filter((name) => used.has(name) || !declared.has(name))).toEqual([]);
     });
 

@@ -13,6 +13,12 @@
         loading
     />
     <RFile
+        name="desabilitado"
+        label="demo.common.desabilitado"
+        accept="png, jpg"
+        disabled
+    />
+    <RFile
         name="comErro"
         label="demo.common.erroManual"
         accept="png, jpg"

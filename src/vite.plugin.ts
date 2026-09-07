@@ -12,6 +12,34 @@ const GENERIC = String.raw`\s*(<[^<>]*(?:<[^<>]*>[^<>]*)*>)?\s*`;
 const ARGS = String.raw`\(([^()]*(?:\([^()]*\)[^()]*)*)\)`;
 
 /**
+ * Quantos argumentos a chamada tem: vírgulas de **topo**, com comentário fora da
+ * conta. Contar por lookahead pegava a vírgula de dentro de um `//` no corpo de um
+ * `opts`, e aí a injeção do nome simplesmente não acontecia.
+ */
+const countArgs = (params: string): number => {
+    const clean = params.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+
+    if (!clean.trim()) {
+        return 0;
+    }
+
+    let depth = 0;
+    let count = 1;
+
+    for (const char of clean) {
+        if (char === "(" || char === "[" || char === "{") {
+            depth += 1;
+        } else if (char === ")" || char === "]" || char === "}") {
+            depth -= 1;
+        } else if (char === "," && depth === 0) {
+            count += 1;
+        }
+    }
+
+    return count;
+};
+
+/**
  * Reescreve `useField(props)` como `useField(props, undefined, "Text")`, para o
  * componente aprender o próprio nome sem repeti-lo no arquivo.
  *
@@ -43,9 +71,7 @@ export default (roots: string[]): Plugin => {
                 .replace(
                     new RegExp(`\\buseField${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {
-                        const paramCount = params.trim()
-                            ? (params.match(/,(?![^()]*\))/g) || []).length + 1
-                            : 0;
+                        const paramCount = countArgs(params);
 
                         switch (paramCount) {
                             case 1:
@@ -63,9 +89,7 @@ export default (roots: string[]): Plugin => {
                 .replace(
                     new RegExp(`\\buseUtil${GENERIC}${ARGS}`, "g"),
                     (match, generic = "", params) => {
-                        const paramCount = params.trim()
-                            ? (params.match(/,(?![^()]*\))/g) || []).length + 1
-                            : 0;
+                        const paramCount = countArgs(params);
 
                         switch (paramCount) {
                             case 0:

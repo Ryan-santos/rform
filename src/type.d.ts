@@ -112,3 +112,59 @@ export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<
 export type FormErrors = {
     [key: string]: string | string[] | FormErrors;
 };
+/**
+ * O mínimo que uma função de upload devolve, e o que o model do `RFile` passa a
+ * guardar quando a prop `upload` existe. O resto do objeto passa intacto.
+ */
+export type Uploaded = {
+    id: string | number;
+    name: string;
+    url: string;
+    /** Opcional: quando vem, a linha mostra o tamanho. */
+    size?: number;
+    /** Opcional: `image/*` faz a `url` valer de miniatura sem depender da extensão. */
+    type?: string;
+} & Record<string, unknown>;
+
+/** O que o campo dá à função de upload: como abortar, e onde relatar o progresso. */
+export type UploadContext = {
+    signal: AbortSignal;
+    /** Fração de 0 a 1. O campo desenha a barra; chamar é opcional. */
+    onProgress: (ratio: number) => void;
+};
+
+/**
+ * O transporte, que é do app: o módulo é dono do ciclo (fila, progresso, cancelar,
+ * erro, retry) e não tem convenção de envelope nem dependência de fetch.
+ *
+ * @example const upload: UploadFn = async (file, { signal }) => $fetch("/api/uploads", { method: "POST", body, signal });
+ */
+export type UploadFn<U extends Uploaded = Uploaded> = (
+    file: File,
+    context: UploadContext
+) => Promise<U>;
+
+/**
+ * Uma linha da lista do `RFile`: um item já assentado no model, ou um arquivo em
+ * voo que a fila ainda segura. É o que o slot `#item` recebe e o que o
+ * `RUtilsFileItem` desenha.
+ */
+export type FileEntry = {
+    /** Estável dentro de uma renderização — serve de `key` do `v-for`. */
+    key: string;
+    name: string;
+    /** Do `File`, ou o `size` que o `Uploaded` trouxe. */
+    size?: number;
+    /** O `File` cru, quando existe: é dele que sai a miniatura. */
+    file?: File;
+    /** A URL do que já subiu, para a miniatura e o link. */
+    url?: string;
+    /** O MIME do que está na `url`, quando o `Uploaded` o trouxe. */
+    type?: string;
+    status: "done" | "pending" | "error" | "rejected";
+    /** Fração de 0 a 1. */
+    progress: number;
+    message?: string;
+    /** Presente só enquanto a linha é uma entry da fila. */
+    uid?: string;
+};

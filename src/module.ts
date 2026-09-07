@@ -97,6 +97,11 @@ export default defineNuxtModule<ModuleOptions>({
                     search: "mi:search",
                     check: "fa6-solid:check",
                     calendar: "fa6-regular:calendar",
+                    file: "fa6-regular:file-lines",
+                    image: "fa6-regular:image",
+                    upload: "fa6-solid:cloud-arrow-up",
+                    retry: "fa6-solid:rotate-right",
+                    cancel: "fa6-solid:ban",
                     "chevron-left": "fa6-solid:chevron-left",
                     "chevron-right": "fa6-solid:chevron-right"
                 }

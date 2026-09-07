@@ -61,7 +61,9 @@
                 <RFile
                     name="anexo"
                     label="~~Anexo"
-                    accept="png, jpg"
+                    accept="image/*, .pdf"
+                    multiple
+                    :max-files="3"
                 />
                 <RCalendar
                     name="agenda"

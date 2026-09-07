@@ -50,6 +50,7 @@
             "nomeCompleto": "full name",
             "obrigatorio": "Required",
             "carregando": "Loading",
+            "desabilitado": "Disabled",
             "erroManual": "Manual error",
             "selecione": "select"
         },
@@ -166,6 +167,9 @@
         },
         "file": {
             "avatar": "Avatar",
+            "comUpload": "With upload",
+            "ateDoisMega": "Up to 2 MB",
+            "ateTresArquivos": "Up to 3 files",
             "arrasteOuClique": "Drag or click to add",
             "anexos": "Attachments",
             "podeSoltarVarios": "you can drop several at once",

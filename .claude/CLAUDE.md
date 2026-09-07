@@ -65,13 +65,14 @@ Os `import()` de `.vue` nos templates de tipo saem **relativos**. O `@vue/compil
 
 ### O `errorsBag`: um escritor só para o `error` (`src/runtime/composables/errorsBag.ts`)
 
-O Form provê quatro coisas, e as direções não são as mesmas:
+O Form provê cinco coisas, e as direções não são as mesmas:
 
 | provide | direção | o que carrega |
 |---|---|---|
 | `useProvide` | Form → campo | `{ id, model }` — a raiz da injeção |
 | `defineFormRoot` | Form → campo | o model inteiro, para o `form` de toda `validation` |
 | `defineRulesList` | campo → Form | **pull**: `id → () => Promise<string \| void>` |
+| `definePendingList` | campo → Form | **pull**, antes de tudo: `id → () => Promise<string \| void>` |
 | `defineErrorsBag` | Form → campo | **push**: `id → string` |
 
 Os dois últimos são chaveados pelo **mesmo `id` pontilhado**, e é a inversão que faz tudo caber: o bag é o **único escritor** do `error` de um campo. O Form junta as duas fontes — os issues do `:rules` agregado e o retorno de cada `fn` do `rulesList` — num mapa só e escreve no bag; o watcher de cada campo espelha `bag[id]` no próprio ref `error`.
@@ -83,6 +84,22 @@ Os dois últimos são chaveados pelo **mesmo `id` pontilhado**, e é a inversão
 - `issue.path.join(".")` casa com o `id` do `useField` **por construção** — o `name` de um filho de `RArray` *é* o índice, então `["itens", 0, "nome"]` → `"itens.0.nome"`. Issue de raiz (`path: []`) vira a chave `""`, que nenhum campo tem: aparece no retorno do `submit` e não renderiza em lugar nenhum.
 - A rule do campo **vence** o issue agregado: é a declaração mais local.
 - Em modo `schema` o mesmo `rule` valida duas vezes — uma pelo campo, uma pelo agregado. As mensagens são idênticas (é o mesmo preset), então o resultado é correto e só desperdiça um parse; não vale mecanismo para evitar. É por isso que `docs/app/demos/Form/modo-schema.vue` continua **sem** `:rules`, e o `modo-zod.vue` passou a ter.
+
+#### O gancho de pendência no `RForm` (`src/runtime/composables/pendingList.ts`)
+
+Espelho exato do `rulesList` — mesma assinatura de entrada (`() => Promise<string | void>`), mesma chave (o `id` pontilhado do campo), `define*` no Form e `inject*` no campo. O que muda é **quando** o Form o consome: primeiro, antes do `:rules` agregado e antes das rules de campo.
+
+```ts
+const pending = await Promise.all(
+    [...pendingList.value.entries()].map(async ([key, fn]) => [key, await fn()] as const)
+);
+```
+
+A ordem importa duas vezes. **Antes**, porque o `safeParseAsync` do `:rules` precisa rodar sobre o model já assentado — um upload que ainda não voltou deixaria o parse ver `null` onde vai haver um objeto. **E a mensagem entra por último**, com `messages[key] ??= message`: a declaração mais local continua vencendo, então uma `rule` do campo fala na frente do "o envio falhou".
+
+**A entrada resolve, nunca rejeita, e resolve na _liquidação_ — não no sucesso.** Um upload que falhou devolve a mensagem (`rform.fields.file.failed`) e a validação segue; sem isso um arquivo que falhou sumiria do submit calado, que é a classe de falha que este repo persegue em toda parte.
+
+Quem registra hoje é só o `RFile`, e ele **apaga a própria entrada no `onUnmounted`** — um `RFile` dentro de um `RArray` que some deixaria o Form esperando por uma fila morta, e pior, reprovando o submit por uma falha que já não está na tela. O `export default { definePendingList, injectPendingList }` é obrigatório: o template de `#rform/composables` emite `import <basename> from` e **não** faz `export *`, ao contrário do `#rform/utils`.
 
 #### O `error` é `TrInput` na entrada e `string` na saída
 
@@ -157,7 +174,7 @@ container: "rounded-(--rf-radius-xl) bg-(--rf-color-background-100) has-[:focus]
 
 São 16 variáveis, declaradas em `src/runtime/style.css`: `--rf-color-{background,background-100,background-200,background-300,contrast,primary,primary-fg,danger,danger-fg,success,warn}` e `--rf-radius-{sm,md,lg,xl,2xl}`. Trocar tema é trocar variável — `ui` não se mexe.
 
-O `background-200` é o único declarado sem nenhum `ui` embutido lendo: a escala é oferecida inteira ao app. Por isso ele está na lista `orphans` de `test/unit/theme.test.ts` — que também asserta o contrário, então no dia que um `ui` passar a usá-lo o teste manda tirar dali.
+Hoje o único declarado sem nenhum `ui` embutido lendo é o `--rf-radius-2xl`: a escala é oferecida inteira ao app. Por isso ele está na lista `orphans` de `test/unit/theme.test.ts` — que também asserta o contrário, então no dia que um `ui` passar a usá-lo o teste manda tirar dali. O `--rf-color-background-200` **saiu** dessa lista ao virar o trilho da barra de progresso do `RUtilsFileItem`, e o `2xl` entrou no lugar quando o overlay do `RFile` passou a casar o raio da própria dropzone em vez de arredondar mais que ela.
 
 **Isso já foi token do playground.** Os `ui` usavam `bg-background-100`, `text-contrast/50`, `outline-primary`, que só existem no `@theme` de `playgrounds/i18n/app/assets/css/main.css`. Instalado em qualquer outro app, todo campo renderizava transparente. A lint não pegava porque `oxlint.config.ts` aponta o `entryPoint` do `better-tailwindcss` para o CSS **do playground**.
 
@@ -211,6 +228,70 @@ Fica literal de propósito: `*-current/*` (já é `currentColor`), `bg-transpare
 O `v-for` do `RArray` itera `length` e passa cada item por um componente de linha, em vez de `v-for="(item, index) in model"`. Aquela forma lia **todo** elemento no render *deste* componente, então uma tecla — uma escrita em `array[i]` — invalidava a lista inteira e repatchava todo irmão: 0,6 ms com 10 linhas e 4,1 ms com 100, crescendo com a lista onde um form plano ficava plano.
 
 Iterar `length` e passar `item` por um getter **não basta sozinho**: o `v-bind` num `<slot>` normaliza o objeto e lê o getter do mesmo jeito. Só a fronteira de componente escopa a dependência de verdade.
+
+### O campo `File`: dois modos, e a fila mora fora do model
+
+`RFile` deixou de ser um arquivo só. A presença da prop `upload` é o que decide o que vai ao model:
+
+| `upload` | o que o model guarda | quem envia |
+|---|---|---|
+| ausente | o `File` do browser | o submit do app |
+| presente | o que a função devolveu, no mínimo `{ id, name, url }` (`Uploaded`) | o campo, no instante da escolha |
+
+O transporte é do app — `UploadFn` recebe `(file, { signal, onProgress })` e devolve uma promise. Zero dependência de `fetch` e nenhuma convenção de envelope; o módulo é dono do **ciclo** (fila, progresso, cancelar, erro, retry), não do fio.
+
+```
+src/runtime/utils/formatBytes.ts             ← puro: bytes → { value, unit }
+src/runtime/utils/acceptMatch.ts             ← puro: accept → { attr, list, matches(file) }
+src/runtime/composables/useUploadQueue.ts    ← a fila: add/reject/retry/cancel/settled/stop
+src/runtime/composables/pendingList.ts       ← o gancho do Form (acima)
+src/runtime/components/utils/FileItem.vue    ← RUtilsFileItem: uma linha
+src/runtime/components/fields/File.vue       ← dropzone, input, orquestração
+```
+
+**`formatBytes` devolve `{ value, unit }`, não a string.** A unidade é chave de `text.bytes.*` e quem traduz é o componente — a função fica pura e testável sem `tr`. A tupla `UNITS as const` é o que mantém o índice sendo chave de `text.bytes` e não `string`.
+
+**Estado pendente mora fora do model.** Um arquivo em voo ainda não é um `Uploaded`, e não pode poluir o model com um marcador de status. A fila guarda `entries` locais (`uid`, `file`, `status`, `progress`, `message`), e o que a lista renderiza é *itens do model ++ entries em voo*. Ao resolver, a entry sai e o `Uploaded` entra; ao falhar, a entry fica em `status: "error"` com o botão de retry. `status: "rejected"` é o arquivo que nem chegou a subir (`accept`, `maxSize`, `maxFiles`) — e a mensagem dele aparece **na linha**, não no `error` do campo, que é do `errorsBag` e tem um escritor só.
+
+Isso mata de saída a race da referência, em que um POST em voo regrava o model depois de o usuário ter removido o arquivo: cancelar aborta o `signal` **e** descarta a entry, e a resolução só escreve no model se a entry ainda existir.
+
+**Cancelar também solta a promise.** O `pending` da fila é um `Map` por uid, não um `Set`, justamente para `cancel`/`stop` poderem removê-la: o resultado já foi descartado, e esperar por ela no `settled()` prenderia o submit para sempre se o `upload` do app ignorasse o `signal`. Já o `while (pending.size)` do `settled()` cobre o inverso — um retry começado *durante* a espera.
+
+**`multiple` e o `default`.** `defaults.default` é estático (`null`), então a normalização para array vai no `opts.get` do `useField` — o seam que já existe — usando `_props.multiple`, a prop crua, antes do merger. O model pristino continua `null`; toda escrita posterior é uma lista.
+
+**`FileItem` é um util de verdade**, não um `defineComponent` inline como o `Row` do `Array.vue`. É a linha que um app mais quer restilizar, e como util ela ganha `ui.Utils.FileItem`, a classe-gancho `RUtil RUtilsFileItem` e o `::ui-tree{component="File"}` de graça. Ela lê `props.text.*` **herdado do campo** — `useUtil` já mescla as props do pai —, então todo o texto continua morando em `rform.fields.file.*` e não se parte em duas subárvores. O `Props` dela declara as folhas que lê, sem importar o `defaults` do `File.vue`: importar fecharia um acoplamento entre util e campo que não existe hoje.
+
+**O objectURL é do `FileItem`, não da fila.** Um `File` cru no model (modo sem `upload`) não tem entry nenhuma, então a fila não teria onde revogar o dele — dois donos seriam duas formas de vazar. O util cria no watcher e revoga no `onUnmounted`, e o watcher observa `entry.file`/`entry.url`/`entry.type` e **não** o `entry`: o objeto da linha é remontado a cada tique de progresso, e revogar ali piscaria a miniatura. `createObjectURL` vai em try/catch — no happy-dom sobre o `URL` do Node ele recusa o `File`, e uma exceção ali derruba o util inteiro em vez de só ficar sem miniatura.
+
+**A miniatura tem dois caminhos, e o segundo precisa do `type`.** O `Uploaded` de uma API é `{ id, name, url }` e a `url` é `/api/uploads/7` — sem extensão para o regex de imagem enxergar. Então, no instante em que a entry sai da fila e o item entra no model, a miniatura sumia: o `File` já não estava em lugar nenhum.
+
+Quem a segura é um `WeakMap<Uploaded, File>` no campo, escrito no `onDone` (que por isso recebe o `File` junto do valor) e lido no `rows`. **Fraco de propósito**: a chave é o próprio objeto do model, então a entrada morre com o item e não há nada a limpar no `discard` — e um `Map` forte guardaria o binário de todo arquivo já enviado na sessão.
+
+O outro caminho é o do arquivo que **já veio do servidor**, em que não há `File` nenhum: aí a decisão é o `type`, opcional no `Uploaded`, e o regex de extensão fica de reserva para quem não o manda. `size` é opcional pelo mesmo motivo e com a mesma direção — e vem **na frente** do `File` local na hora de escrever a linha (`file?.size ?? uploaded?.size ?? local?.size`), porque quem declarou o tamanho é a API, que é a dona do que está no model.
+
+**`upload` e `remove` aceitam `false`, e é a única forma de recusar o padrão do app.** Os dois são props como quaisquer outras, então `defineFieldDefaults({ File: { upload, remove } })` padroniza o transporte para o app inteiro — e aí um campo precisa de como sair. `:upload="undefined"` não serve: o `merger` pula quando o resultado é truthy e o valor novo é falsy (a regra "não apaga"), e `undefined` nem chega a ser considerado. É a mesma parede que o `focusError` do `RForm` encontra, e a saída aqui é a mesma — ler a prop **crua**:
+
+```ts
+const upload = computed(() => fnProp<UploadFn>(_props.upload, props.value.upload));
+```
+
+O `fnProp` também exige `typeof === "function"` no valor mesclado, que é o que cobre o `<RFile upload>` sem valor: com `Boolean` na lista de tipos que o SFC compila, a forma curta vira `true`, e chamar `true(file)` seria o erro. E os dois entram no `withDefaults` como `undefined`, junto de `required`, `loading` e `disabled`, senão o boolean casting transformaria a prop **ausente** em `false` — que este campo lê como "recuso o default", e o padrão do app nunca funcionaria.
+
+**`disabled` é prop do `RFile`, não do `Element`.** Nenhum campo tem `disabled` hoje, e pôr no `Element` daria a prop a todos os quinze no nível do tipo sem nenhum honrá-la no template — quebra calada, que é pior do que não ter. Aqui ele desliga em três lugares: o `disabled` do input nativo, um `pointer-events-none` na dropzone (que apaga o hover e o drag de uma vez, coisa que nenhuma utility consegue desfazer sozinha) e o `:disabled` dos três botões da linha, que o `FileItem` herda pelo merge de props do `useUtil` sem o campo precisar passar. O `intake`, o `retry` e o `discard` repetem a guarda em JS porque o slot `#item` expõe as três funções — e um slot não passa pelo `pointer-events-none`.
+
+**A lista saiu de dentro do `<label>`.** Era o `<label>` da dropzone que embrulhava tudo, e por isso cada botão precisava de `pointer-events-auto` para não abrir o seletor de arquivos ao ser clicado. Fora dele, nada disso é preciso.
+
+#### O que estava quebrado, e não aparecia
+
+Não havia **nenhum** teste montando o `RFile`, e a lista é a prova do que isso custa:
+
+- **`multiple` não ligava na forma curta.** `multiple?: Multiple` sem o `& boolean` compila `multiple: {}` em vez de `{ type: Boolean }`, então `<RFile multiple>` chegava como `""` — falsy. Só `:multiple="true"` funcionava, e a própria demo do site usava a forma curta. É o mesmo remendo que o `Select.vue` já tinha.
+- **`props.loading` era ignorado** — o overlay só reagia ao `ref` local.
+- **O filtro de `accept` só olhava extensão pelo nome**, então o `accept="image/*"` do próprio JSDoc do componente nunca casava; e o valor ia cru para o atributo nativo, onde `"png, jpg"` não é aceito pelo diálogo do SO. Hoje é `acceptMatch`, que devolve o `attr` normalizado (`.png,.jpg`) junto do `matches`.
+- **`acceptSplit` era calculado uma vez fora de `computed`** — `accept` vindo de schema dinâmico não atualizava nada.
+- **Os listeners de drag eram de `window`**, então dois `RFile` na mesma página pulsavam juntos. Hoje é um contador de `dragenter`/`dragleave` (que disparam em filhos) escopado ao elemento.
+- **`<Icon name="close" />` nunca existiu** na lista de aliases do `module.ts`. Os cinco novos são `file`, `image`, `upload`, `retry` e `cancel`; remover continua sendo o `remove` que o `RArray` já usa.
+- **`useIsURL(model.value as unknown as string)`** rodava um regex sobre um `File` ou sobre um array coagido a string. Funcionava por acidente.
 
 ### Presets (rules e masks)
 
@@ -441,6 +522,8 @@ rform.
   fields.                      ← components/fields, via prefixText(scope: "fields")
     array.add
     file.bytes.kb              ← grupo: a própria chave ("bytes") entra no caminho
+    file.tooBig                ← com param: tr({ key, params: { max } }), montado no campo
+    file.tooMany               ← plural pelo primeiro param numérico, via pluralOf
     date.hint
     date.hintTime
   utils.                       ← components/utils, via prefixText(scope: "utils")
@@ -656,6 +739,8 @@ Com `enforce: "pre"` o plugin vê o SFC cru; sem ele, o id `.vue` já foi compil
 
 A consequência é que a regex passa a ver TypeScript cru: `useUtil<Props>()`, com o genérico entre o nome e o `(`. As regexes aceitam e **preservam** a lista de tipos.
 
+**Quantos argumentos a chamada tem é contado por `countArgs`, não por lookahead.** O que decide entre injetar o nome como segundo ou terceiro parâmetro é a contagem de vírgulas, e a versão antiga contava *toda* vírgula — inclusive a de dentro de um `//` no corpo de um `opts`. Escrever um comentário com vírgula dentro do `useField(...)` fazia a contagem estourar o `switch`, o nome não era injetado, e o campo morria com o `throw` do `useField`. Hoje a contagem é de vírgulas em profundidade 0, com comentário de linha e de bloco removidos antes. O `ARGS` continua tolerando **um** nível de parênteses aninhado — é por isso que o `opts` do `File.vue`, como o do `Number.vue`, é escrito em forma de método e sem arrow aninhada.
+
 ### As classes-gancho (`RField` / `RUtil`) entram pelo `ui`
 
 Todo campo e todo util — embutido **e** do usuário — carrega duas classes na raiz:
@@ -796,9 +881,11 @@ Quatro apps Nuxt de rascunho, um por eixo. Nenhum deles é documentação — is
 | app | porta | eixo |
 |---|---|---|
 | `playgrounds/i18n` | 3030 | `@nuxtjs/i18n` em foco: troca de idioma, packs do usuário, `tr`/`trRule`, `RDate` reformatando ao trocar de locale |
-| `playgrounds/basic` | 3031 | app comum **com** i18n: cadastro de ponta a ponta, `RDynamic` vindo de rota do Nitro, tela de edição/CRUD |
+| `playgrounds/basic` | 3031 | app comum **com** i18n: cadastro de ponta a ponta, `RDynamic` vindo de rota do Nitro, tela de edição/CRUD, e o upload de verdade contra `POST /api/uploads` |
 | `playgrounds/standalone` | 3032 | **sem** `@nuxtjs/i18n`: o motor próprio, packs em `app/rform/locales`, a assimetria do `~~` |
 | `playgrounds/ui` | 3033 | tokens `--rf-*`, `defineFieldDefaults`, `ui` por campo, `popover` do Dropdown |
+
+A página `upload` do `basic` é a única prova ponta a ponta do `RFile` com API: três rotas Nitro (`POST /api/uploads`, `GET` e `DELETE /api/uploads/:id`) guardando bytes na memória do processo, e um `upload` escrito com `XMLHttpRequest` — `fetch` não reporta progresso de envio, então a barra só existe por ali. Um arquivo com `falha` no nome faz a rota devolver 502, que é como se exercita o retry sem derrubar o servidor.
 
 `standalone` e `ui` **não podem** ganhar `@nuxtjs/i18n`, e por motivos diferentes:
 o primeiro é o único lugar que exercita o motor próprio; o segundo ficaria ilegível,

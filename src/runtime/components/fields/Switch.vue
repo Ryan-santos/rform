@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <label
@@ -13,6 +13,7 @@
             <span :class="props.ui?.group?.button?.container">
                 <input
                     v-model="model"
+                    :disabled="props.disabled"
                     type="checkbox"
                     :class="props.ui?.group?.button?.input"
                 />
@@ -58,6 +59,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
                 ifPlaceholder:
@@ -103,6 +105,7 @@
 
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
+        disabled: undefined,
         icon: undefined,
         required: undefined,
         loading: undefined

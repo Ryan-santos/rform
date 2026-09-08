@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <TransitionGroup
@@ -27,6 +27,7 @@
                 key="remover"
             >
                 <button
+                    :disabled="props.disabled"
                     type="button"
                     :class="props.ui?.list?.add"
                     @click="model?.push(undefined)"
@@ -58,6 +59,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             list: {
                 transitionGroup: {
                     name: "",
@@ -105,6 +107,7 @@
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
         required: undefined,
+        disabled: undefined,
         loading: undefined
     });
 

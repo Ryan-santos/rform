@@ -261,6 +261,14 @@
             "hintSaiDoUtil": "The hint comes from RUtilsHint, a file of the app — not of the module.",
             "apelido": "Nickname",
             "nota": "Rating"
+        },
+        "condicional": {
+            "entrega": "Delivery",
+            "casa": "To my address",
+            "retirada": "Pick up in store",
+            "complemento": "Address line 2",
+            "presente": "This is a gift",
+            "mensagem": "Gift card message"
         }
     }
 }

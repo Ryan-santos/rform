@@ -199,8 +199,6 @@
             maxSize?: number;
             /** Só em `multiple`. */
             maxFiles?: number;
-            /** Congela a dropzone e as ações da lista; o que já subiu continua visível. */
-            disabled?: boolean;
             /** No topo por contrato, como `label` — nunca dentro de `text`. */
             placeholder?: TrInput;
         };
@@ -221,7 +219,6 @@
             remove?: ((value: Uploaded) => unknown) | false;
             maxSize?: number;
             maxFiles?: number;
-            disabled?: boolean;
             placeholder?: TrInput;
             default?: unknown;
             modelValue?: unknown;

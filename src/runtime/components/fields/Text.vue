@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group?.wrapper?.container">
@@ -15,6 +15,7 @@
                 <input
                     v-model="model"
                     v-mask="mask"
+                    :disabled="props.disabled"
                     :name="String(props.name)"
                     type="text"
                     :class="props.ui?.group?.field?.input"
@@ -55,6 +56,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 wrapper: {
                     container: `
@@ -87,6 +89,7 @@
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
         required: undefined,
+        disabled: undefined,
         loading: undefined
     });
 

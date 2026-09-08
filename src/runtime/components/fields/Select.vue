@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <RUtilsDropdown
@@ -70,6 +70,7 @@
                     />
                     <input
                         v-model="search"
+                        :disabled="props.disabled"
                         type="search"
                         :placeholder="tr(props.text?.search)"
                         :class="props.ui?.list?.search?.input"
@@ -133,6 +134,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex w-full flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 wrapper: {
                     container: `
@@ -230,7 +232,13 @@
 </script>
 
 <script setup lang="ts" generic="Opts extends Options, Multiple extends boolean = false">
-    const _props = defineProps<Props<Opts, Multiple>>();
+    // `disabled: undefined` como nos outros campos: `disabled?: boolean` compila com
+    // `type: Boolean`, e o boolean casting do Vue apagaria a diferença entre a prop
+    // ausente e um `:disabled="false"`. Este era o único campo sem `withDefaults`
+    // nenhum — o `required` e o `loading` daqui continuam sendo castados.
+    const _props = withDefaults(defineProps<Props<Opts, Multiple>>(), {
+        disabled: undefined
+    });
 
     type Original =
         Opts extends Array<infer U>

@@ -133,6 +133,209 @@ Dois modos de falha calados no mesmo prop, e por isso ele fica **fora** do `defa
 
 O mesmo vale para `rules`: `defaults` só existe para semear o `merger`, e o `merger` copia qualquer chave de `sourceProps` de qualquer jeito.
 
+### Condicionais no schema: `visibleWhen` e `disabledWhen`
+
+Duas chaves do **schema**, não props de campo. No modo template o `v-if` do próprio
+Vue já resolve — e resolve melhor, porque o campo desmonta e leva a `rule` junto.
+No modo schema não há markup onde escrevê-lo: um `<RDynamic :schema>` vindo de uma
+rota do Nitro não tinha como dizer "o `body` só aparece quando `body_type` é `json`
+ou `form`". Quem lê as duas é o `RDynamic`, que decide o `v-if` e preenche o
+`disabled` do campo.
+
+Junto delas, `disabled` virou prop base de verdade: antes só o `RFile` a tinha, e um
+`<RText disabled>` não fazia nada, calado. Essa continua sendo prop, e das duas é a
+única que vale numa tag escrita à mão.
+
+**Isso já foi prop de campo**, com o `useField` calculando um `visible` que cada
+componente aplicava num `v-if` da raiz. Custava um `v-if` em quinze templates, um
+`visible` no retorno da composable e um acessor tardio do model dentro do
+`useField` — tudo para dar, no modo template, uma segunda forma de escrever o `v-if`
+que o Vue já tem. Do arranjo antigo sobrou o que ele consertou de verdade: o
+`disabled` como prop base e o `rulesList.delete` do `onUnmounted`.
+
+O avaliador é `matchCondition` (`src/runtime/utils/`), puro e testável sem app, e a
+forma é a mesma que o `rule` já aceita — um objeto, um array (AND), `{ or }`,
+`{ not }` ou uma função. Os tipos moram em `src/type.d.ts`, importados como
+`import type`: `importsRformValue` ignora import de tipo, então o helper não vai
+para o fim da lista de reentrantes do barrel.
+
+**`op` é obrigatório, e não há default.** `{ field: "x", value: 1 }` não compila. A
+diferença entre `==` e `===` fica sempre escrita no schema, que é onde ela precisa
+estar quando o autor não controla se o campo devolve `"18"` ou `18`. E a união
+discriminada é o que paga o `flags`: com os unários (`is_empty`, `is_not_empty`)
+tipados sem `value`, o `matches` declara o próprio `flags?: string` sem que ele
+apareça nos outros quinze — regex sem `i` é metade dos casos, e `(?i)` não existe
+em JS.
+
+**A linha entre lançar e não casar**, e é a mesma escolha do `fromPreset`:
+
+- **erro de autoria lança**, alto, com `[rform]` na mensagem — operador
+  desconhecido, `op` ausente num schema vindo de API, `value` que não é array num
+  `in`, padrão de regex inválido;
+- **dado ausente não lança** — um `field` apontando para caminho inexistente devolve
+  `undefined`, e o operador simplesmente não casa.
+
+`in` e `contains` são inversos e os dois são necessários: o primeiro pergunta se o
+campo está numa lista fixa do schema, o segundo se o campo (um `RSelect multiple`,
+uma string) contém um item.
+
+#### O contexto é `{ form, path }`, e o `value` sai do `path`
+
+`matchCondition` recebe o form inteiro e o **caminho do próprio campo**, não o valor
+já resolvido — e é ele quem desce o caminho quando uma condição em forma de função
+pede o `value`. O caller passa o que já tem em mão (o `id` pontilhado, o mesmo que
+chaveia as rules), e não há como o valor chegar dessincronizado do form.
+
+`path` é opcional porque só a função o lê: as quinze comparações declarativas olham
+`condition.field`, que é outro caminho.
+
+#### O curto-circuito quando a condição é `undefined`
+
+`evaluate` sai antes de ler o `formRoot` quando o campo não declara a condição.
+Sem isso o `rest` de **todo** campo do schema passaria a depender do model, e uma
+tecla em qualquer um invalidaria as props de todos os outros. Com o curto-circuito
+só quem declarou paga, e a leitura reativa é `form.body_type`, que o Vue rastreia
+por propriedade.
+
+**Sem `formRoot` (um `RDynamic` fora de `RForm`) a condição não é consultada** — o
+campo fica visível e habilitado, e sai um `console.warn` nomeando a prop. Avaliar
+contra `undefined` esconderia o campo calado.
+
+`disabled` ganha **duas procedências**, exatamente como o `error`, e o valor escrito
+no schema vence: `r.disabled ?? evaluate("disabledWhen")`. Nos dois sentidos —
+`disabled: false` mantém o campo ligado contra a condição.
+
+#### O registro do escondido é do `RDynamic`, não do campo
+
+O campo escondido **não monta**, então não tem como tirar a própria mensagem da
+validação. Quem o registra no `hiddenList` é o `RDynamic`, que continua na árvore:
+um `watch(visible)` com `flush: "sync"` e um `onUnmounted` que limpa.
+
+O `id` é montado uma vez, como no `useField` — `inject(key)` para o prefixo do
+container mais o `name` —, e por construção é a mesma chave pontilhada que o
+`rulesList`, o `pendingList` e o `errorsBag` usam. Uma linha de `RArray` fica com o
+índice que recebeu.
+
+O `rulesList.delete` no `onUnmounted` do **`useField`** é outra coisa, e é correção
+de um bug latente adjacente: o `useField` nunca limpava a própria entrada, então uma
+linha removida de um `RArray` deixava uma rule órfã continuando a reprovar o submit
+sobre um model descartado. Ele é também o que faz o `v-if` do modo template tirar o
+campo da validação de graça.
+
+#### O filtro é um ponto só, na saída do `validate()`
+
+O `hiddenList` (`composables/hiddenList.ts`) é cópia estrutural do `rulesList` /
+`pendingList` — `shallowRef<Set<string>>` mutado no lugar, `define*` no Form,
+`inject*` no `RDynamic`, `export default` obrigatório porque o template de
+`#rform/composables` emite `import <basename> from` e não faz `export *`.
+
+O Form o consome **uma vez**, depois de as três fontes terem montado `messages` e
+antes de escrever no bag. **Um ponto só, e é o que faz a feature caber:** as três
+fontes (rule do campo pelo `rulesList`, issue do `:rules` agregado, retorno do
+`pendingList`) são chaveadas pelo **mesmo `id` pontilhado**, então o filtro cobre as
+três de uma vez — inclusive o `:rules` agregado, que é montado no `useRForm` e não
+tem como saber de condição nenhuma. Por isso `useRForm.ts` e `aggregateRules` ficam
+**intocados**.
+
+E o retorno do `validate()` sai do mapa **já filtrado**, senão um campo escondido
+reprovaria o submit sem mostrar erro nenhum na tela.
+
+O casamento é por **prefixo** (`key === h` ou `key` começando com `h` mais ponto), e
+é o que cobre um `object` escondido: `endereco` no `hiddenList` derruba
+`endereco.cep` e `endereco.uf`. Note que o filtro só trabalha de verdade sobre o
+`:rules` agregado — um filho que desmontou já levou a própria rule junto, pelo
+`onUnmounted`.
+
+**Campo escondido mantém o valor no model.** Só `visibleWhen` tira da validação;
+**`disabled` continua sendo validado**, e é decisão explícita — ele mexe em UI e
+interação, e o HTML não é a autoridade sobre o que está no model.
+
+#### O nome da chave é camelCase, o valor do operador é snake_case
+
+Não é inconsistência: `op: "is_empty"` é um *valor*, e ali snake_case é a convenção
+da casa; já a chave espelha o nome de prop que o resto do módulo usa.
+
+**No schema, snake_case é aceito para qualquer chave composta** — `visible_when`,
+`disabled_when`, e de graça `key_value`, `key_label`, `model_full`. Não é uma tabela
+de apelidos: é uma regra, com duas metades.
+
+**Runtime**, no `rest` do `Dynamic.vue`. As duas condicionais são resolvidas antes,
+por nome, num `CONDITIONS` de duas entradas — elas não são props de campo nenhum, e
+o `delete` das quatro grafias é o que as impede de sair como
+`visible_when="[object Object]"` no `<div>` raiz. O que sobra passa pela regra geral,
+e o que a torna segura é que o `components-map.ts` gerado importa os componentes
+**estaticamente**, então `resolved.value.props` é a declaração compilada do
+`defineProps`: dá para traduzir só o que de fato é prop **daquele** campo. Três
+guardas, cada uma cobrindo um modo de falha:
+
+- a **regex** (`/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/`) exclui `__proto__` e
+  `constructor` de saída — atribuir com chave calculada é onde poluição de protótipo
+  entraria;
+- o **`declares`** é o que dissolve a objeção contra a regra geral: um campo de
+  usuário com uma prop legitimamente chamada `foo_bar` não é renomeado, porque
+  `fooBar` não está nas props dele. Nada é perdido e nada é renomeado calado;
+- o **`delete`** não é higiene. O `rest` é espalhado com `v-bind`, e chave que não
+  casa com prop declarada vira **atributo de fallthrough**.
+
+`r[camel] ??= r[key]`: quem escreveu as duas quis a explícita.
+
+**Tipo**, no `Base<P, C>` do template de `schema.d.ts` (`src/module.ts`). As
+condicionais entram por um `Conditions` escrito à mão (não vêm do `P`, porque não
+são props), e o apelido delas sai do mesmo `SnakeAliases` que já cobre o `P`.
+`Snake<K> extends K ? never` derruba toda prop de uma palavra só — sem isso `label`
+e `name` voltariam como si mesmas e colidiriam com as chaves explícitas.
+
+#### `Condition` é desdobrada, não auto-referente
+
+A forma óbvia — `ConditionGroup<Condition>` dentro do próprio `Condition` — **faz o
+checker desistir**. Medido: com ela, o `or` de um grupo já estreitado
+(`"or" in condition`) resolve como `any`, e o interior de um `{ or: [...] }` deixa
+de ser checado, calado. Um `{ field: "a", op: "equals" }` ali passaria a compilar.
+
+A saída é desdobrar a recursão em **quatro níveis** (`ConditionLeaf` +
+`ConditionGroup<C>` aninhado três vezes), o que é `[{ or: [{ not: [...] }] }]`. Aí o
+checker rejeita o operador errado nos quatro, medido com `@ts-expect-error` nos três
+níveis. O runtime do `matchCondition` recursiona sem limite — só a tipagem para aí.
+
+Isso **já teve outra causa**: enquanto `Condition` morava no `Element`, a forma
+auto-referente estourava o "Type instantiation is excessively deep" no `merger` do
+`useField`. Esse caminho não existe mais — o `Element` não conhece `Condition` —, e
+a auto-referência foi remedida agora que ele sumiu. O motivo de continuar desdobrada
+é o outro, e é pior: aquele falhava alto, este falha calado.
+
+#### Campo do usuário não precisa fazer nada pelo `visibleWhen`
+
+Quem decide montar é o `RDynamic`, então um `.vue` em `app/rform/fields` entra no
+schema como qualquer embutido, sem uma linha a mais.
+
+O `disabled`, sim, o campo honra sozinho: o `useField` o entrega em
+`props.disabled`, e o template o repassa ao controle nativo e ao `ui.disabled` do
+container. `test/fixtures/basic/rform/fields/Rating.vue` e as cópias no `docs/` e no
+`playgrounds/i18n` são o exemplo vivo.
+
+`disabled` num container (`Object`, `Array`) **não cascateia** para os filhos: o
+`pointer-events-none` bloqueia o mouse por CSS, mas não tira os filhos do Tab. Quem
+quer filho desabilitado põe `disabledWhen` no filho. Limite conhecido.
+
+O `File` fica com a própria semântica de `disabled` (`ui.group.disabled`, mais rica:
+congela a dropzone e as ações da lista, e o que já subiu continua visível); só o
+`disabled?: boolean` duplicado saiu do `Props` dele, que agora vem do `Element`. Nos
+outros doze o `disabled` do `ui` entra **logo depois de `container`**, e a posição
+importa: o `hookUi` prepende `RField RText` na **primeira entrada que guarda
+classes**.
+
+E `disabled: undefined` entra no `withDefaults` de cada campo junto de `required` e
+`loading`: `disabled?: boolean` compila com `type: Boolean`, e o boolean casting
+transformaria a prop **ausente** em `false`, apagando a diferença entre "não
+declarei" e "declarei desligado". Não é o que faz a condição funcionar — quem
+decide o `disabled` no schema é o `RDynamic`, e ele sempre passa um booleano
+explícito —, é a mesma convenção que `required` e `loading` já seguem.
+
+É por isso que o `Select`, que não tinha `withDefaults` nenhum, ganhou um só para
+essa chave. **O `required` e o `loading` dele continuam sendo castados**, e por
+tabela o `<RUtilsLoading v-if="props.loading !== undefined">` renderiza sempre ali.
+Desvio anterior a isto, deixado de lado de propósito.
+
 ### useUtil (`src/runtime/composables/useUtil.ts`)
 
 - A sobrecarga que recebe o `defaults` do componente é **síncrona**, e é esse o ponto: um campo renderiza seis utils, e todo `await` num `setup` transforma o componente em async — uma boundary de Suspense e um salto de microtask antes de a subárvore existir, pagos até pelos cinco utils que decidem não renderizar nada. O `<script setup>` compartilha escopo com o `<script>`, então o objeto já está em mão; buscá-lo no registry era ida e volta para pegar o que o chamador estava pisando. A forma sem argumento continua resolvendo pelo registry e continua devolvendo promise, porque um util escrito antes disso chama assim.
@@ -277,7 +480,9 @@ const upload = computed(() => fnProp<UploadFn>(_props.upload, props.value.upload
 
 O `fnProp` também exige `typeof === "function"` no valor mesclado, que é o que cobre o `<RFile upload>` sem valor: com `Boolean` na lista de tipos que o SFC compila, a forma curta vira `true`, e chamar `true(file)` seria o erro. E os dois entram no `withDefaults` como `undefined`, junto de `required`, `loading` e `disabled`, senão o boolean casting transformaria a prop **ausente** em `false` — que este campo lê como "recuso o default", e o padrão do app nunca funcionaria.
 
-**`disabled` é prop do `RFile`, não do `Element`.** Nenhum campo tem `disabled` hoje, e pôr no `Element` daria a prop a todos os quinze no nível do tipo sem nenhum honrá-la no template — quebra calada, que é pior do que não ter. Aqui ele desliga em três lugares: o `disabled` do input nativo, um `pointer-events-none` na dropzone (que apaga o hover e o drag de uma vez, coisa que nenhuma utility consegue desfazer sozinha) e o `:disabled` dos três botões da linha, que o `FileItem` herda pelo merge de props do `useUtil` sem o campo precisar passar. O `intake`, o `retry` e o `discard` repetem a guarda em JS porque o slot `#item` expõe as três funções — e um slot não passa pelo `pointer-events-none`.
+**`disabled` vem do `Element`, e o `RFile` faz mais com ele.** Todo campo tem a prop e todo campo a honra — `pointer-events-none opacity-60` no container e o `disabled` do controle nativo. Aqui ele desliga em três lugares: o `disabled` do input nativo, um `pointer-events-none` na dropzone (que apaga o hover e o drag de uma vez, coisa que nenhuma utility consegue desfazer sozinha) e o `:disabled` dos três botões da linha, que o `FileItem` herda pelo merge de props do `useUtil` sem o campo precisar passar. O `intake`, o `retry` e o `discard` repetem a guarda em JS porque o slot `#item` expõe as três funções — e um slot não passa pelo `pointer-events-none`.
+
+**Isso já foi prop só do `RFile`**, quando nenhum outro campo a honrava: pôr no `Element` daria a prop a todos os quinze no nível do tipo sem nenhum honrá-la no template, que é quebra calada. Hoje os quinze honram, e o que sobrou de exclusivo aqui é o `ui.group.disabled`.
 
 **A lista saiu de dentro do `<label>`.** Era o `<label>` da dropzone que embrulhava tudo, e por isso cada botão precisava de `pointer-events-auto` para não abrir o seletor de arquivos ao ser clicado. Fora dele, nada disso é preciso.
 

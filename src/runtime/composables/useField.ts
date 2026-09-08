@@ -1,6 +1,7 @@
 import {
     computed,
     inject,
+    onUnmounted,
     provide,
     ref,
     shallowRef,
@@ -204,6 +205,17 @@ export default async function <T extends Element, S = T["modelValue"], G = T["mo
 
     const rulesList = injectRulesList();
     const formRoot = injectFormRoot();
+
+    // Antes do primeiro `await` deste arquivo, e por isso aqui: depois dele a
+    // instância corrente já não é a do componente, e `onUnmounted` vira no-op.
+    //
+    // Sem isto, uma linha removida de um `RArray` deixa uma rule órfã reprovando o
+    // submit sobre um model já descartado.
+    onUnmounted(() => {
+        if (id) {
+            rulesList?.value.delete(id);
+        }
+    });
 
     // O bag é o único escritor do `error`. `flush: "sync"` pelo mesmo motivo do
     // watcher de seed: o setter do model limpa o erro de forma síncrona, e um flush

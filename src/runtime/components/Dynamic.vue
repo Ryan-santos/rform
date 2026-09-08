@@ -18,46 +18,48 @@
         </template>
     </template>
 
-    <component
-        v-else-if="config?.type === 'object'"
-        :is="resolved"
-        :name="name"
-        v-bind="rest"
-    >
-        <RDynamic :schema="objectChildren">
-            <template
-                v-for="(_, slotName) in $slots"
-                #[slotName]="scope"
-            >
-                <slot
-                    :name="slotName"
-                    v-bind="scope || {}"
+    <template v-else-if="visible">
+        <component
+            v-if="config?.type === 'object'"
+            :is="resolved"
+            :name="name"
+            v-bind="rest"
+        >
+            <RDynamic :schema="objectChildren">
+                <template
+                    v-for="(_, slotName) in $slots"
+                    #[slotName]="scope"
+                >
+                    <slot
+                        :name="slotName"
+                        v-bind="scope || {}"
+                    />
+                </template>
+            </RDynamic>
+        </component>
+
+        <component
+            v-else-if="config?.type === 'array'"
+            :is="resolved"
+            :name="name"
+            v-bind="rest"
+        >
+            <template v-slot="{ index }">
+                <RDynamic
+                    v-if="arrayChild"
+                    :name="index"
+                    :schema="arrayChild"
                 />
             </template>
-        </RDynamic>
-    </component>
+        </component>
 
-    <component
-        v-else-if="config?.type === 'array'"
-        :is="resolved"
-        :name="name"
-        v-bind="rest"
-    >
-        <template v-slot="{ index }">
-            <RDynamic
-                v-if="arrayChild"
-                :name="index"
-                :schema="arrayChild"
-            />
-        </template>
-    </component>
-
-    <component
-        v-else
-        :is="resolved"
-        :name="name"
-        v-bind="rest"
-    />
+        <component
+            v-else
+            :is="resolved"
+            :name="name"
+            v-bind="rest"
+        />
+    </template>
 </template>
 
 <script setup lang="ts">
@@ -65,13 +67,22 @@
      * Renderiza um `schema` de `useRForm`: recursivo em `object` e `array`, e cada
      * entrada com `slot` vira um slot nomeado que sobe até o `RForm`.
      *
+     * É também quem resolve as condições do schema — `visibleWhen` decide o `v-if` e
+     * `disabledWhen` preenche o `disabled` do campo. Ver "Condicionais no schema" no
+     * `.claude/CLAUDE.md`.
+     *
      * @example <RDynamic :schema />
      */
-    import { computed } from "vue";
+    import { computed, inject, onUnmounted, watch } from "vue";
 
     import map from "#rform/components-map";
-    import type { SlotScope } from "#rform/types";
+    import type { Condition, SlotScope } from "#rform/types";
     import type { FieldConfig, Schema } from "#rform/types/schema";
+    import { matchCondition } from "#rform/utils";
+
+    import { injectFormRoot } from "../composables/formRoot";
+    import { injectHiddenList } from "../composables/hiddenList";
+    import { key as upperKey } from "../composables/useField";
 
     export type Props = {
         name?: string | number;
@@ -115,6 +126,73 @@
 
     const resolved = computed(() => (config.value ? map[config.value.type] : null));
 
+    const upper = inject(upperKey, undefined);
+
+    const formRoot = injectFormRoot();
+
+    const hiddenList = injectHiddenList();
+
+    // Montado uma vez, como no `useField`: um `RDynamic` de linha de `RArray` fica
+    // com o índice que recebeu, e é o mesmo `id` pontilhado que chaveia as rules.
+    const upperId = upper?.id ? `${upper.id}.` : "";
+    const id = props.name === undefined ? null : `${upperId}${props.name}`;
+
+    /** As duas grafias de cada condição; no schema o objeto vem de uma API. */
+    const CONDITIONS = {
+        visibleWhen: "visible_when",
+        disabledWhen: "disabled_when"
+    } as const;
+
+    const warned = new Set<string>();
+
+    const evaluate = (prop: keyof typeof CONDITIONS): boolean | undefined => {
+        const source = config.value as Record<string, Condition | undefined> | undefined;
+
+        // camelCase vence, como no `rest`.
+        const when = source?.[prop] ?? source?.[CONDITIONS[prop]];
+
+        // Sai antes de ler o `formRoot`: sem condição não há por que o `rest` deste
+        // campo passar a depender do model.
+        if (when === undefined) {
+            return undefined;
+        }
+
+        // Avaliar contra `undefined` esconderia o campo calado.
+        if (!formRoot) {
+            if (!warned.has(prop)) {
+                warned.add(prop);
+
+                console.warn(
+                    `[rform] "${prop}" needs an RForm ancestor to read the form from; the condition on "${String(props.name)}" was ignored.`
+                );
+            }
+
+            return undefined;
+        }
+
+        return matchCondition(when, { form: formRoot.value, path: id ?? undefined });
+    };
+
+    const visible = computed(() => evaluate("visibleWhen") ?? true);
+
+    // snake_case estrito: `_priv`, `__proto__`, `a__b` e `Foo_bar` não casam — é ela
+    // que mantém poluição de protótipo fora do `r[camel]` de chave calculada.
+    const SNAKE = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/;
+
+    const camelize = (key: string) =>
+        key.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+
+    /** O `components-map` importa estaticamente, então isto é a declaração compilada. */
+    const declares = (component: unknown, prop: string) => {
+        const declared = (component as { props?: unknown })?.props;
+
+        if (Array.isArray(declared)) {
+            return declared.includes(prop);
+        }
+
+        return !!declared && typeof declared === "object" && prop in declared;
+    };
+
     const rest = computed(() => {
         if (!config.value) {
             return {};
@@ -122,6 +200,68 @@
 
         const { type, children, slot, ...r } = props.schema as Record<string, unknown>;
 
+        // Consumidas aqui e não repassadas: as duas não são props de campo nenhum, e
+        // sem o `delete` sairiam como atributo de fallthrough no `<div>` raiz.
+        for (const [camel, snake] of Object.entries(CONDITIONS)) {
+            delete r[camel];
+            delete r[snake];
+        }
+
+        // Duas procedências, como o `error` do `useField`: o `disabled` escrito no
+        // schema vence a condição, nos dois sentidos.
+        const disabled = (r.disabled as boolean | undefined) ?? evaluate("disabledWhen");
+
+        if (disabled !== undefined) {
+            r.disabled = disabled;
+        }
+
+        // No schema o objeto vem de uma API, e snake_case é a convenção da casa. A
+        // regra é geral, mas ancorada nas props reais do componente resolvido: uma
+        // chave que ele não declara continua sendo o atributo de fallthrough que já
+        // era. Ver "Condicionais no schema" no `.claude/CLAUDE.md`.
+        for (const key of Object.keys(r)) {
+            if (!SNAKE.test(key)) {
+                continue;
+            }
+
+            const camel = camelize(key);
+
+            if (!declares(resolved.value, camel)) {
+                continue;
+            }
+
+            // camelCase vence: quem escreveu as duas quis a explícita.
+            r[camel] ??= r[key];
+
+            // Sem o `delete` a chave crua sairia como atributo de fallthrough no
+            // `<div>` raiz do campo, ao lado da prop certa.
+            delete r[key];
+        }
+
         return r;
+    });
+
+    // O campo escondido não monta, então não tem como tirar a própria mensagem da
+    // validação: quem o registra é este `RDynamic`, que continua na árvore.
+    watch(
+        visible,
+        (is) => {
+            if (!id) {
+                return;
+            }
+
+            if (is) {
+                hiddenList?.value.delete(id);
+            } else {
+                hiddenList?.value.add(id);
+            }
+        },
+        { immediate: true, flush: "sync" }
+    );
+
+    onUnmounted(() => {
+        if (id) {
+            hiddenList?.value.delete(id);
+        }
     });
 </script>

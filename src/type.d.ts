@@ -91,6 +91,9 @@ export type WithTextSource<P> = Omit<P, "text"> & { text?: TextSource };
  *
  * `error` é `TrInput` como `label` e `placeholder`, mas só na entrada: quem resolve é
  * o `useField`, e o que sai do merger é sempre a mensagem pronta.
+ *
+ * `disabled` é prop de todo campo, e o `RDynamic` a preenche a partir do
+ * `disabledWhen` do schema — ver "Condicionais no schema" no `.claude/CLAUDE.md`.
  */
 export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<OBJ["default"]>> = {
     name?: string | number;
@@ -98,6 +101,7 @@ export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<
     required?: boolean;
     rule?: Rule<C>;
     loading?: boolean;
+    disabled?: boolean;
     default?: D;
     ui?: DeepPartial<OBJ["ui"]>;
     modelValue?: D;
@@ -168,3 +172,60 @@ export type FileEntry = {
     /** Presente só enquanto a linha é uma entry da fila. */
     uid?: string;
 };
+/** Operadores unários: não levam `value`, e a união discriminada os impede de levar. */
+export type ConditionUnary = "is_empty" | "is_not_empty";
+
+export type ConditionBinary =
+    | "=="
+    | "==="
+    | "!="
+    | "!=="
+    | ">"
+    | ">="
+    | "<"
+    | "<="
+    | "in"
+    | "not_in"
+    | "contains"
+    | "not_contains"
+    | "starts_with"
+    | "ends_with"
+    | "matches";
+
+export type ConditionOperator = ConditionUnary | ConditionBinary;
+
+/**
+ * Uma comparação entre um campo do form e um valor literal. `op` é obrigatório —
+ * sem default a diferença entre `==` e `===` fica sempre escrita no schema, que é
+ * onde ela precisa estar quando o autor não controla se o campo devolve `"18"` ou
+ * `18`.
+ */
+export type ConditionRef =
+    | { field: string; op: ConditionUnary }
+    | { field: string; op: "matches"; value: string; flags?: string }
+    | { field: string; op: Exclude<ConditionBinary, "matches">; value: unknown };
+
+/** A escotilha de fuga: recebe o mesmo par que uma `validation` de preset. */
+export type ConditionFn = (context: { value: unknown; form: unknown }) => boolean;
+
+/** Uma folha: a comparação em si, ou a função de escape. */
+export type ConditionLeaf = ConditionRef | ConditionFn;
+
+/** Os combinadores, sobre o nível de baixo. Array é AND. */
+export type ConditionGroup<C> = { or: readonly C[] } | { not: C } | readonly C[];
+
+/**
+ * O que `visibleWhen` e `disabledWhen` do schema aceitam. Array é AND; `{ or }` e
+ * `{ not }` compõem. Ver "Condicionais no schema" no `.claude/CLAUDE.md`.
+ *
+ * A recursão é **desdobrada em quatro níveis**, e não auto-referente, de propósito:
+ * medido, `ConditionGroup<Condition>` faz o checker desistir e resolver o `or` de um
+ * grupo já estreitado como `any` — o interior de um `{ or: [...] }` deixaria de ser
+ * checado, calado. Quatro níveis é `[{ or: [{ not: [...] }] }]`; o runtime do
+ * `matchCondition` recursiona sem limite, então só a tipagem para aí.
+ *
+ * @example { field: "body_type", op: "in", value: ["json", "form"] }
+ */
+export type Condition =
+    | ConditionLeaf
+    | ConditionGroup<ConditionLeaf | ConditionGroup<ConditionLeaf | ConditionGroup<ConditionLeaf>>>;

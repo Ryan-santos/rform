@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <RUtilsDropdown v-model:open="open">
@@ -38,6 +38,7 @@
                             <input
                                 v-if="props.mode === 'multiple'"
                                 v-model="typed[0]"
+                                :disabled="props.disabled"
                                 :name="String(props.name)"
                                 type="text"
                                 :placeholder="placeholderHint"
@@ -48,6 +49,7 @@
                                 v-else
                                 v-model="typed[0]"
                                 v-mask="mask"
+                                :disabled="props.disabled"
                                 :name="String(props.name)"
                                 type="text"
                                 :placeholder="placeholderHint"
@@ -62,6 +64,7 @@
                                 <input
                                     v-model="typed[1]"
                                     v-mask="mask"
+                                    :disabled="props.disabled"
                                     :name="String(props.name)"
                                     type="text"
                                     :placeholder="placeholderHint"
@@ -77,6 +80,7 @@
                     </div>
 
                     <button
+                        :disabled="props.disabled"
                         type="button"
                         :class="props.ui?.group?.trigger"
                         @click="open = !open"
@@ -134,6 +138,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 wrapper: {
                     container: `
@@ -213,6 +218,7 @@
 
 <script setup lang="ts" generic="M extends Mode = 'single'">
     const _props = withDefaults(defineProps<Props<M>>(), {
+        disabled: undefined,
         required: undefined,
         loading: undefined
     });

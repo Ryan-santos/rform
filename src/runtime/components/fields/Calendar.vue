@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
         <RUtilsCalendar />
         <RUtilsError v-if="props.error" />
@@ -29,7 +29,8 @@
 
     export const defaults = defineDefaults({
         ui: {
-            container: "flex grow flex-col gap-1"
+            container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60"
         },
         default: ""
     });
@@ -62,6 +63,7 @@
 
 <script setup lang="ts" generic="M extends Mode = 'single'">
     const _props = withDefaults(defineProps<Props<M>>(), {
+        disabled: undefined,
         required: undefined
     });
 

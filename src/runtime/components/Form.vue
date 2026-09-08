@@ -47,6 +47,7 @@
 
     import { defineErrorsBag } from "../composables/errorsBag";
     import { defineFormRoot } from "../composables/formRoot";
+    import { defineHiddenList } from "../composables/hiddenList";
     import { definePendingList } from "../composables/pendingList";
     import { defineRulesList } from "../composables/rulesList";
 
@@ -94,6 +95,8 @@
     const rulesList = defineRulesList();
 
     const pendingList = definePendingList();
+
+    const hidden = defineHiddenList();
 
     const errors = defineErrorsBag();
 
@@ -175,11 +178,22 @@
             }
         }
 
-        errors.value = messages;
+        // Um ponto só, na saída: as três fontes são chaveadas pelo mesmo `id`
+        // pontilhado, então o filtro cobre inclusive o `:rules` agregado, que é
+        // montado no `useRForm` e não sabe de condição nenhuma. O casamento por
+        // prefixo é o que derruba os filhos de um `RObject` escondido.
+        const isHidden = (key: string) =>
+            [...hidden.value].some((path) => key === path || key.startsWith(`${path}.`));
+
+        const shown = Object.fromEntries(
+            Object.entries(messages).filter(([key]) => !isHidden(key))
+        );
+
+        errors.value = shown;
 
         await focusFirst();
 
-        return Object.keys(messages).length === 0;
+        return Object.keys(shown).length === 0;
     };
 
     const submit = async () => {

@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group?.container">
@@ -8,6 +8,7 @@
                 :key="index"
             >
                 <input
+                    :disabled="props.disabled"
                     :ref="(el) => setBox(index, el)"
                     :type="props.secret ? 'password' : 'text'"
                     :inputmode="charset.inputmode"
@@ -51,6 +52,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 container: "flex flex-row items-center gap-2",
                 input: "size-12 rounded-(--rf-radius-xl) bg-(--rf-color-background-100) text-center outline-none",
@@ -79,6 +81,7 @@
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
         required: undefined,
+        disabled: undefined,
         loading: undefined,
         secret: undefined,
         autofocus: undefined

@@ -1,5 +1,5 @@
 <template>
-    <div :class="props.ui?.container">
+    <div :class="[props.ui?.container, props.disabled && props.ui?.disabled]">
         <RUtilsLabel v-if="props.label" />
 
         <div :class="props.ui?.group">
@@ -24,6 +24,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: "flex flex-col gap-6 rounded-(--rf-radius-xl) border border-current/10 p-4"
         },
         default: {}
@@ -35,6 +36,7 @@
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
         required: undefined,
+        disabled: undefined,
         loading: undefined
     });
 

@@ -1,6 +1,6 @@
 <template>
     <div
-        :class="props.ui?.container"
+        :class="[props.ui?.container, props.disabled && props.ui?.disabled]"
         data-allow-mismatch
     >
         <RUtilsLabel v-if="props.label" />
@@ -80,6 +80,7 @@
                     />
                     <input
                         v-model="hexInput"
+                        :disabled="props.disabled"
                         :class="props.ui?.picker?.input"
                         maxlength="7"
                         spellcheck="false"
@@ -111,6 +112,7 @@
     export const defaults = defineDefaults({
         ui: {
             container: "flex grow flex-col gap-1",
+            disabled: "pointer-events-none opacity-60",
             group: {
                 wrapper: {
                     container: `
@@ -177,6 +179,7 @@
 <script setup lang="ts">
     const _props = withDefaults(defineProps<Props>(), {
         required: undefined,
+        disabled: undefined,
         loading: undefined
     });
 

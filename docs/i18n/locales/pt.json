@@ -261,6 +261,14 @@
             "hintSaiDoUtil": "O hint sai do RUtilsHint, que é um arquivo do app — não do módulo.",
             "apelido": "Apelido",
             "nota": "Nota"
+        },
+        "condicional": {
+            "entrega": "Entrega",
+            "casa": "Em casa",
+            "retirada": "Retirar na loja",
+            "complemento": "Complemento",
+            "presente": "É um presente",
+            "mensagem": "Mensagem do cartão"
         }
     }
 }

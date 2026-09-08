@@ -22,8 +22,7 @@
         "dev:build": "nuxi build playgrounds/i18n",
         "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare docs && nuxi prepare playgrounds/i18n && nuxi prepare playgrounds/basic && nuxi prepare playgrounds/standalone && nuxi prepare playgrounds/ui",
         "docs": "nuxi dev docs",
-        "docs:build": "nuxi build docs",
-        "docs:generate": "pnpm --filter rform-docs generate",
+        "docs:build": "pnpm --filter rform-docs build",
         "play": "nuxi dev playgrounds/i18n",
         "play:basic": "nuxi dev playgrounds/basic",
         "play:standalone": "nuxi dev playgrounds/standalone",
@@ -32,7 +31,7 @@
         "lint": "oxlint",
         "test": "vitest run",
         "test:watch": "vitest watch",
-        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p docs/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/i18n/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/basic/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/standalone/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/ui/.nuxt/tsconfig.app.json --noEmit"
+        "test:types": "vue-tsc -p tsconfig.check.json --noEmit && vue-tsc -p test/fixtures/basic/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p docs/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p docs/.nuxt/tsconfig.server.json --noEmit && vue-tsc -p playgrounds/i18n/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/basic/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/standalone/.nuxt/tsconfig.app.json --noEmit && vue-tsc -p playgrounds/ui/.nuxt/tsconfig.app.json --noEmit"
     },
     "dependencies": {
         "@floating-ui/vue": "^2.0.1",

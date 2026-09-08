@@ -7,6 +7,9 @@ packages:
 #
 # `esbuild: false` — o binário chega pronto pelo optional dep de plataforma.
 # `better-sqlite3: true` — o `@nuxt/content` do docs precisa do binding nativo.
+# `core-js-pure: false` — só o banner de financiamento; ele chega pelo `agents`,
+# que o `@nuxtjs/mcp-toolkit` exige no preset da Cloudflare.
 allowBuilds:
     esbuild: false
     better-sqlite3: true
+    core-js-pure: false

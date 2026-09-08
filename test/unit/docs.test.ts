@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { demoSourceOf } from "../../docs/app/utils/demos";
+import { demoSourceOf } from "../../docs/app/utils/demoSource";
 import { highlight, paint } from "../../docs/app/utils/highlight";
 import { searchDocs, type Section } from "../../docs/app/utils/search";
 

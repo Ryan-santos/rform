@@ -9,6 +9,7 @@ export default defineNuxtConfig({
         "@nuxt/icon",
         "@nuxt/fonts",
         "@nuxtjs/i18n",
+        "@nuxtjs/mcp-toolkit",
         "../src/module"
     ],
 
@@ -46,6 +47,26 @@ export default defineNuxtConfig({
         }
     },
 
+    mcp: {
+        name: "rform-docs",
+        route: "/mcp",
+        description: "rform documentation — fields, props, demos and presets.",
+        instructions: [
+            "This server exposes the rform documentation (a Nuxt forms module).",
+            "",
+            "Call get-component-api BEFORE writing any rform component in a template:",
+            "the module's prop types come from intersections and are not readable in",
+            "any .d.ts, so guessing them is the most common failure. Two shapes agents",
+            "get wrong: `label`, `placeholder`, `description` and `error` are TrInput",
+            "(a translation key), not plain string; and a rule reference takes named",
+            'arguments — { name: "min", min: 3 }, never args: [3].',
+            "",
+            "Use search-documentation to find the page, get-documentation-page to read",
+            "it, get-demo for working code, and list-presets for the built-in rules and",
+            "masks. The documentation served here is English only."
+        ].join("\n")
+    },
+
     app: {
         head: {
             title: "RForm",
@@ -73,6 +94,24 @@ export default defineNuxtConfig({
 
     devServer: {
         port: 3000
+    },
+
+    nitro: {
+        preset: "cloudflare_module",
+
+        cloudflare: {
+            deployConfig: true,
+
+            wrangler: {
+                name: "rform"
+            }
+        },
+
+        prerender: {
+            crawlLinks: true,
+            routes: ["/pt", "/en"],
+            ignore: ["/mcp"]
+        }
     },
 
     compatibilityDate: "latest",

@@ -24,6 +24,9 @@ dist
 .build-*
 .netlify
 
+# Cloudflare
+.wrangler
+
 # Env
 .env
 

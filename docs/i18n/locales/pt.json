@@ -40,7 +40,7 @@
         "no": "não",
         "slots": "slots",
         "events": "eventos",
-        "noProps": "Nenhuma prop lida para {component} — rode `pnpm --filter rform-docs api`.",
+        "noProps": "Nenhuma prop lida para {component} — confira o nome do componente.",
         "submit": "submit (roda as rules)",
         "reset": "reset"
     },

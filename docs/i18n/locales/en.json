@@ -40,7 +40,7 @@
         "no": "no",
         "slots": "slots",
         "events": "events",
-        "noProps": "No props read for {component} — run `pnpm --filter rform-docs api`.",
+        "noProps": "No props read for {component} — check the component name.",
         "submit": "submit (runs the rules)",
         "reset": "reset"
     },

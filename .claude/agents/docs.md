@@ -19,8 +19,9 @@ docs/
   i18n/locales/{pt,en}.json  ← as chaves que os demos usam
   app/demos/<Comp>/<id>.vue  ← os demos, arquivos .vue de verdade
   app/components/content/    ← os componentes MDC (Demo, PropsTable, UiTree, Callout, CodeGroup)
-  app/generated/api.json     ← gerado por scripts/api.ts, NÃO editar à mão
-  scripts/api.ts             ← vue-component-meta sobre src/runtime/components
+  modules/api/               ← módulo: vue-component-meta → .nuxt/docs/api.json
+  modules/mcp/               ← módulo: páginas, demos e presets → .nuxt/docs/mcp.json
+  server/mcp/tools/          ← as seis ferramentas do endpoint /mcp
 ```
 
 ## A regra que morde primeiro
@@ -103,10 +104,12 @@ lateral e do índice, e o breakpoint de viewport não enxerga isso.
 ## Depois de mexer
 
 ```bash
-pnpm --filter rform-docs api        # regenera app/generated/api.json
-pnpm exec vitest run test/unit/docs.test.ts
+pnpm exec vitest run test/unit/docs.test.ts test/unit/mcp.test.ts
 pnpm exec vue-tsc -p docs/.nuxt/tsconfig.app.json --noEmit
 ```
+
+`api.json` e `mcp.json` saem dos módulos de `docs/modules/` e são regerados pelo
+`prepare` acima — e por qualquer `dev`/`build`.
 
 `test/unit/docs.test.ts` cobre cinco coisas: `demoSourceOf`, a paridade pt/en
 arquivo a arquivo, que todo `::demo{src}` aponta para um arquivo que existe (e que
@@ -121,12 +124,11 @@ um arquivo criado com o servidor no ar não entra nele.
 
 ## Quando `src/` muda
 
-A tabela de props é gerada, então ela se corrige sozinha com `pnpm --filter
-rform-docs api`. A **prosa não**. Se a mudança altera comportamento que alguma
-página afirma, procure a afirmação nos dois idiomas antes de dar por encerrado.
+A tabela de props é gerada, então ela se corrige sozinha no próximo build. A
+**prosa não**. Se a mudança altera comportamento que alguma página afirma, procure
+a afirmação nos dois idiomas antes de dar por encerrado.
 
 ## Report
 
-Termine com: arquivos tocados, se as duas árvores continuam espelho, se o
-`api.json` foi regenerado, e o resultado do `vue-tsc` do docs e do
-`test/unit/docs.test.ts`.
+Termine com: arquivos tocados, se as duas árvores continuam espelho, e o resultado
+do `vue-tsc` do docs e dos testes de `docs`/`mcp`.

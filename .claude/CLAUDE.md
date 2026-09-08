@@ -771,11 +771,12 @@ O par nome→classe é **gerado**, em `#rform/registry` (`hooks.fields` / `hooks
 
 **Um `generate` ou `build` também desfaz isso**, e o sintoma engana: o `.nuxt` fica sem as declarações de auto-import, e o check despeja `Cannot find name 'useI18n'`, `'useRForm'`, `'useDocsNav'` — 24 erros que parecem código quebrado e são estado do diretório. `nuxi prepare` no app resolve.
 
-São **sete** apps Nuxt, cada um com o próprio `.nuxt` e o próprio `#rform` — checar um não cobre o outro, e é por isso que o `test:types` roda os sete:
+São **sete** apps Nuxt, cada um com o próprio `.nuxt` e o próprio `#rform` — checar um não cobre o outro, e é por isso que o `test:types` roda os sete. O oitavo alvo não é um app: é o **server** do docs, onde moram as ferramentas MCP, que nenhum `tsconfig.app.json` inclui:
 
 ```
 vue-tsc -p tsconfig.check.json                        # o módulo
 vue-tsc -p docs/.nuxt/tsconfig.app.json               # o site
+vue-tsc -p docs/.nuxt/tsconfig.server.json            # o server/ do site (MCP)
 vue-tsc -p playgrounds/i18n/.nuxt/tsconfig.app.json
 vue-tsc -p playgrounds/basic/.nuxt/tsconfig.app.json
 vue-tsc -p playgrounds/standalone/.nuxt/tsconfig.app.json
@@ -841,8 +842,9 @@ O gerenciador de pacotes é o **pnpm** (`pnpm-lock.yaml`, só na raiz). O runtim
   `pnpm docs` morre com `ERR_PNPM_MISSING_PACKAGE_NAME` sem nunca olhar os scripts.
 - `pnpm play` / `play:basic` / `play:standalone` / `play:ui` — os quatro playgrounds, nas portas 3030 a 3033.
 - `pnpm exec oxlint <arquivo>` — lint (config em `oxlint.config.ts`, plugin tailwind ativo).
-- `pnpm test:types` — type-check dos sete apps (precisa dos sete `.nuxt` populados).
-- `pnpm --filter rform-docs api` — regenera a tabela de props do site.
+- `pnpm test:types` — type-check dos sete apps mais o `server/` do docs (precisa dos sete `.nuxt` populados).
+- A tabela de props e o `mcp.json` são regerados por `pnpm exec nuxi prepare docs`
+  (ou por qualquer `dev`/`build`), pelos módulos de `docs/modules/`.
 - `pnpm exec nuxi prepare test/fixtures/basic` — regenera os tipos da fixture depois de mexer no `module.ts` ou em `test/fixtures/basic/rform/`.
 
 ### O `pnpm-workspace.yaml` não é opcional
@@ -853,7 +855,7 @@ Por isso `docs` e `playgrounds/*` estão em `packages:`. Um `pnpm install` na ra
 
 `allowBuilds` no mesmo arquivo é o outro requisito, e a entrada é **obrigatória mesmo dizendo `false`**: o pnpm bloqueia build script de dependência por padrão e, num install do zero, **sai com código 1** (`ERR_PNPM_IGNORED_BUILDS`) até haver uma decisão explícita — apagar a entrada faz ele reescrever o arquivo com `esbuild: set this to true or false`. (Com `node_modules` já populado ele nem checa, então o erro só aparece em clone novo ou CI.) Escrever `onlyBuiltDependencies` não resolve no 11.
 
-São duas entradas hoje: `esbuild: false` e `better-sqlite3: true` — esta última porque o `@nuxt/content` do `docs` precisa do binding nativo, e sem ela o site não sobe nem gera.
+São três entradas hoje: `esbuild: false`, `better-sqlite3: true` — esta porque o `@nuxt/content` do `docs` precisa do binding nativo, e sem ela o site não sobe nem gera — e `core-js-pure: false`, que chega pelo `agents` (a dependência que o `@nuxtjs/mcp-toolkit` exige no preset da Cloudflare) e cujo postinstall é só o banner de financiamento.
 
 `esbuild` está `false`: o binário chega pronto pelo optional dep de plataforma (`@esbuild/win32-x64` e irmãos, que estão no lockfile), e o postinstall dele não faz falta. Medido com `node_modules` apagado: install exit 0, suíte 29/297, e o `nuxi build` de um playground completo (client + SSR + Nitro).
 
@@ -1212,15 +1214,104 @@ transformação, e um arquivo criado com o servidor no ar não entra nele — o 
 engole o resto do documento: o MDC trata o bloco como aberto e o conteúdo seguinte
 vira filho dele. A página termina cedo, sem erro nenhum.
 
+### Os dois JSON gerados saem de módulos locais
+
+`api.json` e `mcp.json` nascem de dois módulos em `docs/modules/`, então existem em
+todo `dev`, `build` e `prepare` — não há passo a lembrar, e o artefato não tem como
+ficar velho. Cada um é um par: `data.ts` puro (o gerador) e `index.ts` (o módulo). O
+teste importa o `data.ts`, então não arrasta o `@nuxt/kit` para dentro do projeto
+`unit` do vitest.
+
+**Mora em `docs/modules/`, não em `docs/app/modules/`**, e isso não é óbvio num app
+com `srcDir: "app"`: o `dir.modules` do schema resolve contra o **`rootDir`**, e o
+`resolveModules` faz `resolve(config.srcDir, dir.modules)` sobre um caminho já
+absoluto — o srcDir não entra. O glob de varredura é `*{ext}` e `*/index{ext}`, então
+`modules/mcp/index.ts` é registrado e `modules/mcp/data.ts` **não** — é o que permite
+colocar o gerador ao lado do módulo.
+
+**O endereço é o alias `#docs`**, registrado em dois lugares pelos dois módulos, com
+o mesmo valor: `nuxt.options.alias` (o Vite, para o `PropsTable.vue`) e
+`nuxt.options.nitro.alias` (o nitro, para o `server/utils/mcpData.ts`). Registrar nos
+dois módulos é de propósito — cada um fica autocontido e não há ordem entre eles a
+manter.
+
+**E os dois módulos fazem `mkdirSync` do diretório no `setup`.** Não é para poder
+escrever depois — é porque o `path` do tsconfig depende disso. Tanto o kit quanto o
+nitro decidem se emitem `#docs/*`, além de `#docs`, por um **`stat`** do alvo do
+alias: só um diretório ganha a entrada com `/*`. Num `.nuxt` frio o `stat` falha,
+sai só `#docs`, e `#docs/mcp.json` deixa de resolver — no `tsconfig.server.json`, que
+é gerado antes dos templates, então o sintoma é o `vue-tsc` do `server/` reprovando
+com `TS2307` **só em clone novo ou CI**, e passando na máquina de quem já rodou um
+build. O `mkdir` no `setup` torna o `stat` determinístico nos dois lados.
+
+**Todo call site casteia o JSON** (`api as ComponentMeta[]`). O tipo de um import de
+`.json` vem do **conteúdo**, então um artefato vazio daria `never[]` e o `.find()` ao
+lado pararia de compilar — e vazio é exatamente o que o `prepare` produz (adiante).
+O cast é o que declara a forma independentemente do que o arquivo tem naquele
+instante. O `mcpData.ts` já fazia assim antes.
+
+#### O `buildDir` não é o mesmo em todo comando
+
+Medido, e é a raiz de tudo o que vem a seguir:
+
+| comando | `buildDir` | quando escreve o tsconfig |
+|---|---|---|
+| `nuxi prepare` | `<rootDir>/.nuxt` | `clearBuildDir` → `buildNuxt` → **`writeTypes`** |
+| `nuxi build` | `<rootDir>/node_modules/.cache/nuxt/.nuxt` | `clearBuildDir` → **`writeTypes`** → `buildNuxt` |
+| `nuxi dev` | `<rootDir>/.nuxt` | herda o do prepare anterior (escreve em paralelo) |
+
+Consequência direta: **no `prepare` o `api.json` sai `[]`**, porque o checker precisa
+do tsconfig e ele ainda não existe. Não faz falta — prepare só gera tipos, nada
+renderiza — e é por isso que o aviso é suprimido quando `nuxt.options._prepare` é
+verdadeiro: mandar "rode `nuxi prepare`" durante um `nuxi prepare` é ruído que não
+diz nada. O `build`, que é o que publica o site, escreve os tipos **antes** e sai
+completo.
+
+#### O `api.json` não pode ser um `addTemplate`
+
+O `mcp.json` é template e o `api.json` não, e a assimetria tem causa.
+
+O `getContents` de um template roda **no meio do `generateApp`**. Os `.vue` do módulo
+entram no programa do TypeScript pelo `components.d.ts` e pelos tipos `#rform/*` —
+que são templates irmãos, ainda não escritos naquele instante. O checker então
+falha com `'…/fields/Array.vue' is not part of the project`. Daí o `build:before`,
+que roda depois de todos os templates e ainda **antes** do `builder.bundle()`, que é
+o que importa: o Vite e o nitro resolvem `#docs/api.json` pelo arquivo já no disco.
+
+O `mcp.json` fica template porque o gerador dele só lê arquivo do repositório — não
+depende de nenhum irmão.
+
+**O modo de falha era mudo, e é o que dói.** O Nuxt rebaixa falha de template a
+warning (`NUXT_B1001 Could not compile template`), então o erro do checker não
+aparece; o que aparece é o Vite morrendo depois com
+`[UNLOADABLE_DEPENDENCY] Could not load …/docs/api.json`, apontando para o
+`import` — o sintoma, não a causa. Para ver o motivo é preciso embrulhar o
+`getContents` num try/catch e imprimir.
+
+#### `@nuxt/kit` teve de ser declarado
+
+`docs/package.json` ganhou `@nuxt/kit`. Ele chega pelo `nuxt`, mas para *dentro* de
+`.pnpm/nuxt@…/node_modules`, que não é alcançável da raiz de `docs` — mesma classe
+de phantom dep que o `vue`/`vite` do módulo já foram (`require.resolve` de
+`@nuxt/kit` a partir de `docs/` dá `MODULE_NOT_FOUND` sem a declaração).
+
+#### O teste não lê o artefato
+
+`test/unit/mcp.test.ts` chama `buildMcp()` e compara com o disco: o que há para
+testar é a **derivação**, porque o artefato em si nasce em todo build e não pode
+divergir da fonte. O `describe` da api deriva as tags do layout de `components/`,
+pelo mesmo motivo — nenhum dos dois depende de arquivo gerado.
+
 ### A tabela de props é gerada
 
-`docs/scripts/api.ts` roda `vue-component-meta` sobre
+`docs/modules/api/` roda `vue-component-meta` sobre
 `src/runtime/components/{fields,utils}` mais `Form.vue` e `Dynamic.vue`, e escreve
-`app/generated/api.json`. Ligado ao `predev`/`prebuild`/`pregenerate`.
+`.nuxt/docs/api.json`. O gerador puro mora em `data.ts`, ao lado do `index.ts` que
+é o módulo — e é o `data.ts` que o teste importa, sem arrastar o `@nuxt/kit`.
 
-O checker roda contra **`docs/.nuxt/tsconfig.app.json`**, não contra o
+O checker roda contra o **tsconfig do buildDir**, não contra o
 `tsconfig.check.json` da raiz: é ali que `#rform/*` resolve com os tipos gerados
-daquele app. Depende de `nuxi prepare docs` ter rodado.
+daquele app.
 
 Ele **aguenta o `RSelect`** — o caso difícil, com `Multiple extends boolean` e o
 `Opts` genérico, que é o mesmo lugar que já rendeu o "Union type too complex". 18
@@ -1233,14 +1324,14 @@ decorre disso é a certa: a tabela gerada é a verdade exaustiva
 (nome/tipo/obrigatoriedade/default) e nunca desatualiza; a prosa ao lado explica as
 props que precisam de explicação, e é opcional por prop.
 
-O checker lista todo emit também como prop `onXxx`; o `api.ts` os move para
+O checker lista todo emit também como prop `onXxx`; o `data.ts` os move para
 `events`, senão `onUpdate:modelValue` apareceria como prop escrevível.
 
-O `api.json` está no `ignorePatterns` do `oxfmt.config.ts`, ao lado do tema do
-shiki. Sem isso o formatador reescreve o arquivo e o `pnpm --filter rform-docs
-api` seguinte o desfaz, num vaivém que só aparece no `git status`.
+O `ignorePatterns` do `oxfmt.config.ts` não precisa listar nenhum dos dois: em
+`.nuxt/` eles já caem no `.gitignore`, que o oxfmt lê. Lá ficou só o tema do shiki,
+que é copiado do `.vsix` e não escrito à mão.
 
-**Isso já morou num `.prettierignore`** — que o oxfmt lê por padrão, junto com o
+**O `.prettierignore` era da mesma família** — o oxfmt o lê por padrão, junto com o
 `.gitignore`. Um arquivo de config de uma ferramenta que o repo não usa, só para
 o formatador que ele usa ler: o `ignorePatterns` diz a mesma coisa no arquivo
 onde o resto da configuração do oxfmt já está.
@@ -1288,11 +1379,107 @@ camada é interação que ninguém pedia num diagrama que cabe na tela.
 O scanner tira bloco cercado e código inline antes de casar `::demo` — a própria
 página de contribuição mostra a sintaxe como exemplo.
 
-### Deploy
+### O endpoint MCP (`/mcp`)
+
+A mesma documentação, para agente de código. Quem mais erra o rform é agente, e
+erra no que o site já sabe: a forma dos props (`Element<…> & Utils[…] &
+TextProp<…>`, que não sai de nenhum `.d.ts` legível), a forma dos args de preset
+(`{ name: "min", min: 3 }`, nunca `args: [3]`) e o fato de `label`/`error` serem
+`TrInput` e não string. Consultar em vez de chutar é o ponto.
+
+**As ferramentas não consultam o `@nuxt/content`, e o motivo não é que não daria.**
+Daria: `queryCollection(event, …)` é o caminho normal de um server route. O que
+decide é que **metade delas lê arquivo que não cabe em collection nenhuma** — o
+`.vue` de um demo, o `.ts` de um preset, a saída do `vue-component-meta` —, então um
+artefato de build existiria de qualquer jeito. As páginas vêm junto por duas razões
+menores: markdown cru serve melhor a um agente que o AST do MDC (que é o que a query
+devolve), e no Worker a query custaria um D1, porque o preset `cloudflare` do próprio
+content **força** `{ type: "d1", bindingName: "DB" }` — no Worker não há filesystem
+nem `better-sqlite3`. Um banco para 29 arquivos de markdown não se paga. Num alvo
+Node isso não vale: ali a query não custa nada, e o corte seria só o dos três.
+
+O preço aceito é a **granularidade de página** na busca: `queryCollectionSearchSections`
+daria seção por seção, e é o que se ganharia com o D1. Ver a nota do
+`search-documentation`, adiante.
+
+É o mesmo padrão da tabela de props, com um segundo gerador ao lado.
+
+```
+docs/modules/mcp/data.ts        ← puro: páginas, demos, presets → McpData
+docs/modules/mcp/index.ts       ← o módulo: template → .nuxt/docs/mcp.json
+docs/app/utils/demoSource.ts    ← demoSourceOf, sem glob (o Node não importa o demos.ts)
+docs/server/utils/mcpData.ts    ← o único lugar que conhece o endereço dos dois JSON
+docs/server/mcp/tools/*.ts      ← as seis ferramentas
+```
+
+São seis, e o argumento opcional é o que funde list+get em vez de virarem dez:
+`search-documentation`, `get-documentation-page`, `list-documentation`,
+`get-component-api`, `get-demo`, `list-presets`.
+
+**`demoSourceOf` teve de sair do `demos.ts`**: aquele arquivo abre com
+`import.meta.glob`, transformação do Vite que o gerador, sendo Node puro, não
+consegue importar.
+Mora sozinho em `app/utils/demoSource.ts`, e o `Demo.vue` importa de lá — reexportar
+pelo `demos.ts` daria **dois donos ao mesmo nome no auto-import**, e o Nuxt avisa a
+cada prepare. Uma definição só, e o que o MCP entrega é byte a byte o que o site
+mostra.
+
+**A busca é em granularidade de página**, não de seção: sobre o JSON, fatiar por
+âncora exigiria replicar a slugificação de heading do `@nuxt/content` — quem daria
+isso de graça é o `queryCollectionSearchSections`, e o preço dele é o D1 (acima). E
+um agente quer a página inteira de qualquer jeito. O preço é que toda página que
+cita as palavras empata no corpo (peso 1) e o desempate vira a ordem da barra
+lateral — `"mask cpf"` respondia com a home antes de `/concepts/presets`. Por isso
+os `titles` de cada seção levam a trilha do caminho **e** os `headings` da página:
+um título de seção volta a pesar o que pesa no site, sem replicar slug nenhum.
+
+O `path` espelha a rota do `@nuxt/content` — cai o `en/`, cai o prefixo `NN.` de
+cada segmento, `index` vira a raiz — e por isso vem **sem** prefixo de idioma: a
+URL no site é `/en<path>`. Só `en`, por decisão.
+
+### Deploy: um Worker, não Pages
 
 `.github/workflows/docs.yml`: `pnpm install` → stub do módulo → `nuxi prepare docs`
-→ `pnpm --filter rform-docs generate` (que dispara o `api.ts` pelo `pregenerate`) →
-`cloudflare/wrangler-action` com `pages deploy docs/.output/public`.
+→ `pnpm --filter rform-docs build` (que gera `api.json` e `mcp.json` por dentro,
+pelos módulos de `docs/modules/`) → `cloudflare/wrangler-action` com `deploy` e
+`docs` como cwd.
 
 Precisa dos secrets `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID` no
-repositório, e do projeto `rform-docs` criado no painel da Cloudflare.
+repositório. O worker se chama `rform` e é criado no primeiro deploy — não há
+projeto a criar no painel, ao contrário do Pages.
+
+**`build`, e não `generate`.** O `/mcp` é rota POST de runtime, e estático não a
+serve — daí o `prerender` com `crawlLinks`, semeado em `/pt` e `/en` (a
+`strategy: "prefix"` do i18n faz `/` ser redirect) e com `ignore: ["/mcp"]`, senão
+o crawler tenta pré-renderizar o endpoint.
+
+**`cloudflare_module`, e o que ele apaga.** Static assets do Worker atendem antes
+de o worker acordar, então as 56 páginas pré-renderizadas continuam saindo do CDN
+sem `_routes.json` nenhum — o arquivo que o preset de Pages gerava, com o limite de
+100 regras e a lista de exclusão que crescia com o site, simplesmente não existe
+mais. Só `/mcp` e o redirect de `/` chegam no worker. A saída é `docs/.output`
+(`server/` + `public/`), não `docs/dist`.
+
+**O `wrangler.json` é gerado, e é por isso que `deployConfig: true` está ligado.**
+O preset escreve `.output/server/wrangler.json` com o entry, o binding `ASSETS`, o
+`compatibility_date` (do `compatibilityDate` do Nuxt) e o `nodejs_compat` que o
+`@nuxt/content` pede — tudo derivado do layout de saída, em vez de um segundo
+arquivo à mão pra desatualizar. Do `nuxt.config` sai só o `name`. Junto vai
+`docs/.wrangler/deploy/config.json`, que é como o `wrangler deploy` sem argumento
+acha essa config; ele imprime `Using redirected Wrangler configuration` quando
+achou. **A contrapartida**: com `deployConfig` ligado, config do painel da
+Cloudflare (env var, binding) é descartada no deploy. Aqui não pesa — não há
+nenhuma —, mas no dia que houver, ela tem de virar `cloudflare.wrangler`.
+
+**`agents` é dependência obrigatória, não peer opcional.** O `@nuxtjs/mcp-toolkit`
+troca de provider quando o preset contém `cloudflare`, e o provider de lá importa
+`agents/mcp`. Num Worker não há external, então o build morre com
+`Cannot resolve "agents/mcp" … and externals are not allowed!` — que não diz que a
+saída é instalar o pacote. `h3` e `zod` são os peers não-opcionais do toolkit; o
+`zod` já estava.
+
+O `@nuxt/content` avisa `switching to D1 database with binding DB` no prepare e no
+build. É só aviso: tudo é pré-renderizado e nada consulta conteúdo em runtime, então
+o worker sobe sem binding nenhum — medido com `wrangler dev` sobre o build, onde
+`/` redireciona pra `/pt`, `/en/fields/text` sai do asset store e `/mcp` responde
+o `initialize` com as seis ferramentas.

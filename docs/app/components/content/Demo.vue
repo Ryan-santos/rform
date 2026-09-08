@@ -110,7 +110,8 @@
      */
     import { computed, defineAsyncComponent, ref, useTemplateRef } from "vue";
 
-    import { demoComponent, demoSource, demoSourceOf } from "~/utils/demos";
+    import { demoComponent, demoSource } from "~/utils/demos";
+    import { demoSourceOf } from "~/utils/demoSource";
 
     const props = withDefaults(
         defineProps<{

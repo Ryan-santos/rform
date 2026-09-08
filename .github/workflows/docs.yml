@@ -36,17 +36,21 @@ jobs:
             # `.nuxt` de que os seguintes dependem.
             - run: pnpm install
 
-            # O checker do `scripts/api.ts` roda contra `docs/.nuxt/tsconfig.app.json`,
-            # então o prepare do docs tem de ter acontecido — o `pregenerate` do
-            # `docs/package.json` chama o script sozinho, mas o stub do módulo não.
+            # O `postinstall` já rodou `nuxi prepare` em cada subprojeto, mas naquele
+            # momento o módulo ainda não tinha stub — daí stubar e preparar de novo,
+            # para o `docs/.nuxt` nascer com os tipos de verdade do `#rform/*`.
             - run: pnpm exec nuxt-module-build build --stub && pnpm exec nuxt-module-build prepare
 
             - run: pnpm exec nuxi prepare docs
 
-            - run: pnpm --filter rform-docs generate
+            # `build`, e não `generate`: o endpoint `/mcp` é rota POST de runtime, e
+            # estático não a serve. Os dois JSON gerados (`api.json` e `mcp.json`) saem
+            # dos módulos de `docs/modules/`, dentro deste build — não há passo à parte.
+            - run: pnpm --filter rform-docs build
 
             - uses: cloudflare/wrangler-action@v3
               with:
                   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                   accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-                  command: pages deploy docs/.output/public --project-name=rform-docs
+                  workingDirectory: docs
+                  command: deploy

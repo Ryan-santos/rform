@@ -125,15 +125,16 @@
 <script setup lang="ts">
     /**
      * `::props-table{component="Text"}` — a tabela de props, lida do `api.json` que
-     * o `scripts/api.ts` gera do fonte pelo `vue-component-meta`.
+     * o módulo `modules/api` gera do fonte pelo `vue-component-meta`.
      *
      * Ela é a verdade exaustiva (nome/tipo/default/obrigatoriedade) e nunca
      * desatualiza; a explicação de cada prop mora na prosa ao lado, porque não há
      * JSDoc por prop no módulo para o checker ler.
      */
     import { computed } from "vue";
+    import type { ComponentMeta } from "~~/modules/api/data";
 
-    import api from "~/generated/api.json";
+    import api from "#docs/api.json";
 
     const props = withDefaults(
         defineProps<{
@@ -159,8 +160,13 @@
         t("ui.propRequired")
     ]);
 
+    // O cast é o que declara a forma: o tipo de um import de `.json` vem do
+    // conteúdo, então um artefato vazio (`.nuxt` frio) daria `never[]` e o
+    // `.find` abaixo pararia de compilar.
+    const entries = api as ComponentMeta[];
+
     const meta = computed(() =>
-        api.find(
+        entries.find(
             (entry) => entry.name === props.component && (!props.kind || entry.kind === props.kind)
         )
     );

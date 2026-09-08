@@ -1,12 +1,11 @@
 /**
- * Gera `app/generated/api.json` — a lista de props, slots e eventos de cada
- * componente do módulo, lida do fonte pelo `vue-component-meta`.
+ * A lista de props, slots e eventos de cada componente do módulo, lida do fonte
+ * pelo `vue-component-meta`. Puro — quem escreve o JSON é o `index.ts` ao lado.
  *
  * O checker roda contra o **tsconfig do docs**, e não contra o da raiz, porque é
- * aqui que `#rform/*` resolve com os tipos gerados deste app. Depende, portanto,
- * de `nuxi prepare docs` ter rodado — mesma pré-condição do `test:types`.
+ * aqui que `#rform/*` resolve com os tipos gerados deste app.
  */
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,10 +13,7 @@ import { createChecker } from "vue-component-meta";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-const docs = resolve(here, "..");
-const root = resolve(docs, "..");
-
-const tsconfig = join(docs, ".nuxt", "tsconfig.app.json");
+const root = resolve(here, "..", "..", "..");
 
 const components = join(root, "src", "runtime", "components");
 
@@ -92,31 +88,31 @@ const vueFiles = (dir: string) =>
         .map((name) => join(dir, name).replaceAll("\\", "/"))
         .sort();
 
-const checker = createChecker(tsconfig, {
-    forceUseTs: true,
-    printer: { newLine: 1 }
-});
+/**
+ * Roda o checker sobre os componentes do módulo. Custa um programa de TypeScript
+ * inteiro, então é chamado uma vez por build.
+ *
+ * @example buildApi("<docs>/.nuxt/tsconfig.app.json")
+ */
+export function buildApi(tsconfig: string): ComponentMeta[] {
+    const checker = createChecker(tsconfig, {
+        forceUseTs: true,
+        printer: { newLine: 1 }
+    });
 
-const all: ComponentMeta[] = [];
+    const all: ComponentMeta[] = [];
 
-for (const file of vueFiles(join(components, "fields"))) {
-    all.push(meta(checker, file, "field"));
+    for (const file of vueFiles(join(components, "fields"))) {
+        all.push(meta(checker, file, "field"));
+    }
+
+    for (const file of vueFiles(join(components, "utils"))) {
+        all.push(meta(checker, file, "util"));
+    }
+
+    for (const name of ["Form.vue", "Dynamic.vue"]) {
+        all.push(meta(checker, join(components, name).replaceAll("\\", "/"), "root"));
+    }
+
+    return all;
 }
-
-for (const file of vueFiles(join(components, "utils"))) {
-    all.push(meta(checker, file, "util"));
-}
-
-for (const name of ["Form.vue", "Dynamic.vue"]) {
-    all.push(meta(checker, join(components, name).replaceAll("\\", "/"), "root"));
-}
-
-const out = join(docs, "app", "generated", "api.json");
-
-mkdirSync(dirname(out), { recursive: true });
-writeFileSync(out, `${JSON.stringify(all, null, 4)}\n`, "utf8");
-
-// oxlint-disable-next-line no-console -- script de CLI: a linha de resumo é a saída dele
-console.log(
-    `[rform-docs] api.json — ${all.length} componentes, ${all.reduce((n, c) => n + c.props.length, 0)} props`
-);

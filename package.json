@@ -51,7 +51,7 @@
         "play:basic": "nuxi dev playgrounds/basic",
         "play:standalone": "nuxi dev playgrounds/standalone",
         "play:ui": "nuxi dev playgrounds/ui",
-        "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && pnpm publish && git push --follow-tags",
+        "release": "pnpm run lint && pnpm run test && pnpm run prepack && changelogen --release && git push --follow-tags",
         "lint": "oxlint",
         "test": "vitest run",
         "test:watch": "vitest watch",

@@ -1061,7 +1061,15 @@ site, dos quatro playgrounds e da fixture.
 
 ## Publicação
 
-`pnpm run release` encadeia `lint → test → prepack → changelogen --release → pnpm publish → git push --follow-tags`. Três coisas nessa cadeia mordem, e nenhuma é óbvia.
+O publish **não acontece na sua máquina**. `pnpm run release` encadeia `lint → test → prepack → changelogen --release → git push --follow-tags`, e para aí: quem publica é o `.github/workflows/release.yml`, disparado pela tag que o changelogen acabou de empurrar.
+
+**O motivo é o 2FA.** Com ele ligado na conta, o registry pede um OTP no publish — e num terminal não-interativo o pnpm morre com `ERR_PNPM_OTP_NON_INTERACTIVE` depois de já ter construído o tarball inteiro. Um token de automação do npm (granular, com *Bypass two-factor authentication*) não pede OTP, e é o que o workflow usa, pelo secret `NPM_TOKEN`.
+
+No workflow, `--no-git-checks` é **obrigatório**: numa tag o checkout é detached, e o `publishBranch: develop` reprovaria. O `prepack` não aparece na lista de passos porque roda sozinho, pelo lifecycle do `pnpm publish`.
+
+**Alavanca futura:** o *trusted publishing* do npm (OIDC, sem token nenhum) é melhor, mas se configura nas settings **do pacote** no npmjs.com — então não serve para o primeiro publish, quando o pacote ainda não existe. De `0.1.0` em diante dá para trocar.
+
+Três coisas nessa cadeia mordem, e nenhuma é óbvia.
 
 ### O `changelogen` **rebaixa** o bump enquanto a versão for `0.x`
 

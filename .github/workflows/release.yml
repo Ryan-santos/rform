@@ -20,10 +20,11 @@ jobs:
         permissions:
             contents: write
 
-            # O pnpm tenta OIDC (trusted publishing) antes de olhar o token, e sem
-            # isto ele desiste com `ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS`.
-            # Só serve depois que o pacote existe no npm — o trusted publisher se
-            # configura nas settings **do pacote** —, mas a permissão não custa nada.
+            # É por aqui que o publish autentica. O pnpm pede um id token ao GitHub
+            # (audience `npm:registry.npmjs.org`) e o npm o troca pelo direito de
+            # publicar, pelo trusted publisher configurado nas settings do pacote.
+            # Sem esta permissão ele desiste com
+            # `ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS` e cai no token.
             id-token: write
 
         steps:
@@ -55,6 +56,9 @@ jobs:
             # `--no-git-checks` é obrigatório: numa tag o checkout é detached, e o
             # `publishBranch: develop` do pnpm-workspace.yaml reprovaria. O `prepack`
             # roda sozinho, pelo lifecycle do publish.
+            # Não há mais `NPM_TOKEN`: quem autentica é o OIDC. O `env` fica porque o
+            # `.npmrc` que o setup-node escreve referencia `${NODE_AUTH_TOKEN}`, e
+            # deixá-lo indefinido é mudar uma configuração que já se provou boa.
             - run: pnpm publish --no-git-checks
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

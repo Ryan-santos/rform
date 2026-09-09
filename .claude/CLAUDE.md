@@ -1063,11 +1063,15 @@ site, dos quatro playgrounds e da fixture.
 
 O publish **não acontece na sua máquina**. `pnpm run release` encadeia `lint → test → prepack → changelogen --release → git push --follow-tags`, e para aí: quem publica é o `.github/workflows/release.yml`, disparado pela tag que o changelogen acabou de empurrar.
 
-**O motivo é o 2FA.** Com ele ligado na conta, o registry pede um OTP no publish — e num terminal não-interativo o pnpm morre com `ERR_PNPM_OTP_NON_INTERACTIVE` depois de já ter construído o tarball inteiro. Um token de automação do npm (granular, com *Bypass two-factor authentication*) não pede OTP, e é o que o workflow usa, pelo secret `NPM_TOKEN`.
+**O motivo é o 2FA.** A conta está em `auth-and-writes`, o modo estrito: todo write pede um OTP — e num terminal não-interativo o pnpm morre com `ERR_PNPM_OTP_NON_INTERACTIVE` depois de já ter construído o tarball inteiro. Vale **também no CI**: rodar de dentro de uma action não muda nada, e um token granular sem *Bypass two-factor authentication* marcado bate na mesma parede.
+
+**Quem autentica hoje é o OIDC**, pelo *trusted publishing* do npm — não há token nenhum, nem no npm nem nos secrets do repo. O pnpm pede um id token ao GitHub com audience `npm:registry.npmjs.org` e o npm o troca pelo direito de publicar, conferindo repositório e nome do workflow contra o trusted publisher configurado nas settings **do pacote**. Daí o `id-token: write` no `permissions`: sem ele o pnpm avisa `Skipped OIDC: ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS` e cai no token que não existe mais.
+
+Isso **não serve para o primeiro publish** de um nome novo: o trusted publisher se configura no pacote, que ainda não existe. A `0.1.0` saiu por token granular com o bypass marcado; da `0.1.1` em diante é OIDC.
+
+**Como testar a configuração sem gastar uma versão:** dispare o workflow por `workflow_dispatch` com a versão ainda publicada. O npm recusa a versão duplicada, mas **só depois de autenticar** — então o erro responde a pergunta. `[E403] You cannot publish over the previously published versions` quer dizer que a credencial passou; `E401`, `ENEEDAUTH` ou o `ERR_PNPM_OTP_NON_INTERACTIVE` querem dizer que não. Nada é publicado nos dois casos.
 
 No workflow, `--no-git-checks` é **obrigatório**: numa tag o checkout é detached, e o `publishBranch: develop` reprovaria. O `prepack` não aparece na lista de passos porque roda sozinho, pelo lifecycle do `pnpm publish`.
-
-**Alavanca futura:** o *trusted publishing* do npm (OIDC, sem token nenhum) é melhor, mas se configura nas settings **do pacote** no npmjs.com — então não serve para o primeiro publish, quando o pacote ainda não existe. De `0.1.0` em diante dá para trocar.
 
 Três coisas nessa cadeia mordem, e nenhuma é óbvia.
 

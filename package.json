@@ -1,7 +1,31 @@
 {
-    "name": "rform",
+    "name": "nuxt-rform",
     "version": "0.0.0",
+    "description": "Composable form fields for Nuxt: the model, the types and the validation all come from the field itself. Zod rules, input masks, dynamic schemas and i18n included.",
+    "keywords": [
+        "nuxt",
+        "nuxt-module",
+        "nuxt4",
+        "vue",
+        "forms",
+        "form-builder",
+        "validation",
+        "zod",
+        "mask",
+        "i18n",
+        "tailwindcss",
+        "typescript"
+    ],
     "license": "MIT",
+    "author": "Ryan Santos",
+    "homepage": "https://github.com/Ryan-santos/nuxt-rform#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Ryan-santos/nuxt-rform.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Ryan-santos/nuxt-rform/issues"
+    },
     "type": "module",
     "packageManager": "pnpm@11.25.0",
     "main": "./dist/module.mjs",
@@ -20,7 +44,7 @@
         "prepack": "nuxt-module-build build",
         "dev": "pnpm run dev:prepare && nuxi dev playgrounds/i18n",
         "dev:build": "nuxi build playgrounds/i18n",
-        "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare docs && nuxi prepare playgrounds/i18n && nuxi prepare playgrounds/basic && nuxi prepare playgrounds/standalone && nuxi prepare playgrounds/ui",
+        "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare docs && nuxi prepare playgrounds/i18n && nuxi prepare playgrounds/basic && nuxi prepare playgrounds/standalone && nuxi prepare playgrounds/ui && nuxi prepare test/fixtures/basic",
         "docs": "nuxi dev docs",
         "docs:build": "pnpm --filter rform-docs build",
         "play": "nuxi dev playgrounds/i18n",
@@ -51,6 +75,7 @@
         "@vitejs/plugin-vue": "^6.0.8",
         "@vitest/coverage-v8": "^4.1.7",
         "@vue/test-utils": "^2.5.0",
+        "changelogen": "^0.6.2",
         "eslint-plugin-better-tailwindcss": "^4.7.0",
         "happy-dom": "^20.12.0",
         "nuxt": "^4.4.2",

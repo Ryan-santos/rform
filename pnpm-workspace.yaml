@@ -13,3 +13,7 @@ allowBuilds:
     esbuild: false
     better-sqlite3: true
     core-js-pure: false
+
+# Este repo desenvolve em `develop`. Sem isto o `pnpm publish` barra com
+# `ERR_PNPM_BRANCH_IS_NOT_PREPUBLISH`, porque o default é `main`/`master`.
+publishBranch: develop

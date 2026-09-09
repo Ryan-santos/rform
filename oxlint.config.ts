@@ -3,7 +3,15 @@ import { defineConfig } from "oxlint";
 export default defineConfig({
     options: {
         typeAware: true,
-        typeCheck: true
+
+        // Desligado: o `typeCheck` é experimental e despeja os diagnósticos crus do
+        // tsc, e o tsgolint não tem o plugin do Vue — todo import de `.vue` volta
+        // como `TS2307: Cannot find module`. São 6 hoje, numa árvore limpa, e é o
+        // que fazia `pnpm run lint` sair com 1 e abortar a cadeia do `release`.
+        // Quem manda em tipo aqui é o `test:types`, que roda vue-tsc nos oito
+        // projetos e enxerga `.vue`. O `typeAware` fica: as regras que ele liga
+        // não passam por resolução de módulo.
+        typeCheck: false
     },
     rules: {
         eqeqeq: ["error", "always"],

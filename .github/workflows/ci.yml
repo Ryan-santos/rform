@@ -1,0 +1,49 @@
+name: ci
+
+on:
+    push:
+        branches: [develop, main]
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            # `--frozen-lockfile` é o default no CI. O `postinstall` de cada
+            # subprojeto roda `nuxi prepare`, então este passo já popula os `.nuxt`.
+            - run: pnpm install
+
+            # Naquele `prepare` o módulo ainda não tinha stub — daí stubar e preparar
+            # de novo, para os `.nuxt` nascerem com os tipos de verdade do `#rform/*`.
+            # É o mesmo `dev:prepare`, e é o que o `test:types` exige — os seis apps mais
+            # a fixture, que não tem `package.json` e por isso não é preparada sozinha.
+            - run: pnpm run dev:prepare
+
+            - run: pnpm run lint
+
+            - run: pnpm run test:types
+
+            # O projeto `e2e` do vitest sobe um browser pela fixture. O binário é
+            # `playwright-core`: é ele que está nas devDependencies, e `playwright`
+            # puro não existe aqui.
+            - run: pnpm exec playwright-core install --with-deps chromium
+
+            - run: pnpm run test

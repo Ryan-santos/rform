@@ -6,6 +6,28 @@ Nuxt module that ships form components (`RForm`, `RText`, `RSelect`, `RArray`, e
 
 ## Arquitetura
 
+### O nome no npm é `nuxt-rform`; tudo o mais é `rform`
+
+São duas coisas distintas, e o `module.ts` as separa de propósito:
+
+| | valor | de onde vem |
+|---|---|---|
+| nome no npm, `meta.name` | `nuxt-rform` | `import { name as pkg } from "../package.json"` |
+| `configKey`, `#rform`, `app/rform/` | `rform` | `const name = "rform"`, no próprio `module.ts` |
+
+`rform` **já existe no npm** — um pacote React/Redux sem relação, publicado desde
+2016 —, então o prefixo `nuxt-` não é só a convenção que a página do ecossistema
+recomenda para módulo de terceiro: é a única forma de publicar. E o `configKey` e
+o alias não podem pagar por isso, porque são contrato público: `#rform/utils` está
+escrito em todo preset de usuário, e `app/rform/fields` no disco de quem já usa.
+
+O acoplamento existia porque todo `${name}` do `module.ts` — 40 e poucos, entre
+nome de template, raiz em `srcDir` e alias — saía do `package.json`. A separação é
+uma constante local com o nome curto, e o `pkg` sobrevivendo só no `meta`. Cuidado
+ao mexer: dentro dos `map(({ name }) => …)` o `name` é o do **componente**, e
+sombreia — foi por isso que a constante manteve o nome `name` em vez de virar
+`SHORT`, e o import é que ganhou o apelido.
+
 ### Layout dos componentes
 
 ```
@@ -410,7 +432,7 @@ Tem de ser `@import` do entry do app, nunca `nuxt.options.css`: num arquivo que 
 
 Três nomes que não resolvem, todos testados: `#rform` puro (o alias aponta para um diretório e o resolver de CSS do Vite não pega `index.css` dele), `#rform/tailwindcss` pela regra geral `#rform/*` (sem extensão o Vite não acha o arquivo) e qualquer `@source` relativo. O nome sem extensão funciona por um **alias exato** `#rform/tailwindcss` → `<buildDir>/rform/tailwind.css`, registrado **antes** de `#rform/*`, que senão engole o caminho.
 
-Consequência de ter saído do `nuxt.options.css`: um app **sem Tailwind** não recebe mais token nenhum — nada mais os injeta. Para esse caso o `package.json` exporta `rform/style.css`, que dá para pôr no `css:` na mão.
+Consequência de ter saído do `nuxt.options.css`: um app **sem Tailwind** não recebe mais token nenhum — nada mais os injeta. Para esse caso o `package.json` exporta `nuxt-rform/style.css`, que dá para pôr no `css:` na mão.
 
 #### Invariantes do `style.css`
 
@@ -1036,6 +1058,43 @@ tipa o escopo do outro lado — a anotação era eco, não informação.
 
 Quem guarda é `test/unit/templates.test.ts`, sobre os 202 `.vue` do módulo, do
 site, dos quatro playgrounds e da fixture.
+
+## Publicação
+
+`pnpm run release` encadeia `lint → test → prepack → changelogen --release → pnpm publish → git push --follow-tags`. Três coisas nessa cadeia mordem, e nenhuma é óbvia.
+
+### O `changelogen` **rebaixa** o bump enquanto a versão for `0.x`
+
+Está no `bumpVersion` dele, e vale inclusive quando o tipo é passado na mão:
+
+```js
+if (currentVersion.startsWith("0.")) {
+    if (type === "major") { type = "minor"; }
+    else if (type === "minor") { type = "patch"; }
+}
+```
+
+Ou seja, a partir de `0.0.0`: `--release` (que deduz `minor` dos `feat`) e `--release --minor` dão os dois **`0.0.1`**. Para sair em `0.1.0` é `--release --major`.
+
+Depois de `0.1.0` a política de fato passa a ser a normal de pré-1.0, e é a que se quer: `feat` sobe patch, breaking change sobe minor. Só o primeiro release precisa do `--major` escrito.
+
+Os commits deste repo levam gitmoji antes do tipo (`:sparkles: feat: …`) e o changelogen **os parseia certo** — conferido, os `feat` caem em *🚀 Enhancements*. Não há nada a ajustar aí.
+
+### `typeCheck` do oxlint fica desligado, e é o que deixa o `lint` passar
+
+`options.typeCheck` é experimental e despeja os diagnósticos crus do tsc. O tsgolint não tem o plugin do Vue, então **todo import de `.vue` volta como `TS2307: Cannot find module`** — 6 numa árvore limpa, e `pnpm run lint` saindo com 1. Como a primeira coisa que o `release` faz é `pnpm run lint`, a cadeia inteira abortava antes de começar.
+
+Quem manda em tipo aqui é o `test:types`, que roda vue-tsc nos oito alvos e enxerga `.vue`. O `typeAware` continua ligado: as regras que ele habilita não passam por resolução de módulo.
+
+### O `pnpm publish` checa a branch
+
+Ver "`pnpm publish` checa o git", adiante. O `publishBranch: develop` no `pnpm-workspace.yaml` é o que resolve — o default é `main`/`master`, e este repo desenvolve em `develop`.
+
+### O que vai no tarball
+
+`files: ["dist"]`, mais o `README.md`, o `LICENSE` e o `package.json`, que o npm inclui sempre. Medido: 190 arquivos, 71 kB comprimidos, 310 kB descompactados — com o `dist/runtime/style.css` (que o `exports` publica como `nuxt-rform/style.css`) e o `dist/module.json`.
+
+**Cuidado ao conferir depois de um `prepack`:** ele substitui o stub do `dist` pelo build de verdade, e aí os playgrounds param de refletir o `src/`. `pnpm exec nuxt-module-build build --stub` devolve o symlink.
 
 ## Comandos úteis
 

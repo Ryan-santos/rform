@@ -71,5 +71,5 @@
 
     const menu = useState("docs-menu", () => false);
 
-    const repository = "https://github.com/Ryan-santos/rform";
+    const repository = "https://github.com/Ryan-santos/nuxt-rform";
 </script>

@@ -33,15 +33,19 @@ componente declara.
 ## Instalação
 
 ```bash
-pnpm add rform zod
+pnpm add nuxt-rform zod
 ```
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-    modules: ["rform"]
+    modules: ["nuxt-rform"]
 });
 ```
+
+O pacote no npm é **`nuxt-rform`** — o prefixo é a convenção do ecossistema
+Nuxt. Tudo o mais continua curto: a chave de config é `rform`, o alias é
+`#rform` e os seus campos moram em `app/rform/`.
 
 ```css
 /* app/assets/css/main.css */
@@ -51,7 +55,7 @@ export default defineNuxtConfig({
 
 Essa linha traz as duas coisas: o `@source` dos componentes do módulo (o Tailwind
 não varre `node_modules`) e os tokens de tema. Num app sem Tailwind, use
-`css: ["rform/style.css"]`.
+`css: ["nuxt-rform/style.css"]`.
 
 `zod` é peer dependency **obrigatória** — as rules embutidas são schemas zod.
 

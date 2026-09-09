@@ -103,7 +103,7 @@ export default defineNuxtConfig({
             deployConfig: true,
 
             wrangler: {
-                name: "rform"
+                name: "nuxt-rform"
             }
         },
 

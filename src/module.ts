@@ -13,7 +13,7 @@ import {
     addVitePlugin
 } from "@nuxt/kit";
 
-import { name, version } from "../package.json";
+import { name as pkg, version } from "../package.json";
 import { resolveAppMessages, trTemplate, type I18nConfig } from "./appMessages";
 import { collectPresets } from "./presets";
 import { collectComponents, type ComponentFile } from "./scan";
@@ -65,6 +65,14 @@ const hasDefaultExport = (source: string) => /^export default\b/m.test(source);
  */
 const filePath = ({ root, file }: ComponentFile) => join(root, file).split("\\").join("/");
 
+/**
+ * O nome curto do módulo. É ele que dá o `configKey`, o alias `#rform` e as raízes
+ * em `app/rform/` — e é **desacoplado** do nome no npm (`nuxt-rform`) de propósito:
+ * o pacote precisa do prefixo `nuxt-` para descoberta, e o alias público não pode
+ * mudar junto.
+ */
+const name = "rform";
+
 export interface ModuleOptions {
     /**
      * Idioma usado quando o app **não** tem `@nuxtjs/i18n`. Com ele instalado,
@@ -75,7 +83,7 @@ export interface ModuleOptions {
 
 export default defineNuxtModule<ModuleOptions>({
     meta: {
-        name,
+        name: pkg,
         version,
         configKey: name,
         compatibility: {

@@ -1,0 +1,70 @@
+# Changelog
+
+
+## v0.1.0
+
+
+### 🚀 Enhancements
+
+- Adicionando input pin ([a6a3667](https://github.com/Ryan-santos/nuxt-rform/commit/a6a3667))
+- Reformulando o playground ([4b12b9d](https://github.com/Ryan-santos/nuxt-rform/commit/4b12b9d))
+- Permitindo campos do usuário ([075bd2e](https://github.com/Ryan-santos/nuxt-rform/commit/075bd2e))
+- Adicionando tokens --rf-* de tema ([ca71556](https://github.com/Ryan-santos/nuxt-rform/commit/ca71556))
+- Dando classe-gancho a todo campo ([64bdf9e](https://github.com/Ryan-santos/nuxt-rform/commit/64bdf9e))
+- Adicionando tradução com i18n ([34613e5](https://github.com/Ryan-santos/nuxt-rform/commit/34613e5))
+- Os quatro playgrounds, o README e o deploy do docs ([ad41554](https://github.com/Ryan-santos/nuxt-rform/commit/ad41554))
+- Rules e erros externos no RForm ([3453dea](https://github.com/Ryan-santos/nuxt-rform/commit/3453dea))
+- Reformulando o campo de arquivo ([1015337](https://github.com/Ryan-santos/nuxt-rform/commit/1015337))
+- Servindo a documentação por MCP ([f91c525](https://github.com/Ryan-santos/nuxt-rform/commit/f91c525))
+- Condicionando campos pelo schema ([14e02d3](https://github.com/Ryan-santos/nuxt-rform/commit/14e02d3))
+
+### 🔥 Performance
+
+- Otimizando montagem, bundle e arrays ([c884fac](https://github.com/Ryan-santos/nuxt-rform/commit/c884fac))
+
+### 🩹 Fixes
+
+- Corrigindo erros de tipagem ([d12404e](https://github.com/Ryan-santos/nuxt-rform/commit/d12404e))
+- Corrigindo defaults e reset dos forms ([7d76ac8](https://github.com/Ryan-santos/nuxt-rform/commit/7d76ac8))
+- Corrigindo o reposicionamento do dropdown ([a67b77a](https://github.com/Ryan-santos/nuxt-rform/commit/a67b77a))
+- Corrigindo desvios dos campos e utils ([868e8c0](https://github.com/Ryan-santos/nuxt-rform/commit/868e8c0))
+
+### 💅 Refactors
+
+- Centralizando o ui do dropdown ([e7e5481](https://github.com/Ryan-santos/nuxt-rform/commit/e7e5481))
+- Movendo todas as classes ao ui ([479c5a3](https://github.com/Ryan-santos/nuxt-rform/commit/479c5a3))
+- Reduzindo os playgrounds ao mínimo para reproduzir ([4e4fe23](https://github.com/Ryan-santos/nuxt-rform/commit/4e4fe23))
+
+### 📖 Documentation
+
+- Padronizando comentários e JSDoc em pt-BR ([c0416aa](https://github.com/Ryan-santos/nuxt-rform/commit/c0416aa))
+- O conteúdo — 30 páginas em pt e en, e 109 demos ([b64ac32](https://github.com/Ryan-santos/nuxt-rform/commit/b64ac32))
+
+### 📦 Build
+
+- Migrando o npm para o pnpm ([addb121](https://github.com/Ryan-santos/nuxt-rform/commit/addb121))
+
+### 🏡 Chore
+
+- Adicionando skill de commit ([48462f9](https://github.com/Ryan-santos/nuxt-rform/commit/48462f9))
+- Movendo defaults para app/rform ([fdc01a0](https://github.com/Ryan-santos/nuxt-rform/commit/fdc01a0))
+- Reescrevendo o agente de lint ([3060d6c](https://github.com/Ryan-santos/nuxt-rform/commit/3060d6c))
+- Renomeando useField e useUtil ([19fa27e](https://github.com/Ryan-santos/nuxt-rform/commit/19fa27e))
+- Separando docs e playgrounds ([2cdaca0](https://github.com/Ryan-santos/nuxt-rform/commit/2cdaca0))
+- Preparando a publicação no npm ([8cea5d0](https://github.com/Ryan-santos/nuxt-rform/commit/8cea5d0))
+
+### 🎨 Styles
+
+- Formatando o repo com o oxfmt ([5290807](https://github.com/Ryan-santos/nuxt-rform/commit/5290807))
+- Chassi de três colunas no site, e o model ao lado de todo demo ([f50bcc4](https://github.com/Ryan-santos/nuxt-rform/commit/f50bcc4))
+- Repaginando o chassi do docs ([5e45650](https://github.com/Ryan-santos/nuxt-rform/commit/5e45650))
+
+### 🤖 CI
+
+- Atualizando a action do wrangler ([e0c8152](https://github.com/Ryan-santos/nuxt-rform/commit/e0c8152))
+- Publicando pelo GitHub Actions ([dd37dc9](https://github.com/Ryan-santos/nuxt-rform/commit/dd37dc9))
+
+### ❤️ Contributors
+
+- Ryan Santos <ryandossantosfelix22@gmail.com>
+

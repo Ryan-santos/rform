@@ -20,6 +20,12 @@ jobs:
         permissions:
             contents: write
 
+            # O pnpm tenta OIDC (trusted publishing) antes de olhar o token, e sem
+            # isto ele desiste com `ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS`.
+            # Só serve depois que o pacote existe no npm — o trusted publisher se
+            # configura nas settings **do pacote** —, mas a permissão não custa nada.
+            id-token: write
+
         steps:
             - uses: actions/checkout@v4
 

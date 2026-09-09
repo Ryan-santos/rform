@@ -1,14 +1,10 @@
 name: release
 
-# Dispara na tag que o `changelogen --release` cria. Publicar daqui é o que
-# resolve o 2FA: um token de automação do npm não pede OTP, e OTP não existe
-# em terminal não-interativo.
 on:
     push:
         tags: ["v*"]
     workflow_dispatch:
 
-# Sem `cancel-in-progress`: cancelar um publish pela metade é pior que esperar.
 concurrency:
     group: release
     cancel-in-progress: false
@@ -20,11 +16,7 @@ jobs:
         permissions:
             contents: write
 
-            # É por aqui que o publish autentica. O pnpm pede um id token ao GitHub
-            # (audience `npm:registry.npmjs.org`) e o npm o troca pelo direito de
-            # publicar, pelo trusted publisher configurado nas settings do pacote.
-            # Sem esta permissão ele desiste com
-            # `ERR_PNPM_ID_TOKEN_GITHUB_WORKFLOW_INCORRECT_PERMISSIONS` e cai no token.
+            # É por aqui que o publish autentica, pelo trusted publishing do npm.
             id-token: write
 
         steps:
@@ -32,17 +24,14 @@ jobs:
 
             - uses: pnpm/action-setup@v6
 
-            # O `registry-url` é o que escreve o `.npmrc` com o `_authToken` lendo
-            # `NODE_AUTH_TOKEN` — o pnpm expande a variável na hora do publish.
             - uses: actions/setup-node@v7
               with:
-                  node-version: 22
-                  registry-url: https://registry.npmjs.org
+                  node-version-file: package.json
                   cache: pnpm
 
             - run: pnpm install
 
-            # Os `.nuxt` dos seis apps mais a fixture, que o `test:types` exige.
+            # Os `.nuxt` que o `test:types` exige, a fixture inclusive.
             - run: pnpm run dev:prepare
 
             - run: pnpm run lint
@@ -53,18 +42,9 @@ jobs:
 
             - run: pnpm run test
 
-            # `--no-git-checks` é obrigatório: numa tag o checkout é detached, e o
-            # `publishBranch: develop` do pnpm-workspace.yaml reprovaria. O `prepack`
-            # roda sozinho, pelo lifecycle do publish.
-            # Não há mais `NPM_TOKEN`: quem autentica é o OIDC. O `env` fica porque o
-            # `.npmrc` que o setup-node escreve referencia `${NODE_AUTH_TOKEN}`, e
-            # deixá-lo indefinido é mudar uma configuração que já se provou boa.
+            # Numa tag o checkout é detached, e o `publishBranch` reprovaria.
             - run: pnpm publish --no-git-checks
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-            # O changelogen escreve o CHANGELOG.md e para aí ("Followup in the
-            # browser"); esta etapa recorta a seção da versão e cria a release.
             - name: GitHub Release
               if: startsWith(github.ref, 'refs/tags/')
               env:

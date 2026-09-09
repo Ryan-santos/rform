@@ -61,3 +61,40 @@ export const collectComponents = (sources: ComponentSource[]): ComponentFile[] =
 
     return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name));
 };
+
+/** Módulo de fonte ou do `dist`. A declaração de tipo ao lado dele fica fora. */
+const MODULE = /\.[cm]?[tj]s$/;
+const DECLARATION = /\.d\.[cm]?ts$/;
+
+export type ModuleFile = {
+    name: string;
+    /** Caminho relativo ao diretório lido: quem junta caminho é o chamador. */
+    file: string;
+};
+
+/**
+ * Pareia todo módulo de um diretório com o nome sem extensão, para os barrels
+ * `#rform/utils` e `#rform/composables`. No `dist` publicado cada helper aparece
+ * duas vezes — `merger.js` e `merger.d.ts` —, e o nome tem de sair igual nos dois
+ * layouts: um `basename(file, ".ts")` devolvia `"merger.js"` e `"merger.d"`, dois
+ * identificadores que não parseiam no `import` gerado.
+ *
+ * @example collectModules(["merger.js", "merger.d.ts"]) // → [{ name: "merger", file: "merger.js" }]
+ */
+export const collectModules = (files: string[]): ModuleFile[] => {
+    const merged = new Map<string, ModuleFile>();
+
+    for (const file of files) {
+        if (!MODULE.test(file) || DECLARATION.test(file)) {
+            continue;
+        }
+
+        const name = file.replace(MODULE, "");
+
+        if (!merged.has(name)) {
+            merged.set(name, { name, file });
+        }
+    }
+
+    return [...merged.values()];
+};

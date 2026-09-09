@@ -1,5 +1,5 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { basename, dirname, join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 import {
     defineNuxtModule,
@@ -15,8 +15,9 @@ import {
 
 import { name as pkg, version } from "../package.json";
 import { resolveAppMessages, trTemplate, type I18nConfig } from "./appMessages";
+import { langFile } from "./langFile";
 import { collectPresets } from "./presets";
-import { collectComponents, type ComponentFile } from "./scan";
+import { collectComponents, collectModules, type ComponentFile } from "./scan";
 import vitePlugin from "./vite.plugin";
 
 // Ligado, não desestruturado: o kit tipa `resolve` como método, e arrancá-lo do
@@ -34,7 +35,7 @@ const specifier = (path: string) =>
         path
             .split("\\")
             .join("/")
-            .replace(/\.[tj]s$/, "")
+            .replace(/\.[cm]?[tj]s$/, "")
     );
 
 /**
@@ -605,13 +606,7 @@ export default defineNuxtModule<ModuleOptions>({
             for (const root of localeRoots) {
                 const files = await readdir(root).catch(() => [] as string[]);
 
-                for (const file of files) {
-                    if (!/\.[tj]s$/.test(file) || /\.d\.[tj]s$/.test(file)) {
-                        continue;
-                    }
-
-                    const code = file.replace(/\.[tj]s$/, "");
-
+                for (const { name: code, file } of collectModules(files)) {
                     merged.set(code, [...(merged.get(code) ?? []), join(root, file)]);
                 }
             }
@@ -706,9 +701,10 @@ export default defineNuxtModule<ModuleOptions>({
                 )
         });
 
-        // A ponte: um arquivo por locale no `buildDir`, reexportando o pack sob a
+        // A ponte: um arquivo por locale no `buildDir`, entregando o pack sob a
         // chave `rform`. `.ts` e não `.json` porque os packs são módulos, e quem os
-        // avalia é o Vite. Ver "A ponte é hook" no `.claude/CLAUDE.md`.
+        // avalia é o Vite. A forma do arquivo é do `langFile`, e não é negociável —
+        // ver o JSDoc dele. Ver "A ponte é hook" no `.claude/CLAUDE.md`.
         const localeEntries = await localeFiles();
 
         // Os codes que o **app** declarou. Registrar um que ele não declarou não é
@@ -746,19 +742,11 @@ export default defineNuxtModule<ModuleOptions>({
 
         const langDir = join(nuxt.options.buildDir, name, "i18n");
 
-        const langFile = (code: string) =>
-            [
-                "// gerado — o pack deste locale, no namespace `rform`",
-                `import { locales } from "#${name}/locales";`,
-                "",
-                `export default { ${name}: locales[${JSON.stringify(code)}] ?? {} };`
-            ].join("\n");
-
         for (const [code] of localeEntries) {
             addTemplate({
                 filename: `${name}/i18n/${code}.ts`,
                 write: true,
-                getContents: () => langFile(code)
+                getContents: () => langFile(name, code)
             });
         }
 
@@ -768,7 +756,9 @@ export default defineNuxtModule<ModuleOptions>({
         await mkdir(langDir, { recursive: true });
 
         await Promise.all(
-            localeEntries.map(([code]) => writeFile(join(langDir, `${code}.ts`), langFile(code)))
+            localeEntries.map(([code]) =>
+                writeFile(join(langDir, `${code}.ts`), langFile(name, code))
+            )
         );
 
         // Cast: o hook não está no `NuxtHooks`, e augmentar a interface exigiria
@@ -832,10 +822,12 @@ export default defineNuxtModule<ModuleOptions>({
 
         const composablesPath = resolve("runtime/composables");
 
-        const composables = (await readdir(composablesPath)).map((file) => ({
-            name: basename(file, ".ts"),
-            path: resolve(composablesPath, file)
-        }));
+        const composables = collectModules(await readdir(composablesPath)).map(
+            ({ name, file }) => ({
+                name,
+                path: resolve(composablesPath, file)
+            })
+        );
 
         addTemplate({
             filename: `${name}/composables.ts`,
@@ -857,12 +849,12 @@ export default defineNuxtModule<ModuleOptions>({
         const utilsPath = resolve("runtime/utils");
 
         const helpers = await Promise.all(
-            (await readdir(utilsPath)).map(async (file) => {
+            collectModules(await readdir(utilsPath)).map(async ({ name, file }) => {
                 const path = resolve(utilsPath, file);
                 const source = await readFile(path, "utf8");
 
                 return {
-                    name: basename(file, ".ts"),
+                    name,
                     path,
                     // O que a intercalação do template abaixo usa, e não sorte
                     // alfabética.

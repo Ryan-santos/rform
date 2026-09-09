@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { collectComponents, RESERVED } from "../../src/scan";
+import { collectComponents, collectModules, RESERVED } from "../../src/scan";
 
 const builtin = (...files: string[]) => ({
     root: "/module/components/fields",
@@ -75,5 +75,43 @@ describe("collectComponents", () => {
 
     it("nomeia o diretório culpado, para o erro ser acionável", () => {
         expect(() => collectComponents([user("my-field.vue")])).toThrow(/\/app\/rform\/fields/);
+    });
+});
+
+describe("collectModules", () => {
+    it("tira a extensão do nome, no layout do fonte", () => {
+        expect(collectModules(["merger.ts", "useField.ts"])).toEqual([
+            { name: "merger", file: "merger.ts" },
+            { name: "useField", file: "useField.ts" }
+        ]);
+    });
+
+    it("ignora a declaração de tipo que o dist publica ao lado do módulo", () => {
+        expect(collectModules(["merger.js", "merger.d.ts"])).toEqual([
+            { name: "merger", file: "merger.js" }
+        ]);
+    });
+
+    it("dá o mesmo nome nos dois layouts, que é o que o barrel importa", () => {
+        const source = collectModules(["acceptMatch.ts", "tr.ts"]);
+        const dist = collectModules(["acceptMatch.d.ts", "acceptMatch.js", "tr.d.ts", "tr.js"]);
+
+        expect(dist.map((entry) => entry.name)).toEqual(source.map((entry) => entry.name));
+    });
+
+    it('devolve nome que é identificador, e não "merger.js" ou "merger.d"', () => {
+        for (const { name } of collectModules(["merger.js", "merger.d.ts", "vMask.mjs"])) {
+            expect(name).toMatch(/^[A-Za-z_$][A-Za-z0-9_$]*$/);
+        }
+    });
+
+    it("ignora o que não é módulo", () => {
+        expect(collectModules(["merger.ts", "README.md", "style.css", "nested"])).toEqual([
+            { name: "merger", file: "merger.ts" }
+        ]);
+    });
+
+    it("devolve lista vazia quando não há arquivo", () => {
+        expect(collectModules([])).toEqual([]);
     });
 });

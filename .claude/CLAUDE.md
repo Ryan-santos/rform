@@ -801,6 +801,12 @@ O `builder:watch` cobre `/(^|[\\/])i18n[\\/].*\.json$/` e chama `builder:generat
 
 Quem escolhe o motor é o build; quem acha o `$i18n` é o runtime. O `bridge.ts` lê `tryUseNuxtApp()?.$i18n` e o valida **estruturalmente** (`t` função, `locale` com `.value`) — o módulo é opcional, então não há tipo a importar nem dependência a declarar. Sem `$i18n` por perto (um teste unitário, um `mount()` fora de app), a ponte devolve a chave e um `ref("")`. O `standalone.ts` usa `useState("rform-locale")` semeado com a opção `locale` do módulo (default `"pt-BR"`) quando há app Nuxt, e um `ref` local quando não há — cair de volta em vez de lançar é o ponto, porque `tr` também é chamado de dentro de uma `validation`, muito depois de qualquer setup.
 
+**O arquivo de locale é um loader, e o import dele é dinâmico** (`src/langFile.ts`). Não é estilo — é a única forma que atravessa o `@nuxtjs/i18n` inteira. Ele pré-compila **todo** arquivo de locale pelo gerador do intlify, que só sabe lidar com literal estático; diante de um `export default { rform: locales["pt-BR"] ?? {} }` o `scanAst` dele vê `ObjectExpression`, entra no gerador e emite `"rform": rform{` — código inválido. O sintoma é o pior possível: um `Transform failed` apontando para `.nuxt/rform/i18n/pt-BR.ts`, **cujo conteúdo em disco está correto**. Função no `export default` é o que o `allowDynamic` deixa passar intacto.
+
+E o import é `import()` porque o mesmo handler faz `i18nPathSet.add` de todo **import estático** do arquivo de locale: um `import { locales } from "#rform/locales"` arrastaria o barrel de packs para o mesmo pré-compilador, e aquele arquivo é ainda menos literal. `findStaticImports` não vê import dinâmico.
+
+Isso quebrou o `0.1.0` no npm (issue #1), e **não aparecia aqui**: o `localePaths` que o i18n manda pré-compilar passou a filtrar `type === "static"` no 10.6, que é a versão dos playgrounds. No 10.4 — a do app que reportou — a lista é todo arquivo de locale. `test/unit/langFile.test.ts` roda o `generateJavaScript` do `@intlify/bundle-utils` de verdade sobre o arquivo gerado, com os mesmos argumentos que o `VueI18nPlugin` recebe, e exige que ele volte **idêntico** — mais um caso que prova que a forma antiga saía com `rform{`.
+
 **Os arquivos do `langDir` são escritos na mão, com `writeFile`, além do `addTemplate`.** O @nuxtjs/i18n lê cada um com `readFileSync` durante o setup dele (`analyzeResource`, para descobrir se é objeto ou loader), e template do Nuxt só chega ao disco no `builder:generateApp`, bem depois. O sintoma de esquecer isso é um `ENOENT` apontando para um caminho dentro do próprio `buildDir`.
 
 **Quem manda na lista de codes é o app, e a ponte só responde.** O merge do i18n é por code exato — um app com `locales: ["pt"]` não veria um pack registrado só como `pt-BR` — mas registrar `pt` na marra tem preço: o `mergeConfigLocales` do i18n junta *todos* os configs num `Map` por code, então **um code que só a ponte cita entra na lista de locales do app**, e de lá sai no seletor de idioma dele, no `localeCodes` e no prerender.
@@ -846,6 +852,25 @@ sintoma era `This expression is not callable` no primeiro app fora do módulo qu
 tentou usar o que o próprio `.claude/CLAUDE.md` documenta. O default saiu do
 `tr.ts`, e `hasDefaultExport` no `module.ts` é o que impede a classe inteira de
 voltar.
+
+#### O nome sai do `collectModules`, porque o `dist` tem cada helper duas vezes
+
+O `src/runtime/utils/` do repo tem só `.ts`; o `dist` publicado tem `merger.js`
+**e** `merger.d.ts`. Um `basename(file, ".ts")` sobre o `readdir` devolvia
+`"merger.js"` e `"merger.d"` — os dois viravam identificador no barrel gerado, e
+`.nuxt/rform/utils.ts` saía com `import merger.d from …`. Não parseia, e todo campo
+importa dos dois barrels: no `0.1.0` do npm nenhum campo montava (issue #1).
+
+Quem responde pelo nome agora é `collectModules` (`src/scan.ts`) — puro, e o único
+lugar que conhece o layout do `dist`: ignora `.d.ts`, tira a extensão qualquer que
+seja ela, e deduplica por nome. Os dois barrels e o escaneamento de locale passam
+por ele; `collectPresets` mantém o próprio filtro, porque ali o nome vem do caminho
+inteiro. O `specifier()` casa com isso, cobrindo `.mjs`/`.cjs` além de `.js`/`.ts`.
+
+**Nada disso aparece rodando o repo**, e é o ponto: os playgrounds carregam o módulo
+por caminho relativo (`"../../src/module"`), então todo teste vê o layout do fonte. A
+única forma de exercitar o outro é consumir o tarball — `npm pack` num app de
+verdade, que é como os três defeitos do `0.1.0` foram confirmados e verificados.
 
 #### Os specifiers saem sem extensão
 
@@ -1144,6 +1169,17 @@ Removê-los para conferir dá o tamanho do estrago: 3 arquivos de teste caem com
 Isso era bug latente, não invenção do pnpm: um `npm ci` com hoisting diferente quebraria igual.
 
 **`nitropack` não entra na lista.** Ele aparece se você fizer `grep nitropack src/ test/`, mas todas as ocorrências estão em `.nuxt` **gerado** da fixture — o `src/` não importa nitropack em lugar nenhum, e os tsconfig gerados já mapeiam o caminho em `paths`. Grep para achar phantom dep precisa excluir `.nuxt/`, senão você declara dependência que ninguém usa.
+
+### O `@nuxt/icon` é `dependencies`, e tem de ser
+
+Ele está no `moduleDependencies` do `defineNuxtModule`, então o Nuxt o **instala** —
+e resolve o pacote a partir do `nuxt-rform`. Como devDependency isso morria no
+`installModules`, antes do `setup`, com `Could not resolve @nuxt/icon (specified as a
+dependency of nuxt-rform)`: o app não subia nem em `prepare`.
+
+Não aparecia no repo pelo motivo de sempre — aqui o `@nuxt/icon` está instalado como
+devDep, e os playgrounds carregam o módulo por caminho relativo. Terceiro defeito da
+issue #1, e o primeiro na ordem em que mordia.
 
 ### `pnpm publish` checa o git
 

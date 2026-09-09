@@ -1,6 +1,32 @@
 # Changelog
 
 
+## v0.1.1
+
+[compare changes](https://github.com/Ryan-santos/nuxt-rform/compare/v0.1.0...v0.1.1)
+
+### 🩹 Fixes
+
+- Fazendo o pacote publicado buildar num app de verdade ([7023e77](https://github.com/Ryan-santos/nuxt-rform/commit/7023e77))
+
+### 📖 Documentation
+
+- Apontando para rform.ryancode.dev ([bd6643a](https://github.com/Ryan-santos/nuxt-rform/commit/bd6643a))
+- Registrando o publish por OIDC ([590ba4e](https://github.com/Ryan-santos/nuxt-rform/commit/590ba4e))
+
+### 🏡 Chore
+
+- Fixando o node pelo engines do package ([15c6aa7](https://github.com/Ryan-santos/nuxt-rform/commit/15c6aa7))
+
+### 🤖 CI
+
+- Liberando o id-token para o OIDC ([0178e3f](https://github.com/Ryan-santos/nuxt-rform/commit/0178e3f))
+- Subindo as actions para os majors atuais ([15dd3af](https://github.com/Ryan-santos/nuxt-rform/commit/15dd3af))
+
+### ❤️ Contributors
+
+- Ryan Santos <ryandossantosfelix22@gmail.com>
+
 ## v0.1.0
 
 

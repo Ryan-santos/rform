@@ -77,7 +77,10 @@ não varre `node_modules`) e os tokens de tema. Num app sem Tailwind, use
 
 ## Documentação
 
-O site fica em [`docs/`](docs/), em pt-BR e en, com demos vivos:
+**[rform.ryancode.dev](https://rform.ryancode.dev)** — em pt-BR e en, com demos vivos,
+referência de props gerada do fonte e um endpoint MCP em `/mcp` para agentes.
+
+Para rodar o site localmente, o fonte está em [`docs/`](docs/):
 
 ```bash
 pnpm install

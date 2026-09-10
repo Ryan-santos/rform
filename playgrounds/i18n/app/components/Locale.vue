@@ -1,7 +1,9 @@
 <template>
     <RSelect
         :modelValue="locale"
-        :options="options"
+        :options="locales"
+        key-value="code"
+        key-label="name"
         :ui="{
             container: 'w-24',
             group: {
@@ -18,19 +20,15 @@
             }
         }"
         aria-label="Idioma"
-        @update:modelValue="change"
+        @update:modelValue="setLocale"
     />
 </template>
 
 <script setup lang="ts">
     /**
      * Seletor de idioma do playground — é ele que exercita a ponte com o i18n do app.
+     * O `key-value="code"` é o que faz o payload chegar tipado no `setLocale`, sem
+     * cast e sem procurar o item de novo na lista (issue #4).
      */
     const { locale, locales, setLocale } = useI18n();
-
-    const options = computed(() =>
-        Object.fromEntries(locales.value.map((option) => [option.code, option.name ?? option.code]))
-    );
-
-    const change = (value: unknown) => setLocale(value as typeof locale.value);
 </script>

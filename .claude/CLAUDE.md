@@ -1175,6 +1175,72 @@ Generics com conditional types nas `Props` (ex.: `Multiple extends true ? T[] : 
 
 Quando o slot precisa expor um tipo conditional (`Multiple extends true ? Item[] : Item`), criar helpers em script (`fieldSlot()`, `rowSlot(option)`) que retornam `as Selected` — o template não suporta cast `as` direto em expressões.
 
+### O generic do `RSelect` vai até o model
+
+O campo é genérico sobre `options` desde sempre, mas por muito tempo **nada do que
+saía dele usava esse generic**: `modelValue`, `default` e o payload de
+`update:modelValue` eram `unknown`, e o `OptionItem` do slot declarava
+`value: unknown` / `label: unknown` — só o `original` ficava certo. Quem consumia um
+select tipado reconquistava na mão o tipo que o componente já tinha, com cast ou com
+um `find` na própria lista de opções. Era a issue #4.
+
+São **cinco** parâmetros hoje, e todos com default — é isso que mantém o modo schema
+intacto, porque o `Components["Select"]` do `types/components` lê o `Props` **sem
+argumento** e cai em `OptArrayObj`, `false`, `"id"`, `"name"`, `false`, exatamente a
+forma anterior:
+
+```ts
+Props<Opts extends Options, Multiple = false, KeyValue = "id", KeyLabel = "name", ModelFull = false>
+```
+
+A derivação é uma cadeia de aliases pequenos, cada um com um trabalho só:
+
+| alias | responde |
+|---|---|
+| `OptionOf<Opts>` | o item bruto — elemento do array, ou valor do objeto |
+| `OriginalOf<Opts>` | o que o `original` guarda, e o que vai ao model com `modelFull` |
+| `PropOf<U, K>` | `U[K]`, e o próprio `U` quando ele é primitivo |
+| `KeyOf<Opts>` | a chave de um `options` em forma de objeto |
+| `ValueOf` / `LabelOf` | o `value` e o `label` de uma opção |
+| `SelectedOf` / `ModelOf` | a seleção, e ela embrulhada em lista pelo `multiple` |
+
+**`PropOf` cai em `unknown` de propósito.** O `getProperty` faz `path.split(".")`, então
+`keyValue="user.id"` é caminho aninhado e **não** é `keyof` de nada — fechar as duas
+props em `keyof` quebraria esse uso. Elas continuam aceitando qualquer string, e o
+valor só estreita quando a chave é simples; no caminho pontilhado ele volta a ser
+`unknown`, que é o que **todos** os casos eram antes.
+
+**`KeyOf` só estreita a chave quando ela já é string.** Um `options` em forma de objeto
+com chave numérica (`{ 1: "a" }`) sai `string`, porque quem monta o valor é o
+`Object.entries`, e ele devolve a chave já convertida — estreitar para `1` seria
+mentira. Não há `[keyof Opts] extends [string]` aqui: `keyof Opts` não é parâmetro de
+tipo pelado, então não distribui, e o par de colchetes seria decoração (medido, as duas
+formas dão o mesmo nos três casos).
+
+**O `& string` em `keyValue`/`keyLabel` é o mesmo remendo do `Multiple & boolean`.**
+`OptionKey<Opts>` é conditional, e o `inferRuntimeType` do compiler-sfc devolve
+`UNKNOWN` para conditional; numa interseção ele filtra o que não resolveu, então basta
+**um** membro resolvível para o `type: String` voltar. Medido, comparando os props
+compilados antes e depois: sem o `& string`, `keyValue` e `keyLabel` perdem o `type` —
+compila, roda, e some a validação de prop do dev mode, calado.
+
+**E a interseção fica escrita por extenso na prop, nunca atrás de um alias de dois
+parâmetros.** Um `OptionKey<Opts, K> = K & string & (…)` é a forma legível, e foi
+medida: ela estoura `TS2590 "union type too complex"` em `Date`, `Hour`, `Number`,
+`Pin`, `Text` e `Textarea` — em todo campo, não no Select, porque quem paga é o
+`Element` que o `schema.d.ts` instancia. O custo da forma por extenso é uma tabela de
+props do site mostrando `KeyValue & OptionKey<Opts> & string` em vez de `string`.
+
+O runtime é dinâmico e o tipo é o contrato, então há **um** ponto de cast, e é o
+`toItem(value, label, original)` que monta cada opção. Fora dele o `_options` não
+casteia nada.
+
+A guarda é `test/fixtures/basic/components/SelectTypes.vue` — o `vue-tsc` da fixture é
+quem a executa, do lugar de quem consome. Ela cobre os cinco formatos pelo lado
+positivo (passando `selected.value` e o payload do evento a funções tipadas) e três
+casos pelo negativo, com `<!-- @vue-expect-error -->`. Vale conferir que ela morde:
+contra o `Select.vue` anterior são dez erros e duas diretivas ociosas.
+
 ### `addComponentsDir` não aninha
 
 O scanner do Nuxt guarda cada diretório já varrido e pula todo arquivo sob ele (`if (scannedPaths.some(d => filePath.startsWith(d))) continue`). Registrar `components/` deixaria `components/fields` e `components/utils` **vazios**, sem erro nenhum — some a tag, não o build. Por isso `Form` e `Dynamic` entram por `addComponent`, um a um, e só `fields/` e `utils/` (mais as duas raízes do usuário, com `priority: 10`) entram como diretório.
@@ -1821,10 +1887,12 @@ O checker roda contra o **tsconfig do buildDir**, não contra o
 `tsconfig.check.json` da raiz: é ali que `#rform/*` resolve com os tipos gerados
 daquele app.
 
-Ele **aguenta o `RSelect`** — o caso difícil, com `Multiple extends boolean` e o
-`Opts` genérico, que é o mesmo lugar que já rendeu o "Union type too complex". 18
-props, sem erro. Medido antes de escrever as páginas, exatamente para não descobrir
-tarde.
+Ele **aguenta o `RSelect`** — o caso difícil, com cinco parâmetros de tipo e o `Opts`
+genérico, que é o mesmo lugar que já rendeu o "Union type too complex". 18 props, sem
+erro, medido de novo depois que o generic passou a chegar ao model. O que muda na
+tabela é o texto: `modelValue` e `default` saem como
+`ModelOf<Opts, KeyValue, ModelFull, Multiple>` em vez de `unknown`, no mesmo espírito
+do `options: Opts` e do `multiple: Multiple` que a tabela já mostrava.
 
 Os tipos do módulo vêm de interseção, então o checker devolve a lista achatada e
 completa mas **sem descrição** — não há JSDoc por prop pra ele ler. A divisão que

@@ -125,9 +125,56 @@
     export type OptObj<T = unknown> = Record<string | number, T>;
     export type Options = OptArray | OptArrayObj | OptObj;
 
-    export type OptionItem<O = unknown> = {
-        value: unknown;
-        label: unknown;
+    /** O item bruto de `options`: elemento do array, ou valor do objeto. */
+    export type OptionOf<Opts> = Opts extends readonly (infer U)[]
+        ? U
+        : Opts extends Record<string | number, infer V>
+          ? V
+          : unknown;
+
+    /** O que o `original` de uma opção guarda — e, com `modelFull`, o que vai ao model. */
+    export type OriginalOf<Opts> = Opts extends readonly (infer U)[]
+        ? U
+        : Opts extends Record<string | number, infer V>
+          ? Record<string | number, V>
+          : unknown;
+
+    /**
+     * `item[K]`, e o próprio item quando ele é primitivo. Cai em `unknown` quando `K`
+     * não é chave simples — um caminho pontilhado (`user.id`), que o `getProperty`
+     * resolve mas o `keyof` não enxerga.
+     */
+    type PropOf<U, K extends string> = U extends Primitive ? U : K extends keyof U ? U[K] : unknown;
+
+    /**
+     * A chave de um `options` em forma de objeto. `Object.entries` devolve a chave já
+     * convertida, então uma chave numérica sai `string` — estreitar seria mentira.
+     */
+    type KeyOf<Opts> = keyof Opts extends string ? keyof Opts : string;
+
+    /** O `value` de uma opção: `item[keyValue]` no array, a chave no objeto. */
+    export type ValueOf<Opts, KV extends string> = Opts extends readonly (infer U)[]
+        ? PropOf<U, KV>
+        : KeyOf<Opts>;
+
+    /** O `label` de uma opção: `item[keyLabel]`, ou o próprio item quando primitivo. */
+    export type LabelOf<Opts, KL extends string> = Opts extends readonly (infer U)[]
+        ? PropOf<U, KL>
+        : Opts extends Record<string | number, infer V>
+          ? PropOf<V, KL>
+          : unknown;
+
+    /**
+     * As chaves que `keyValue`/`keyLabel` sugerem, sem fechar o campo: o `string & {}`
+     * é o que mantém `keyValue="user.id"` válido, e sem ele o `getProperty` perderia
+     * o caminho pontilhado que ele sabe resolver.
+     */
+    export type OptionKey<Opts> =
+        OptionOf<Opts> extends Primitive ? string : (keyof OptionOf<Opts> & string) | (string & {});
+
+    export type OptionItem<O = unknown, V = unknown, L = unknown> = {
+        value: V;
+        label: L;
         original: O;
     };
 
@@ -190,10 +237,30 @@
         }
     });
 
-    export type Props<Opts extends Options = OptArrayObj, Multiple extends boolean = false> = Omit<
-        Element<typeof defaults, "select">,
-        "modelValue" | "onUpdate:modelValue" | "default"
-    > &
+    /** O que uma seleção guarda: o item inteiro com `modelFull`, senão só o `value`. */
+    export type SelectedOf<
+        Opts,
+        KeyValue extends string,
+        ModelFull extends boolean
+    > = ModelFull extends true ? OriginalOf<Opts> : ValueOf<Opts, KeyValue>;
+
+    /** O model do campo: a seleção, ou a lista delas com `multiple`. */
+    export type ModelOf<
+        Opts,
+        KeyValue extends string,
+        ModelFull extends boolean,
+        Multiple extends boolean
+    > = Multiple extends true
+        ? SelectedOf<Opts, KeyValue, ModelFull>[]
+        : SelectedOf<Opts, KeyValue, ModelFull>;
+
+    export type Props<
+        Opts extends Options = OptArrayObj,
+        Multiple extends boolean = false,
+        KeyValue extends string = "id",
+        KeyLabel extends string = "name",
+        ModelFull extends boolean = false
+    > = Omit<Element<typeof defaults, "select">, "modelValue" | "onUpdate:modelValue" | "default"> &
         Utils["Label"] &
         Utils["Description"] &
         Utils["Dropdown"] &
@@ -202,13 +269,18 @@
         Utils["Placeholder"] &
         TextProp<typeof defaults.text> & {
             options: Opts;
-            keyValue?: string;
-            keyLabel?: string;
-            modelFull?: boolean;
+            // Escrito por extenso, e não num alias de dois parâmetros: com a
+            // interseção atrás de um alias, o `Element` de todo campo estoura o
+            // "union type too complex". O `& string` é o remendo do `Multiple &
+            // boolean` — sem um membro que ele resolva, o compiler-sfc não emite
+            // `type: String`.
+            keyValue?: KeyValue & OptionKey<Opts> & string;
+            keyLabel?: KeyLabel & OptionKey<Opts> & string;
+            modelFull?: ModelFull & boolean;
             multiple?: Multiple & boolean;
-            default?: unknown;
-            modelValue?: unknown;
-            "onUpdate:modelValue"?: ($event: unknown) => void;
+            default?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
+            modelValue?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
+            "onUpdate:modelValue"?: ($event: ModelOf<Opts, KeyValue, ModelFull, Multiple>) => void;
         };
 
     type InternalProps = Omit<
@@ -231,23 +303,31 @@
         };
 </script>
 
-<script setup lang="ts" generic="Opts extends Options, Multiple extends boolean = false">
+<script
+    setup
+    lang="ts"
+    generic="
+        Opts extends Options,
+        Multiple extends boolean = false,
+        KeyValue extends string = 'id',
+        KeyLabel extends string = 'name',
+        ModelFull extends boolean = false
+    "
+>
     // `disabled: undefined` como nos outros campos: `disabled?: boolean` compila com
     // `type: Boolean`, e o boolean casting do Vue apagaria a diferença entre a prop
     // ausente e um `:disabled="false"`. Este era o único campo sem `withDefaults`
     // nenhum — o `required` e o `loading` daqui continuam sendo castados.
-    const _props = withDefaults(defineProps<Props<Opts, Multiple>>(), {
-        disabled: undefined
-    });
+    const _props = withDefaults(
+        defineProps<Props<Opts, Multiple, KeyValue, KeyLabel, ModelFull>>(),
+        {
+            disabled: undefined
+        }
+    );
 
-    type Original =
-        Opts extends Array<infer U>
-            ? U
-            : Opts extends Record<string | number, infer V>
-              ? Record<string | number, V>
-              : unknown;
+    type Original = OriginalOf<Opts>;
 
-    type Item = OptionItem<Original>;
+    type Item = OptionItem<Original, ValueOf<Opts, KeyValue>, LabelOf<Opts, KeyLabel>>;
     type Selected = Multiple extends true ? Item[] : Item;
 
     defineSlots<{
@@ -272,6 +352,14 @@
         }, obj);
     };
 
+    /**
+     * O único ponto onde o dinâmico vira o tipo declarado: `getProperty` devolve
+     * `unknown`, e é o generic de `options` que diz o que ele de fato é.
+     */
+    const toItem = (value: unknown, label: unknown, original: unknown): Item => {
+        return { value, label, original } as Item;
+    };
+
     const _options = computed<Item[]>(() => {
         const { options, keyValue, keyLabel } = props.value;
 
@@ -284,36 +372,20 @@
                 return [];
             }
 
-            if (options.every((item) => typeof item !== "object" || item === null)) {
-                return (options as Primitive[]).map((item) => ({
-                    value: item,
-                    label: item,
-                    original: item as Original
-                }));
+            if (options.every((entry) => typeof entry !== "object" || entry === null)) {
+                return options.map((entry) => toItem(entry, entry, entry));
             }
 
-            return (options as Record<string, unknown>[]).map((item) => ({
-                value: getProperty(item, keyValue),
-                label: getProperty(item, keyLabel),
-                original: item as Original
-            }));
+            return options.map((entry) => {
+                return toItem(getProperty(entry, keyValue), getProperty(entry, keyLabel), entry);
+            });
         }
 
         if (typeof options === "object") {
             return Object.entries(options).map(([key, value]) => {
-                if (isRecord(value)) {
-                    return {
-                        value: key,
-                        label: getProperty(value, keyLabel),
-                        original: { [key]: value } as Original
-                    };
-                }
+                const label = isRecord(value) ? getProperty(value, keyLabel) : value;
 
-                return {
-                    value: key,
-                    label: value,
-                    original: { [key]: value } as Original
-                };
+                return toItem(key, label, { [key]: value });
             });
         }
 

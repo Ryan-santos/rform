@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.2
+
+[compare changes](https://github.com/Ryan-santos/nuxt-rform/compare/v0.1.1...v0.1.2)
+
+### 🩹 Fixes
+
+- Publicando o módulo de tipos que o #rform/types aponta ([d1cb39f](https://github.com/Ryan-santos/nuxt-rform/commit/d1cb39f))
+
+### ❤️ Contributors
+
+- Ryan Santos <ryandossantosfelix22@gmail.com>
+
 ## v0.1.1
 
 [compare changes](https://github.com/Ryan-santos/nuxt-rform/compare/v0.1.0...v0.1.1)

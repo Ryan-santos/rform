@@ -85,7 +85,7 @@
                         :class="props.ui?.group?.trigger"
                         @click="open = !open"
                     >
-                        <Icon name="calendar" />
+                        <Icon :name="icon('calendar')" />
                     </button>
 
                     <div
@@ -121,7 +121,7 @@
     import { useField, useRangeParts } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { vMask } from "#rform/utils";
+    import { vMask, icon } from "#rform/utils";
     import { dateFormat, defineDefaults } from "#rform/utils";
 
     import {

@@ -6,7 +6,7 @@
                 :class="props.ui?.header?.nav"
                 @click="shiftView(-1)"
             >
-                <Icon name="chevron-left" />
+                <Icon :name="icon('chevron-left')" />
             </button>
             <div :class="props.ui?.header?.title?.container">
                 <button
@@ -33,7 +33,7 @@
                 :class="props.ui?.header?.nav"
                 @click="shiftView(1)"
             >
-                <Icon name="chevron-right" />
+                <Icon :name="icon('chevron-right')" />
             </button>
         </div>
 
@@ -163,7 +163,7 @@
 
     import { useUtil } from "#rform/composables";
     import type { DeepPartial, TextProp } from "#rform/types";
-    import { dateFormat, defineDefaults, vMask } from "#rform/utils";
+    import { dateFormat, defineDefaults, vMask, icon } from "#rform/utils";
 
     import { formatTime, pad, parseTime } from "../fields/Hour.vue";
 

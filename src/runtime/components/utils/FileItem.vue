@@ -8,7 +8,7 @@
         />
         <Icon
             v-else
-            :name="broken ? 'alert' : 'file'"
+            :name="icon(broken ? 'alert' : 'file')"
             :class="[props.ui.icon, broken ? props.ui.failed : '']"
         />
 
@@ -62,7 +62,7 @@
                 :class="props.ui.action"
                 @click="emit('retry')"
             >
-                <Icon name="retry" />
+                <Icon :name="icon('retry')" />
             </button>
 
             <button
@@ -73,7 +73,7 @@
                 :class="props.ui.action"
                 @click="emit('cancel')"
             >
-                <Icon name="cancel" />
+                <Icon :name="icon('cancel')" />
             </button>
             <button
                 v-else
@@ -83,7 +83,7 @@
                 :class="props.ui.remove"
                 @click="emit('remove')"
             >
-                <Icon name="remove" />
+                <Icon :name="icon('remove')" />
             </button>
         </div>
     </div>
@@ -103,7 +103,7 @@
 
     import { useUtil } from "#rform/composables";
     import type { DeepPartial, FileEntry, TextTree } from "#rform/types";
-    import { defineDefaults, formatBytes } from "#rform/utils";
+    import { defineDefaults, formatBytes, icon } from "#rform/utils";
 
     const ui = {
         container: `

@@ -30,7 +30,7 @@
                 :accept="accept.list"
             >
                 <Icon
-                    name="upload"
+                    :name="icon('upload')"
                     size="2.5rem"
                     :class="props.ui?.group?.icon"
                 />
@@ -60,7 +60,7 @@
                     :class="props.ui?.group?.loading?.container"
                 >
                     <Icon
-                        name="loading"
+                        :name="icon('loading')"
                         size="2.5rem"
                     />
                     {{ tr(props.text?.loading) }}
@@ -111,7 +111,7 @@
     import { useField } from "#rform/composables";
     import type { Element, FileEntry, TextProp, TrInput, Uploaded, UploadFn } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { acceptMatch, defineDefaults, formatBytes } from "#rform/utils";
+    import { acceptMatch, defineDefaults, formatBytes, icon } from "#rform/utils";
 
     import { injectPendingList } from "../../composables/pendingList";
     import useUploadQueue from "../../composables/useUploadQueue";

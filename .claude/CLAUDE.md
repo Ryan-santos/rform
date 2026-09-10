@@ -448,6 +448,86 @@ Fica literal de propósito: `*-current/*` (já é `currentColor`), `bg-transpare
 
 `src/runtime/style.css` mora em `src/runtime/` porque o `@nuxt/module-builder` só constrói `src/module` e `src/runtime/` — um `.css` na raiz de `src/` nunca chega ao `dist`. O mkdist passa cssnano nele, então o arquivo publicado sai minificado (`@layer` sobrevive).
 
+### Os ícones vivem num namespace (`icon()` + `prefixIcons`)
+
+Os 16 aliases que o módulo registra no `@nuxt/icon` são **prefixados**, e as duas
+metades do prefixo não se conhecem:
+
+| lado | quem escreve | o que sai |
+|---|---|---|
+| build | `prefixIcons` (`module.ts`), sobre o `moduleDependencies` | `"rform:plus": "fa6-solid:plus"` |
+| runtime | `icon()` (`utils/icon.ts`), exportado por `#rform/utils` | `icon("plus")` → `"rform:plus"` |
+
+**Isso já foi um espaço global.** Os aliases eram os nomes curtos (`plus`,
+`calendar`, `loading`…) e o template escrevia `<Icon name="plus" />`. Custava duas
+coisas, as duas caladas: instalar o rform passava a definir 16 aliases **no app**,
+então um `<Icon name="plus" />` em qualquer página dele resolvia para o
+`fa6-solid:plus` que o módulo escolheu; e um app que já tivesse um alias `calendar`
+próprio **vencia** o merge — o `RDate` passava a renderizar o ícone do app, sem
+ninguém pedir. Na direção contrária, quem quisesse trocar só o calendário do rform
+não tinha como sem trocar o `calendar` do próprio app.
+
+#### Trocar um ícone é sobrescrever o alias
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+    modules: ["nuxt-rform"],
+    icon: {
+        aliases: { "rform:calendar": "lucide:calendar" }
+    }
+});
+```
+
+**Um alias sozinho não derruba os outros 15**, e é o `defu` que garante: os
+`defaults` de um `moduleDependencies` chegam ao app por
+`nuxt.options[configKey] = defu(...overrides, nuxt.options[configKey], ...defaults)`
+(no `installModules` do `@nuxt/kit`), que mescla **fundo**, chave a chave. O valor
+do app ganha só na chave que ele escreveu.
+
+Não há prop de ícone a inventar por causa disso: o endereço de um ícone é o alias,
+como o endereço de uma cor é a variável `--rf-*`. Dois campos abrem uma segunda
+porta, e as duas são **por instância**, não globais — o `icon` do `RSwitch`
+(`{ true, false, loading }`, nomes crus do iconify) e o `ui.icon.name` do
+`RUtilsError`, que é `ui` como qualquer outro.
+
+#### O `icon()` é o que dá o conjunto a um campo do usuário
+
+Ele mora em `#rform/utils` justamente para um `.vue` de `app/rform/fields` chamar
+`icon("alert")` e receber o mesmo ícone que o `RUtilsError` usa — **acompanhando o
+override que o app tenha feito**, o que escrever `"fa6-regular:file-lines"` na mão
+não faz. Mesma ideia do `tr` e do `vMask`: o campo do usuário é de primeira classe,
+então alcança o que o embutido alcança.
+
+O prefixo fica **escrito duas vezes**, e não há como não ficar: `utils/icon.ts` é
+runtime e não pode importar o `const name` do `module.ts`, porque só
+`src/runtime/` chega ao `dist` (ver "Só `src/runtime/` chega ao `dist`"). Quem liga
+os dois é o teste.
+
+#### As duas formas de errar são caladas
+
+`useResolvedName` do `@nuxt/icon` faz `options.aliases?.[bare] || bare` e **só
+depois** procura o `:` para partir em coleção. Então:
+
+- **nome fora do registro** — `icon("plux")`, ou o alias removido — cai no ramo do
+  `:` como coleção `rform`, vira uma consulta de `plux` numa coleção que não existe,
+  e renderiza **nada**, com um `[Icon] failed to load icon` no console;
+- **nome cru que sobrou** — um `name="loading"` que não passou pelo `icon()` — não
+  tem `:` nenhum, não casa com coleção nenhuma, e renderiza nada do mesmo jeito.
+
+O segundo é o que de fato aconteceu ao prefixar: `RUtilsLoading`, `RUtilsError`,
+`RUtilsFileItem` e o botão de remover do `RArray` ficaram com o nome curto e
+**perderam o ícone** — quatro pontos, dois deles (o spinner e o ícone de erro) em
+todo campo do módulo. Nenhum teste viu, e a lint não tem como ver.
+
+**`test/unit/icons.test.ts` é a guarda**, três casos: (a) o conjunto de nomes que
+os componentes pedem ao `icon()` é **igual** ao declarado no `prefixIcons`, nos dois
+sentidos — com uma lista de `orphans` para o que é oferecido ao app sem o módulo
+usar (hoje só `image`), e uma terceira asserção que manda tirar da lista o alias que
+passar a ser usado; (b) nenhum `<Icon name="…">` estático sem `:` sobrou num
+componente; (c) o prefixo do `icon()` e o `const name` do `module.ts` são a mesma
+string.
+
 ### RArray: um render effect por linha
 
 O `v-for` do `RArray` itera `length` e passa cada item por um componente de linha, em vez de `v-for="(item, index) in model"`. Aquela forma lia **todo** elemento no render *deste* componente, então uma tecla — uma escrita em `array[i]` — invalidava a lista inteira e repatchava todo irmão: 0,6 ms com 10 linhas e 4,1 ms com 100, crescendo com a lista onde um form plano ficava plano.

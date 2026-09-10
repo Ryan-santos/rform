@@ -74,6 +74,9 @@ const filePath = ({ root, file }: ComponentFile) => join(root, file).split("\\")
  */
 const name = "rform";
 
+const prefixIcons = (obj: Record<string, string>) =>
+    Object.fromEntries(Object.entries(obj).map(([key, value]) => [`${name}:${key}`, value]));
+
 export interface ModuleOptions {
     /**
      * Idioma usado quando o app **não** tem `@nuxtjs/i18n`. Com ele instalado,
@@ -96,7 +99,7 @@ export default defineNuxtModule<ModuleOptions>({
         "@nuxt/icon": {
             defaults: {
                 size: "1em",
-                aliases: {
+                aliases: prefixIcons({
                     minus: "fa6-solid:minus",
                     plus: "fa6-solid:plus",
                     remove: "fa6-solid:xmark",
@@ -113,7 +116,7 @@ export default defineNuxtModule<ModuleOptions>({
                     cancel: "fa6-solid:ban",
                     "chevron-left": "fa6-solid:chevron-left",
                     "chevron-right": "fa6-solid:chevron-right"
-                }
+                })
             }
         }
     },

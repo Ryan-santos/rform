@@ -2,7 +2,7 @@
     <Transition v-bind="props.ui.transition">
         <Icon
             v-if="props.loading"
-            name="loading"
+            :name="icon('loading')"
             size="1.2rem"
             :class="props.ui.icon"
         />
@@ -15,7 +15,7 @@
      */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     const ui = {
         transition: {

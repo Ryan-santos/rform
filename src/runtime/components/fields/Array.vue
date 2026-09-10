@@ -16,7 +16,7 @@
                 <Row :index="index - 1" />
                 <Icon
                     v-if="canRemove"
-                    name="remove"
+                    :name="icon('remove')"
                     size="1.2rem"
                     :class="props.ui?.list?.item?.remove"
                     @click="model?.splice(index - 1, 1)"
@@ -32,7 +32,7 @@
                     :class="props.ui?.list?.add"
                     @click="model?.push(undefined)"
                 >
-                    <Icon name="plus" />
+                    <Icon :name="icon('plus')" />
                     {{ tr(props.text?.button) }}
                 </button>
             </li>
@@ -54,7 +54,7 @@
     import { useField, useProvide } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {

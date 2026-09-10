@@ -16,7 +16,7 @@
                 :class="props.ui?.group?.controls"
                 @click="decrease"
             >
-                <Icon name="minus" />
+                <Icon :name="icon('minus')" />
             </button>
 
             <div :class="props.ui?.group?.field?.container">
@@ -37,7 +37,7 @@
                 :class="props.ui?.group?.controls"
                 @click="increase"
             >
-                <Icon name="plus" />
+                <Icon :name="icon('plus')" />
             </button>
 
             <div
@@ -64,7 +64,7 @@
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {

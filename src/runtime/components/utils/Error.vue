@@ -19,7 +19,7 @@
      */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial, TrInput } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     // Sem sentinela `error: ""`, como no Label: `error` é `TrInput`, e num app com
     // i18n `""` não é nenhum dos membros desse tipo.
@@ -27,7 +27,7 @@
         ui: {
             container: "text-(--rf-color-danger) ml-1 text-sm font-semibold tracking-wide",
             icon: {
-                name: "alert",
+                name: icon("alert"),
                 class: "mr-0.5 -mb-0.5 animate-pulse"
             }
         }

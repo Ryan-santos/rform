@@ -20,14 +20,14 @@
      */
     import { useUtil } from "#rform/composables";
     import type { DeepPartial } from "#rform/types";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     export const defaults = defineDefaults({
         hint: "",
         ui: {
             container: "ml-1 flex flex-row items-center gap-1 text-xs text-current/50",
             icon: {
-                name: "alert",
+                name: icon("alert"),
                 class: "shrink-0"
             }
         }

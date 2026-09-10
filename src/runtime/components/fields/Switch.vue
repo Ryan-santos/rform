@@ -54,7 +54,7 @@
     import { useField } from "#rform/composables";
     import type { Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults } from "#rform/utils";
+    import { defineDefaults, icon } from "#rform/utils";
 
     export const defaults = defineDefaults({
         ui: {
@@ -114,8 +114,8 @@
     const { model, props, tr } = await useField(_props);
 
     const iconDefaults: Required<IconConfig> = {
-        loading: "loading",
-        true: "check",
+        loading: icon("loading"),
+        true: icon("check"),
         false: ""
     };
 

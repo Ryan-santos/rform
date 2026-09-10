@@ -54,7 +54,7 @@
                     </div>
 
                     <Icon
-                        name="select"
+                        :name="icon('select')"
                         :class="props.ui?.group?.icon"
                     />
 
@@ -65,7 +65,7 @@
             <template #content>
                 <div :class="props.ui?.list?.search?.container">
                     <Icon
-                        name="search"
+                        :name="icon('search')"
                         :class="props.ui?.list?.search?.icon"
                     />
                     <input
@@ -117,7 +117,7 @@
     import { useField } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
-    import { defineDefaults, dropdownFit } from "#rform/utils";
+    import { defineDefaults, dropdownFit, icon } from "#rform/utils";
 
     export type Primitive = string | number | boolean;
     export type OptArray = Array<Primitive>;

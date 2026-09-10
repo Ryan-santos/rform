@@ -46,7 +46,7 @@ src/runtime/components/
 
 Todo componente em `components/fields/*.vue` e `components/utils/*.vue` — embutido **ou** do usuário — segue o mesmo formato:
 
-1. **`<script lang="ts">`** — exporta `defaults` (via `defineDefaults`) e o tipo `Props`. Campo monta `Props` a partir de `Element<typeof defaults, "<tipo>">` (de `src/type.d.ts`) interseccionado com `Utils["..."]` (de `#rform/types/components/utils/props`), `TextProp<typeof defaults.text>` quando há texto, e props específicas; util escreve `Props` à mão e referencia `DeepPartial<typeof defaults.ui>` (mais `TextProp<typeof defaults.text>`, no mesmo caso).
+1. **`<script lang="ts">`** — exporta `defaults` (via `defineDefaults`) e o tipo `Props`. Campo monta `Props` a partir de `Element<typeof defaults, "<tipo>">` (de `src/runtime/type.d.ts`) interseccionado com `Utils["..."]` (de `#rform/types/components/utils/props`), `TextProp<typeof defaults.text>` quando há texto, e props específicas; util escreve `Props` à mão e referencia `DeepPartial<typeof defaults.ui>` (mais `TextProp<typeof defaults.text>`, no mesmo caso).
 2. **`<script setup lang="ts">`** — campo chama `await useField(_props)` para obter `{ id, model, props, tr, locale }`; util chama `await useUtil<Props>()`, que devolve `{ props, upper, tr, locale }`. Containers (Form, Array, Object) também chamam `useProvide({ id, model })`.
 3. **`defaults`** sempre define `ui` (classes Tailwind); campo também define `default` (valor inicial do model); quem tem texto define `text`, um **objeto aninhado** de chaves de tradução do módulo — é o marcador que autoriza o auto-prefixo `rform.<fields|utils>.<componente>.`, e a árvore mantém a forma até o template: `text: { button: "add" }` lê `tr(props.text?.button)`, nunca uma prop `buttonText` de nível superior. Outros campos (`keyValue`, `keyLabel` no Select, `max` num Rating) também viram defaults mesclados via `merger` — e ficam fora do `text` justamente porque não são texto. `label` e `placeholder` são as duas exceções: moram no topo por contrato (um app os passa direto), mas ainda são `TrInput` e ainda são prefixados quando o valor vem do próprio `defaults` do componente.
 
@@ -177,7 +177,7 @@ que o Vue já tem. Do arranjo antigo sobrou o que ele consertou de verdade: o
 
 O avaliador é `matchCondition` (`src/runtime/utils/`), puro e testável sem app, e a
 forma é a mesma que o `rule` já aceita — um objeto, um array (AND), `{ or }`,
-`{ not }` ou uma função. Os tipos moram em `src/type.d.ts`, importados como
+`{ not }` ou uma função. Os tipos moram em `src/runtime/type.d.ts`, importados como
 `import type`: `importsRformValue` ignora import de tipo, então o helper não vai
 para o fim da lista de reentrantes do barrel.
 
@@ -653,7 +653,7 @@ export const defaults = defineDefaults({
 });
 ```
 
-`Base` reserva `ui`, `default`, `text` e as duas que moram fora dele por contrato — `label` e `placeholder`, adiante. `text` é `TextSource` (`src/type.d.ts`): um objeto aninhado, `{ [key]: string | TextSource }`, e continua aninhado o caminho inteiro — nada é achatado para o topo. Um template lê `tr(props.text?.button)`, nunca uma prop de nível superior tipo `buttonText`. Sem esse marcador a regra "prefixa toda string do `defaults`" transformaria `Select.keyValue: "id"` em `"rform.fields.select.id"`, e o Select passaria a procurar `option["rform.fields.select.id"]` — quebra calada em três lugares hoje (`Select.keyValue`, `Select.keyLabel`, `Pin.type`) e armadilha permanente para campo de usuário.
+`Base` reserva `ui`, `default`, `text` e as duas que moram fora dele por contrato — `label` e `placeholder`, adiante. `text` é `TextSource` (`src/runtime/type.d.ts`): um objeto aninhado, `{ [key]: string | TextSource }`, e continua aninhado o caminho inteiro — nada é achatado para o topo. Um template lê `tr(props.text?.button)`, nunca uma prop de nível superior tipo `buttonText`. Sem esse marcador a regra "prefixa toda string do `defaults`" transformaria `Select.keyValue: "id"` em `"rform.fields.select.id"`, e o Select passaria a procurar `option["rform.fields.select.id"]` — quebra calada em três lugares hoje (`Select.keyValue`, `Select.keyLabel`, `Pin.type`) e armadilha permanente para campo de usuário.
 
 Quem prefixa é `prefixText` (`utils/prefixText.ts`, puro), chamado por `useField` (com `scope: "fields"`) e por `useUtil` (com `scope: "utils"`) sobre o `defaults` do componente, **antes** do `merger`:
 
@@ -689,7 +689,7 @@ Cuidado com o nome, também: `src/runtime/presets/helpers.ts` exporta uma funç�
 
 A forma óbvia seria `Element<OBJ> & { [K in keyof OBJ["text"]]?: TrInput }`, com `OBJ` vindo de `typeof defaults`. **Não é implementável.** Quem resolve `defineProps<Props>()` é o `@vue/compiler-sfc`, que anda o tipo na mão e não tem checker: indexar `OBJ["text"]` atrás de um `TSTypeQuery` e depois enumerar `keyof` disso para gerar props novas é pedir para resolver um mapped type sobre o índice de um genérico — e falha, derrubando a coleta de props do SFC inteiro (`@vue-ignore` "resolve" compilando, mas pior: os props type-checkam enquanto a declaração de runtime não existe, e um valor passado em `text` cai em `attrs` sem nunca chegar ao componente, calado).
 
-A saída é `TextTree`/`TextProp` (`src/type.d.ts`), um **mapped type**, não condicional, ancorado num lugar fixo:
+A saída é `TextTree`/`TextProp` (`src/runtime/type.d.ts`), um **mapped type**, não condicional, ancorado num lugar fixo:
 
 ```ts
 export type TextTree<T> = {
@@ -709,7 +709,7 @@ O que o compiler-sfc aceita aqui e recusa na forma ingênua é que **a chave `te
 
 `useUtil<Props>(defaults)` (a forma síncrona, com os próprios `defaults` do componente em mão) não pode receber `defaults` tipado como `Props`: em `Props`, `text` é `TextTree<...>` — folhas `TrInput` — mas o objeto que o componente de fato declara em `defaults.text` ainda não passou por `prefixText`, e suas folhas são só o **sufixo** cru (`"start"`, não um `TrInput` resolvido). Num app com `@nuxtjs/i18n`, `TrInput` estreita para `ModuleKey | Literal` — nenhum sufixo solto como `"start"` é `ModuleKey` nem começa com `~~` — então os dois tipos genuinamente divergem, e não é um detalhe de nomenclatura.
 
-`WithTextSource<P>` (`src/type.d.ts`) existe para isso: `Omit<P, "text"> & { text?: TextSource }` — o mesmo `Props`, com `text` trocado de volta para a forma de autoria. `useUtil` aceita `WithTextSource<P>` e não `P` na sobrecarga síncrona precisamente porque `defaults` está do lado de cá do prefixo; quem chama `useUtil<Props>()` sem argumento (a forma assíncrona, que busca os defaults pelo registry) não precisa dele — ali quem já prefixou é o próprio `useUtil`, por dentro.
+`WithTextSource<P>` (`src/runtime/type.d.ts`) existe para isso: `Omit<P, "text"> & { text?: TextSource }` — o mesmo `Props`, com `text` trocado de volta para a forma de autoria. `useUtil` aceita `WithTextSource<P>` e não `P` na sobrecarga síncrona precisamente porque `defaults` está do lado de cá do prefixo; quem chama `useUtil<Props>()` sem argumento (a forma assíncrona, que busca os defaults pelo registry) não precisa dele — ali quem já prefixou é o próprio `useUtil`, por dentro.
 
 #### O plural é o **quarto** argumento
 
@@ -825,7 +825,7 @@ O app com i18n sobrescreve qualquer mensagem no próprio `locales/pt-BR.json`, s
 
 Cuidado com esse parâmetro: `arr.map(parseIncoming)` passaria o **índice** como pattern. Por isso `Calendar.vue` e `Date.vue` embrulham em `incoming(value)` antes de mapear.
 
-### `Element<OBJ, C, D>` (`src/type.d.ts`)
+### `Element<OBJ, C, D>` (`src/runtime/type.d.ts`)
 
 - `C` é o field type ("text", "color", ...) e filtra quais presets o `rule` aceita, via `available` de cada um. Todo **campo** passa o seu: `Element<typeof defaults, "text">`. `Form` não passa `C`, porque não é campo e não tem membro no `FieldType`. Os que sobrescrevem o model (`File`, `Hour`, `Number`) passam `D` como terceiro parâmetro.
 - Tipa `modelValue`/`default` baseado em `OBJ["default"]` via `ConvertNeverToUnknown`.
@@ -870,7 +870,53 @@ inteiro. O `specifier()` casa com isso, cobrindo `.mjs`/`.cjs` além de `.js`/`.
 **Nada disso aparece rodando o repo**, e é o ponto: os playgrounds carregam o módulo
 por caminho relativo (`"../../src/module"`), então todo teste vê o layout do fonte. A
 única forma de exercitar o outro é consumir o tarball — `npm pack` num app de
-verdade, que é como os três defeitos do `0.1.0` foram confirmados e verificados.
+verdade, que é como os três defeitos do `0.1.0` e o do `0.1.1` foram confirmados e
+verificados.
+
+#### Só `src/runtime/` chega ao `dist`
+
+O `@nuxt/module-builder` publica exatamente duas coisas: o bundle rollup de
+`src/module` — que engole `appMessages.ts`, `langFile.ts`, `presets.ts`, `scan.ts` e
+o `vite.plugin.ts` junto — e o mkdist de `src/runtime/`. **Nada mais da raiz de
+`src/` existe no tarball**, e é a mesma regra que já obrigou o `style.css` a descer
+para `src/runtime/`.
+
+O módulo de tipos mora em `src/runtime/type.d.ts` por isso, e não por gosto. Ele
+esteve na raiz de `src/` até a `0.1.1`, onde três consumidores apontavam para um
+arquivo que o app instalado não tinha (issue #2):
+
+| quem | apontava para | no `dist` publicado |
+|---|---|---|
+| o template `types/index.d.ts` | `resolve("type")` | `dist/type` — inexistente |
+| o template `#rform/defaults` | `specifier(resolve("type"))` | idem |
+| `utils/defineDefaults.ts`, `defineFieldDefaults.ts` | `../../type` | `dist/type.js` — idem |
+
+O mkdist copia um `.d.ts` **cru**: o `jsLoader` dele sai cedo no `DECLARATION_RE` e o
+arquivo cai no fallback de cópia, sem passar pelo esbuild (que o esvaziaria, já que é
+só tipo). Então `src/runtime/type.d.ts` chega ao `dist` byte a byte.
+
+**Os dois primeiros modos de falha são calados, e o terceiro não.** `import type` é
+apagado pelo esbuild antes de resolver, então o `defaults.ts` do usuário e os `.d.ts`
+do próprio `dist` seguem funcionando com o caminho quebrado — só o `tsc` os lê, e um
+app sem `typecheck` nunca percebe. Quem não escapa é um `.vue`: o
+`@vue/compiler-sfc` precisa **resolver** o tipo para gerar as props em runtime a
+partir do `defineProps<Props>()`, e aí o build morre com `Failed to resolve import
+source`. É por isso que o defeito só apareceu quando alguém escreveu o primeiro campo
+próprio em `app/rform/fields`.
+
+A guarda é `test/unit/dist.test.ts`, e ela cobre a regra, não o caso: todo
+`resolve("…")` literal do `module.ts` tem de apontar para dentro de `runtime/` **e**
+existir em disco, e nenhum import relativo de `src/runtime/**` pode escapar de
+`src/runtime/`. Roda na suíte normal, sem rede e sem build.
+
+**Ela não substitui consumir o tarball**, e a diferença importa: a guarda prova que os
+caminhos são publicáveis, não que o pacote monta. O defeito do `merger.d` acima, por
+exemplo, passa por ela intacto — quem o pega é `npm pack` num app de verdade.
+
+Ao montar esse app à mão, pine o `typescript` em `~5.9.3`: a `7.x` é o port nativo e
+não expõe `ts.sys`, de que o `resolveFS` do `@vue/compiler-sfc` depende. O erro de lá
+é `No fs option provided to compileScript in non-Node environment`, que não diz nada
+sobre versão de TypeScript.
 
 #### Os specifiers saem sem extensão
 

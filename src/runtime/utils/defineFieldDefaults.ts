@@ -1,6 +1,6 @@
 import type Components from "#rform/types/components";
 
-import type { DeepPartial } from "../../type";
+import type { DeepPartial } from "../type";
 
 /**
  * Um util contribui apresentação, não conteúdo — daí a entrada dele ficar restrita

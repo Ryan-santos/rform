@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import matchCondition from "../../src/runtime/utils/matchCondition";
-import type { Condition } from "../../src/type";
+import type { Condition } from "../../src/runtime/type";
 
 const form = {
     tipo: "json",

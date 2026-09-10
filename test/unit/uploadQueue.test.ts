@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
 import useUploadQueue from "../../src/runtime/composables/useUploadQueue";
-import type { Uploaded, UploadContext } from "../../src/type";
+import type { Uploaded, UploadContext } from "../../src/runtime/type";
 
 const file = (name = "foto.png") => ({ name, size: 10, type: "image/png" }) as File;
 

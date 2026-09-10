@@ -247,7 +247,7 @@ export default defineNuxtModule<ModuleOptions>({
         addTemplate({
             filename: `${name}/types/index.d.ts`,
             write: true,
-            getContents: () => `export * from "${resolve("type")}"`
+            getContents: () => `export * from "${resolve("runtime/type")}"`
         });
 
         /**
@@ -448,7 +448,7 @@ export default defineNuxtModule<ModuleOptions>({
                 return [
                     "// gerado — os overrides do app sobre o defaults de cada componente",
                     `import type Components from "#${name}/types/components";`,
-                    `import type { DeepPartial } from ${specifier(resolve("type"))};`,
+                    `import type { DeepPartial } from ${specifier(resolve("runtime/type"))};`,
                     "",
                     file ? `import defaults from ${specifier(file)};` : "const defaults = {};",
                     "",

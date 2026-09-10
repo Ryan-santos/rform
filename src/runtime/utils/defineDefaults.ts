@@ -1,4 +1,4 @@
-import type { Base } from "../../type";
+import type { Base } from "../type";
 
 /**
  * Identidade tipada: prende o `defaults` de um componente na forma de `Base`

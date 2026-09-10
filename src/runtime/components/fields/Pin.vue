@@ -8,6 +8,7 @@
                 :key="index"
             >
                 <input
+                    :autocomplete="index === 0 ? props.autocomplete : undefined"
                     :disabled="props.disabled"
                     :ref="(el) => setBox(index, el)"
                     :type="props.secret ? 'password' : 'text'"
@@ -45,7 +46,7 @@
     import { computed, onMounted, ref, watch } from "vue";
 
     import { useField } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Autocomplete, Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults } from "#rform/utils";
 
@@ -65,6 +66,7 @@
     });
 
     export type Props = Element<typeof defaults, "pin"> &
+        Autocomplete &
         Utils["Label"] &
         Utils["Description"] &
         Utils["Error"] &
@@ -139,11 +141,31 @@
         commit(next.join(""));
     };
 
+    // Escreve uma sequência a partir de `index`, empurrando o que vier depois.
+    const fill = (index: number, value: string) => {
+        const start = Math.min(index, chars.value.length);
+
+        commit(chars.value.slice(0, start).join("") + value);
+        focus(start + value.length);
+    };
+
     const onInput = (index: number, event: Event) => {
         const el = event.target as HTMLInputElement;
-        const char = clean(el.value.slice(-1));
+        const raw = clean(el.value);
+        const current = chars.value[index] ?? "";
 
-        el.value = char || (chars.value[index] ?? "");
+        // O autofill de `one-time-code` entrega o código inteiro num `input`, nunca
+        // num `paste`. Digitar numa célula dá exatamente um caractere a mais do que
+        // ela já tem; qualquer coisa acima disso é preenchimento e se espalha.
+        if (raw.length > 1 && raw.length !== current.length + 1) {
+            el.value = current;
+            fill(index, raw);
+            return;
+        }
+
+        const char = raw.slice(-1);
+
+        el.value = char || current;
 
         if (!char) {
             return;
@@ -192,10 +214,7 @@
             return;
         }
 
-        const start = Math.min(index, chars.value.length);
-
-        commit(chars.value.slice(0, start).join("") + pasted);
-        focus(start + pasted.length);
+        fill(index, pasted);
     };
 
     // O valor é sempre denso: focar além do fim volta pra primeira célula vazia,

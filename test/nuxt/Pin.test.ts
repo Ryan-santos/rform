@@ -304,3 +304,34 @@ describe("RPin, conclusão", () => {
         expect(onComplete).toHaveBeenCalledTimes(1);
     });
 });
+/**
+ * O autofill de OTP — o `autocomplete="one-time-code"` da primeira caixa — entrega
+ * o código inteiro num evento `input`, nunca num `paste`. Sem distribuir aqui, o
+ * `slice(-1)` de antes guardava só o último dígito e perdia os outros, calado.
+ */
+describe("RPin, autofill de one-time-code", () => {
+    it("espalha pelas células o código inteiro que chega num input só", async () => {
+        const { boxes, model } = await mountPin();
+
+        await boxes()[0]!.setValue("123456");
+
+        expect(model.value).toBe("123456");
+        expect(boxes().map((box) => box.element.value)).toEqual(["1", "2", "3", "4", "5", "6"]);
+    });
+
+    it("descarta o que não é do charset ao espalhar", async () => {
+        const { boxes, model } = await mountPin({ length: 4 });
+
+        await boxes()[0]!.setValue("12-34");
+
+        expect(model.value).toBe("1234");
+    });
+
+    it("continua tomando só o caractere novo quando se digita numa célula cheia", async () => {
+        const { boxes, model } = await mountPin({ modelValue: "1" });
+
+        await boxes()[0]!.setValue("12");
+
+        expect(model.value).toBe("2");
+    });
+});

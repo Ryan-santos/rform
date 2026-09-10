@@ -15,6 +15,7 @@
                 <textarea
                     v-model="model"
                     v-mask="mask"
+                    :autocomplete="props.autocomplete"
                     :disabled="props.disabled"
                     :name="String(props.name)"
                     :rows="props.rows"
@@ -47,7 +48,7 @@
      * @example <RTextarea name="observacao" :rows="5" />
      */
     import { useField } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Autocomplete, Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import type { Mask } from "#rform/types/presets";
     import { defineDefaults } from "#rform/utils";
@@ -78,6 +79,7 @@
     });
 
     export type Props = Element<typeof defaults, "textarea"> &
+        Autocomplete &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &

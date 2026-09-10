@@ -913,6 +913,76 @@ Cuidado com esse parâmetro: `arr.map(parseIncoming)` passaria o **índice** com
 - **Não** tipa nada a partir de `OBJ["text"]`, e não tem como — ver "O `Element` não deriva os props de texto", acima. Campo com texto intersecciona `TextProp<typeof defaults.text>` no próprio `Props`, ao lado da entrada em `defaults.text`; `label` e `placeholder` também ficam de fora do `Element` — quem os usa declara o próprio `TrInput` (é o `placeholder?: TrInput` do `File`).
 - Atenção: se `defaults.default = null`, então `modelValue?: null` — props com valores diferentes precisam sobrescrever via `Omit<Element<...>, "modelValue" | "default"> & { modelValue?: unknown; default?: unknown }`.
 
+### A prop `autocomplete`
+
+É **prop**, e não atributo de fallthrough. Todo campo tem um `<div>` na raiz e
+nenhum declara `inheritAttrs: false`, então um `<RText autocomplete="username" />`
+pousava no wrapper, onde o navegador não o lê — e sem ele um formulário de login
+não conversa com gerenciador de senha nenhum. Era a issue #3.
+
+Ela mora **fora** do `Element`, num fragmento `Autocomplete` que cada campo
+intersecciona no próprio `Props`. É a mesma parede que o `disabled` encontrou: dar
+a prop aos treze no nível do tipo sem os treze honrarem no template é quebra
+calada. E aqui não é escolha — o HTML **não** aceita `autocomplete` num
+`<input type="checkbox">` nem num `<input type="file">`.
+
+| campo | onde pousa |
+|---|---|
+| `Text` | `<input>` |
+| `Textarea` | `<textarea>` |
+| `Number` | `<input type="number">` |
+| `Date` | primeiro `<input>` (os dois ramos do `mode`, não o do range) |
+| `Hour` | primeiro `<input>` |
+| `Pin` | primeiro `<input>`, via `index === 0` |
+
+Fora: `Switch` e `File` pelo tipo do input; `Select`, `Color`, `Calendar`, `Array`
+e `Object` porque não têm controle nativo do valor.
+
+**Nos multi-input é o primeiro, e não todos.** Num `RPin` é onde
+`autocomplete="one-time-code"` tem de estar para o Chrome e o Safari oferecerem o
+código do SMS. Num `RDate`/`RHour` em range, repetir o token no segundo input
+faria o preenchedor casar o par errado.
+
+#### O autofill de OTP chega por `input`, não por `paste`
+
+Pôr `one-time-code` no `RPin` **não bastava**: o `onInput` fazia
+`clean(el.value.slice(-1))`, então o código inteiro que o navegador injeta de uma
+vez virava o **último dígito** na primeira célula e os outros cinco sumiam. O
+`onPaste` sempre distribuiu certo — e nunca era chamado, porque autofill (iOS
+Safari, Chrome Android, gerenciador de senha no desktop) escreve o valor e dispara
+`input`; `paste` só sai de um colar de verdade.
+
+O que separa os dois casos é o comprimento: **digitar numa célula dá exatamente um
+caractere a mais do que ela já tem** (`raw.length === current.length + 1`), porque
+o `:value` a mantém com no máximo um. Qualquer coisa acima disso é preenchimento e
+vai para o `fill`, que é o corpo que o `onPaste` já tinha e agora os dois
+compartilham.
+
+O guarda contra a volta é `test/nuxt/Pin.test.ts`, em "RPin, autofill de
+one-time-code" — inclusive o caso de digitar numa célula cheia, que é o que a
+regra do comprimento não pode quebrar.
+
+Lida de `props.autocomplete` — o merge —, não de `_props`, então
+`defineFieldDefaults({ Text: { autocomplete: "off" } })` padroniza o app inteiro e
+a tag continua vencendo. Não entra no `defaults`, então a regra "não apaga" do
+`merger` não tem o que atrapalhar. O modo schema sai de graça: sendo prop
+declarada, o `rest` do `RDynamic` a entrega como prop em vez de fallthrough, e o
+`Base<P, C>` do `schema.d.ts` a tipa — é uma palavra só, então o `SnakeAliases` a
+descarta e não há apelido a inventar.
+
+#### O `AutoFill` do `lib.dom` não serve
+
+Ele é uma união de **template literal** (`${section}${addressKind}${field}${cred}`),
+e usá-lo no `Props` derruba os seis campos com `TS2590: Expression produces a union
+type that is too complex to represent`, apontando para o `withDefaults`. Medido: os
+seis, mais três arquivos de teste que os montam. É a mesma família do estouro que o
+`Condition` causou no `merger`, e a diferença é que este falha alto.
+
+Por isso `AutocompleteToken` é a lista literal do WHATWG escrita à mão, mais
+`(string & {})` — que preserva o autocompletar do editor **e** aceita as formas
+compostas (`"shipping street-address"`, `"section-a username"`) que a união de
+template literal existia para cobrir.
+
 ## Gotchas
 
 ### `#rform/utils` é o barrel público

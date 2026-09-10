@@ -23,6 +23,7 @@
                 <RUtilsPlaceholder v-if="props.placeholder" />
                 <input
                     v-model="model"
+                    :autocomplete="props.autocomplete"
                     :disabled="props.disabled"
                     :name="String(props.name)"
                     type="number"
@@ -62,7 +63,7 @@
      * @example <RNumber name="quantidade" :step="0.5" :min="0" />
      */
     import { useField } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Autocomplete, Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { defineDefaults, icon } from "#rform/utils";
 
@@ -104,6 +105,7 @@
     });
 
     export type Props = Element<typeof defaults, "number", null | number> &
+        Autocomplete &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &

@@ -15,6 +15,7 @@
                 <input
                     v-model="model"
                     v-mask="mask"
+                    :autocomplete="props.autocomplete"
                     :disabled="props.disabled"
                     :name="String(props.name)"
                     type="text"
@@ -47,7 +48,7 @@
      * @example <RText name="cpf" label="CPF" mask="brCpf" />
      */
     import { useField } from "#rform/composables";
-    import type { Element } from "#rform/types";
+    import type { Autocomplete, Element } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import type { Mask } from "#rform/types/presets";
     import { defineDefaults } from "#rform/utils";
@@ -77,6 +78,7 @@
     });
 
     export type Props = Element<typeof defaults, "text"> &
+        Autocomplete &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &

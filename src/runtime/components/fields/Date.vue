@@ -38,6 +38,7 @@
                             <input
                                 v-if="props.mode === 'multiple'"
                                 v-model="typed[0]"
+                                :autocomplete="props.autocomplete"
                                 :disabled="props.disabled"
                                 :name="String(props.name)"
                                 type="text"
@@ -49,6 +50,7 @@
                                 v-else
                                 v-model="typed[0]"
                                 v-mask="mask"
+                                :autocomplete="props.autocomplete"
                                 :disabled="props.disabled"
                                 :name="String(props.name)"
                                 type="text"
@@ -119,7 +121,7 @@
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useField, useRangeParts } from "#rform/composables";
-    import type { Element, TextProp } from "#rform/types";
+    import type { Autocomplete, Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { vMask, icon } from "#rform/utils";
     import { dateFormat, defineDefaults } from "#rform/utils";
@@ -182,6 +184,7 @@
         Element<typeof defaults, "date">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > &
+        Autocomplete &
         Utils["Description"] &
         Utils["Dropdown"] &
         Utils["Error"] &
@@ -201,6 +204,7 @@
         Element<typeof defaults, "date">,
         "modelValue" | "onUpdate:modelValue" | "default"
     > &
+        Autocomplete &
         Utils["Description"] &
         Utils["Dropdown"] &
         Utils["Error"] &

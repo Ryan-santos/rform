@@ -1,0 +1,12 @@
+<template>
+    <RText
+        name="usuario"
+        label="demo.text.usuario"
+        autocomplete="username"
+    />
+    <RText
+        name="senha"
+        label="demo.text.senha"
+        autocomplete="current-password"
+    />
+</template>

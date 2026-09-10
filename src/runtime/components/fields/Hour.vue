@@ -30,6 +30,7 @@
                     <input
                         v-model="typed[0]"
                         v-mask="mask"
+                        :autocomplete="props.autocomplete"
                         :disabled="props.disabled"
                         :name="String(props.name)"
                         type="text"
@@ -86,7 +87,7 @@
     import { computed, ref, useTemplateRef, watch } from "vue";
 
     import { useField, useRangeParts } from "#rform/composables";
-    import type { Element, TextProp } from "#rform/types";
+    import type { Autocomplete, Element, TextProp } from "#rform/types";
     import type Utils from "#rform/types/components/utils/props";
     import { vMask } from "#rform/utils";
     import { defineDefaults } from "#rform/utils";
@@ -165,6 +166,7 @@
     });
 
     export type Props = Element<typeof defaults, "hour", TimeValue> &
+        Autocomplete &
         Utils["Description"] &
         Utils["Error"] &
         Utils["Loading"] &

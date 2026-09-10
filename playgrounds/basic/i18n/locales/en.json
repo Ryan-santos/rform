@@ -23,6 +23,21 @@
         "cidade": "City",
         "socios": "Partners"
     },
+    "autocomplete": {
+        "usuario": "Username",
+        "senha": "Password",
+        "entrar": "Sign in",
+        "novaSenha": "New password",
+        "confirmarSenha": "Confirm password",
+        "codigo": "Verification code",
+        "cidade": "City",
+        "titular": "Name on card",
+        "cartao": "Card number",
+        "mes": "Month",
+        "ano": "Year",
+        "cvv": "CVV",
+        "horario": "Preferred time"
+    },
     "checkout": {
         "aceite": "You must accept the terms.",
         "enviando": "sending…",

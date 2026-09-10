@@ -23,6 +23,21 @@
         "cidade": "Cidade",
         "socios": "Sócios"
     },
+    "autocomplete": {
+        "usuario": "Usuário",
+        "senha": "Senha",
+        "entrar": "Entrar",
+        "novaSenha": "Nova senha",
+        "confirmarSenha": "Confirmar senha",
+        "codigo": "Código de verificação",
+        "cidade": "Cidade",
+        "titular": "Nome no cartão",
+        "cartao": "Número do cartão",
+        "mes": "Mês",
+        "ano": "Ano",
+        "cvv": "CVV",
+        "horario": "Horário preferido"
+    },
     "checkout": {
         "aceite": "É preciso aceitar os termos.",
         "enviando": "enviando…",

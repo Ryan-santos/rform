@@ -109,6 +109,82 @@ export type Element<OBJ extends Base = Base, C = any, D = ConvertNeverToUnknown<
 };
 
 /**
+ * Os tokens de autofill do WHATWG, escritos à mão. O `AutoFill` do `lib.dom` é uma
+ * união de template literal e estoura o `defineProps` com "union type too complex";
+ * a lista literal mais o `(string & {})` dá o mesmo autocompletar e ainda aceita as
+ * formas compostas (`"shipping street-address"`, `"section-a username"`).
+ */
+export type AutocompleteToken =
+    | "off"
+    | "on"
+    | "name"
+    | "honorific-prefix"
+    | "given-name"
+    | "additional-name"
+    | "family-name"
+    | "honorific-suffix"
+    | "nickname"
+    | "username"
+    | "new-password"
+    | "current-password"
+    | "one-time-code"
+    | "organization-title"
+    | "organization"
+    | "street-address"
+    | "address-line1"
+    | "address-line2"
+    | "address-line3"
+    | "address-level4"
+    | "address-level3"
+    | "address-level2"
+    | "address-level1"
+    | "country"
+    | "country-name"
+    | "postal-code"
+    | "cc-name"
+    | "cc-given-name"
+    | "cc-additional-name"
+    | "cc-family-name"
+    | "cc-number"
+    | "cc-exp"
+    | "cc-exp-month"
+    | "cc-exp-year"
+    | "cc-csc"
+    | "cc-type"
+    | "transaction-currency"
+    | "transaction-amount"
+    | "language"
+    | "bday"
+    | "bday-day"
+    | "bday-month"
+    | "bday-year"
+    | "sex"
+    | "tel"
+    | "tel-country-code"
+    | "tel-national"
+    | "tel-area-code"
+    | "tel-local"
+    | "tel-extension"
+    | "impp"
+    | "url"
+    | "photo"
+    | "webauthn"
+    | "email"
+    | (string & {});
+
+/**
+ * A prop `autocomplete`, interseccionada campo a campo e de propósito **fora** do
+ * `Element`: o atributo não vale nos inputs de `Switch` (checkbox) nem de `File`
+ * (file), e dá-lo aos treze no nível do tipo sem os treze honrarem é quebra calada
+ * — a mesma armadilha que o `disabled` já encontrou.
+ *
+ * Ver "A prop `autocomplete`" no `.claude/CLAUDE.md`.
+ */
+export type Autocomplete = {
+    autocomplete?: AutocompleteToken;
+};
+
+/**
  * O que o app empurra para dentro do formulário: erros vindos de fora, na forma
  * que uma API produz. Aninhado, já pontilhado ou os dois misturados — quem
  * achata é o `flattenErrors`.

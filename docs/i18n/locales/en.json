@@ -68,6 +68,8 @@
             "carregando": "Loading",
             "erroManual": "Manual error",
             "erroMensagem": "This CPF is already registered.",
+            "usuario": "Username",
+            "senha": "Password",
             "whatsapp": "WhatsApp",
             "whatsappPlaceholder": "(00) 00000-0000",
             "soAceitaUm": "Only accepts 1",
@@ -182,6 +184,7 @@
             "resgate": "Redeem",
             "preenchaAteOFim": "Fill it to the end",
             "disparou": "onComplete fired at {at} with “{value}”.",
+            "codigoSms": "SMS code",
             "erro": "Expired code, ask for another."
         },
         "array": {

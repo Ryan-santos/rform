@@ -68,6 +68,8 @@
             "carregando": "Carregando",
             "erroManual": "Erro manual",
             "erroMensagem": "Esse CPF já está cadastrado.",
+            "usuario": "Usuário",
+            "senha": "Senha",
             "whatsapp": "WhatsApp",
             "whatsappPlaceholder": "(00) 00000-0000",
             "soAceitaUm": "Só aceita 1",
@@ -182,6 +184,7 @@
             "resgate": "Resgate",
             "preenchaAteOFim": "Preencha até o fim",
             "disparou": "onComplete disparou às {at} com “{value}”.",
+            "codigoSms": "Código do SMS",
             "erro": "Código expirado, peça outro."
         },
         "array": {

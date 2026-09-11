@@ -100,3 +100,62 @@ describe("o que o app instalado alcança mora sob src/runtime", () => {
         expect(targets.filter((id) => !/^runtime[/\\]/.test(id))).toEqual(["type"]);
     });
 });
+
+/**
+ * O `@nuxt/module-builder` lê o tsconfig mais próximo de `src/runtime` e entrega o
+ * `compilerOptions` cru ao mkdist. Sem `paths` ali, todo `#rform/*` fica sem
+ * resolver na emissão de declaração: `Element`, `Utils` e `Mask` viram `any`, e
+ * `Props` — interseção — colapsa em `any` inteiro. O `dist` sai sem prop tipada
+ * nenhuma, e o generic do `RSelect` perde o site de inferência.
+ */
+
+/** Casa um specifier contra um padrão de `paths`, que aceita um `*` só. */
+const covers = (pattern: string, id: string) => {
+    const star = pattern.indexOf("*");
+
+    if (star === -1) {
+        return pattern === id;
+    }
+
+    const head = pattern.slice(0, star);
+    const tail = pattern.slice(star + 1);
+
+    return id.length >= head.length + tail.length && id.startsWith(head) && id.endsWith(tail);
+};
+
+/** Todo `#rform/…` que `src/runtime/**` importa, estático ou dinâmico. */
+const specifiers = async () => {
+    const found = new Set<string>();
+
+    for (const file of await sources(RUNTIME)) {
+        const text = await readFile(file, "utf8");
+
+        for (const [, id] of text.matchAll(/["'](#rform(?:\/[^"']*)?)["']/g)) {
+            found.add(id!);
+        }
+    }
+
+    return [...found].sort();
+};
+
+describe("o build resolve os #rform pelo tsconfig da raiz", () => {
+    it("todo #rform importado por src/runtime tem entrada em paths", async () => {
+        const tsconfig = JSON.parse(await readFile(path.join(ROOT, "tsconfig.json"), "utf8"));
+        const patterns = Object.keys(tsconfig.compilerOptions?.paths ?? {});
+        const ids = await specifiers();
+
+        expect(ids.length).toBeGreaterThan(0);
+        expect(patterns.length).toBeGreaterThan(0);
+
+        const uncovered = ids.filter((id) => !patterns.some((pattern) => covers(pattern, id)));
+
+        expect(uncovered).toEqual([]);
+    });
+
+    it("enxerga um specifier descoberto", () => {
+        const patterns = ["#rform/types"];
+
+        expect(patterns.some((pattern) => covers(pattern, "#rform/utils"))).toBe(false);
+        expect(["#rform/*"].some((pattern) => covers(pattern, "#rform/utils"))).toBe(true);
+    });
+});

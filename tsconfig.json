@@ -1,18 +1,27 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./.nuxt/tsconfig.app.json"
+    "files": [],
+    "compilerOptions": {
+        "paths": {
+            "#rform": ["./.nuxt/rform"],
+            "#rform/*": ["./.nuxt/rform/*"],
+            "#rform/builtin": ["./src/runtime/components"],
+            "#rform/builtin/*": ["./src/runtime/components/*"],
+            "#rform/translate": ["./src/runtime/translate/standalone"]
+        }
     },
-    {
-      "path": "./.nuxt/tsconfig.server.json"
-    },
-    {
-      "path": "./.nuxt/tsconfig.shared.json"
-    },
-    {
-      "path": "./.nuxt/tsconfig.node.json"
-    }
-  ],
-  "exclude": ["dist", "node_modules", "playground"]
+    "references": [
+        {
+            "path": "./.nuxt/tsconfig.app.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.server.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.shared.json"
+        },
+        {
+            "path": "./.nuxt/tsconfig.node.json"
+        }
+    ],
+    "exclude": ["dist", "node_modules", "playground"]
 }

@@ -1068,6 +1068,51 @@ não expõe `ts.sys`, de que o `resolveFS` do `@vue/compiler-sfc` depende. O err
 é `No fs option provided to compileScript in non-Node environment`, que não diz nada
 sobre versão de TypeScript.
 
+#### O `paths` da raiz é do build, não do editor
+
+O `tsconfig.json` da raiz declara `compilerOptions.paths` para os `#rform/*`, e ele
+existe pelo **build**. O `@nuxt/module-builder` acha o tsconfig mais próximo de
+`src/runtime` (tsconfck, subindo) e entrega o `compilerOptions` cru ao mkdist, que o
+passa por `convertCompilerOptionsFromJson(…, process.cwd())` — daí os alvos serem
+relativos à raiz do pacote, que é onde o `prepack` sempre roda. Sem `baseUrl`: ele não
+é preciso, e evita que todo specifier pelado passe a tentar resolver pela raiz.
+
+Sem esse bloco o arquivo é *solution-style* puro (`files: []` + `references`), **sem
+`compilerOptions` nenhum** — e aí `loadTSCompilerOptions` devolve `{}`. Nenhum
+`#rform/*` resolve na emissão de declaração, e o estrago é total e calado:
+
+```
+#rform/types não resolve  →  Element, Utils, Mask viram `any`
+                          →  Props = Element<…> & Utils[…] & … é INTERSEÇÃO
+                          →  any & X = any  →  Props colapsa em `any` inteiro
+                          →  dist sai com DefineComponent<any, …>
+```
+
+Ou seja: **nenhum campo do pacote publicado tem prop tipada**, e no `RSelect` o
+`props` do `__VLS_export` sai como `__VLS_PrettifyLocal<any>` — o generic perde o
+único site de inferência que tinha, `Opts` cai no constraint `Options`, e o slot
+resolve para `OptionItem<Record<string | number, unknown> | Primitive, unknown,
+unknown>`. Foi o que fez a issue #4 parecer não corrigida depois do `3b0e08f`: o
+fonte estava certo, o `dist` é que não tinha tipo nenhum para inferir.
+
+Com o `paths`, o emitido vira `DefineComponent<Props, …>` e
+`__VLS_PrettifyLocal<Props<Opts, Multiple, KeyValue, KeyLabel, ModelFull>>`. A
+**indireção é preservada** — o `.d.ts` mantém o `import type … from "#rform/types"`
+—, então quem resolve `Utils`/`Element` é o `.nuxt` do app consumidor, e um util ou
+campo de usuário continua entrando. Nada do `.nuxt` do módulo é assado no pacote.
+
+Os alvos apontam para `.nuxt/rform/*`, que é **gerado**: `#rform/types/presets` e
+`#rform/types/components/utils/props` são template, não têm equivalente em `src/`.
+Quem os cria é o `nuxt-module-build prepare`, e o CI o roda (`pnpm run dev:prepare`)
+antes do `pnpm publish`. `#rform/translate` é a exceção que precisa de entrada
+exata, porque não existe em `.nuxt/rform/` — ele é alias para um dos dois motores.
+
+A guarda é o segundo `describe` de `test/unit/dist.test.ts`, e cobre a regra: todo
+`#rform/…` que `src/runtime/**` importa — estático **ou** dinâmico, que é como o
+`#rform/presets` entra — tem de ser casado por algum padrão do `paths`. É pura e
+sem build; o que ela não prova é que o `dist` monta, e isso continua sendo `npm pack`
+num app de verdade.
+
 #### Os specifiers saem sem extensão
 
 Os specifiers do `export *` passam por `specifier()` e saem **sem extensão**. Com `.ts` no caminho, o TS precisa de `allowImportingTsExtensions` e um app consumidor normalmente não liga — o sintoma é `TS2614: Module '#rform/utils' has no exported member 'defineRule'`, como se o barrel não exportasse nada nomeado.

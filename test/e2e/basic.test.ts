@@ -21,4 +21,13 @@ describe("e2e SSR: fixture basic", async () => {
         const html = await $fetch<string>("/");
         expect(html).toMatch(/<input[^>]*name="name"/);
     });
+
+    it("renderiza o painel do RSelect dentro do #teleports, e não dentro do campo", async () => {
+        const html = await $fetch<string>("/");
+        const at = html.indexOf('id="teleports"');
+
+        expect(at).toBeGreaterThan(-1);
+        expect(html.slice(0, at)).not.toContain("RUtilsDropdown");
+        expect(html.slice(at)).toContain("RUtilsDropdown");
+    });
 });

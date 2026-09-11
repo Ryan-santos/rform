@@ -62,3 +62,21 @@ describe("painel do dropdown", () => {
         expect(classes).toContain("z-999");
     });
 });
+describe("onde o painel mora", () => {
+    // O stub de Teleport da suíte (test/nuxt/setup.ts) é desligado aqui de propósito:
+    // este é o único caso que precisa ver o painel no lugar em que ele de fato pousa.
+    it("teleporta o painel para #teleports, fora do .RField", async () => {
+        const wrapper = await mountSuspended(RSelect, {
+            props: { options: ["a"] } as never,
+            global: { stubs: { teleport: false } }
+        });
+
+        const panels = document.querySelectorAll("#teleports .RUtilsDropdown");
+
+        expect(panels).toHaveLength(1);
+        expect(panels[0]!.closest(".RField")).toBeNull();
+        expect(wrapper.find(".RUtilsDropdown").exists()).toBe(false);
+
+        wrapper.unmount();
+    });
+});

@@ -1,37 +1,40 @@
 <template>
     <slot :reference="setReference" />
 
-    <Transition
-        :name="props.ui?.transition?.name"
-        :enterActiveClass="props.ui?.transition?.enterActiveClass"
-        :enterFromClass="props.ui?.transition?.enterFromClass"
-        :enterToClass="props.ui?.transition?.enterToClass"
-        :leaveActiveClass="props.ui?.transition?.leaveActiveClass"
-        :leaveFromClass="props.ui?.transition?.leaveFromClass"
-        :leaveToClass="props.ui?.transition?.leaveToClass"
-    >
-        <div
-            v-show="open"
-            ref="floating"
-            v-bind="$attrs"
-            :style="floatingStyles"
-            :class="props.ui?.popover"
-            @click.stop
+    <Teleport to="#teleports">
+        <Transition
+            :name="props.ui?.transition?.name"
+            :enterActiveClass="props.ui?.transition?.enterActiveClass"
+            :enterFromClass="props.ui?.transition?.enterFromClass"
+            :enterToClass="props.ui?.transition?.enterToClass"
+            :leaveActiveClass="props.ui?.transition?.leaveActiveClass"
+            :leaveFromClass="props.ui?.transition?.leaveFromClass"
+            :leaveToClass="props.ui?.transition?.leaveToClass"
         >
-            <slot
-                v-if="everOpened"
-                name="content"
-            />
-        </div>
-    </Transition>
+            <div
+                v-show="open"
+                ref="floating"
+                v-bind="$attrs"
+                :style="floatingStyles"
+                :class="props.ui?.popover"
+                @click.stop
+            >
+                <slot
+                    v-if="everOpened"
+                    name="content"
+                />
+            </div>
+        </Transition>
+    </Teleport>
 </template>
 
 <script lang="ts">
     /**
      * Painel flutuante compartilhado por Select, Date e Color. Posiciona com o
-     * floating-ui e só monta o conteúdo no primeiro `open`.
+     * floating-ui e só monta o conteúdo no primeiro `open`. O painel é teleportado
+     * para `#teleports` — ver "O painel mora em `#teleports`" no `.claude/CLAUDE.md`.
      *
-     * @example <RUtilsDropdown v-model:open="open"><template #trigger>…</template></RUtilsDropdown>
+     * @example <RUtilsDropdown v-model:open="open"><template #default="{ reference }">…</template></RUtilsDropdown>
      */
     import {
         autoUpdate,

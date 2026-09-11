@@ -7,6 +7,11 @@
                 data-testid="name-input"
             />
             <p data-testid="name-value">name={{ displayName(data) }}</p>
+            <RSelect
+                name="color"
+                :options="['red', 'green']"
+                data-testid="color-select"
+            />
         </RForm>
     </div>
 </template>

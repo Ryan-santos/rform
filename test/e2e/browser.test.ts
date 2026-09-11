@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { createPage, setup } from "@nuxt/test-utils/e2e";
+import { createPage, setup, url } from "@nuxt/test-utils/e2e";
 import { describe, expect, it } from "vitest";
 
 const fixture = fileURLToPath(new URL("../fixtures/basic", import.meta.url));
@@ -20,5 +20,39 @@ describe("e2e browser: fixture basic", async () => {
         });
         const text = await page.getByTestId("name-value").textContent();
         expect(text).toContain("Ada");
+    });
+
+    it("hidrata o painel do RSelect no lugar e o abre a partir do campo", async () => {
+        const page = await createPage();
+
+        // Guarda o nó que veio do servidor antes de qualquer script da página rodar:
+        // se a hidratação recriasse o painel, o nó de depois seria outro.
+        await page.addInitScript(() => {
+            new MutationObserver((_, observer) => {
+                const panel = document.querySelector("#teleports .RUtilsDropdown");
+                if (panel) {
+                    (window as Window & { __ssrPanel?: Element }).__ssrPanel = panel;
+                    observer.disconnect();
+                }
+            }).observe(document, { childList: true, subtree: true });
+        });
+        await page.goto(url("/"), { waitUntil: "hydration" });
+
+        const hydrated = await page.evaluate(() => {
+            const panels = document.querySelectorAll("#teleports .RUtilsDropdown");
+            return {
+                count: panels.length,
+                same:
+                    panels[0] !== undefined &&
+                    panels[0] === (window as Window & { __ssrPanel?: Element }).__ssrPanel
+            };
+        });
+        expect(hydrated).toEqual({ count: 1, same: true });
+
+        await page.locator('[data-testid="color-select"] > div').first().click();
+        const options = page.locator("#teleports .RUtilsDropdown li");
+        await options.first().waitFor({ state: "visible" });
+
+        expect(await options.allTextContents()).toEqual(["red", "green"]);
     });
 });

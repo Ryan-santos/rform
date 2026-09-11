@@ -1195,6 +1195,55 @@ A variável é `--width` e não `--rf-width` de propósito: ela é medida por el
 
 As guardas: `test/unit/dropdownMiddleware.test.ts` mede a largura do painel a partir de `style["--width"]` e asserta que `style.width` fica `undefined` (o inline não pode voltar); `test/nuxt/dropdownPopover.test.ts` monta os três campos e confere o `z-999` em todos, o `w-(--width)` só onde há medida, a troca por `w-72`/`w-64` onde não há, e o override por `ui`.
 
+#### O painel mora em `#teleports`
+
+O `<div>` do painel é embrulhado num `<Teleport to="#teleports">`, e a referência
+fica onde sempre ficou. `position: fixed` sozinho não bastava: um ancestral com
+`transform`, `filter` ou `will-change` vira o containing block do `fixed`, e o painel
+passa a se posicionar em relação a ele — um card com transição de entrada basta —, e
+um `overflow: hidden` no mesmo ancestral o corta. Teleportar é a saída de todo
+popover, e o que não muda por causa disso é o que faz ela caber aqui:
+
+- os tokens `--rf-*` moram no `:root`, não no `.RField` — o painel continua com cor e
+  radius. Os **resets** de `.RField` (spinner, autofill) deixam de alcançá-lo, e nada
+  dentro dele precisa: o search do `RSelect` é `type=search`, o calendário é botão;
+- o `handleClick` e o `useFloating` trabalham por `contains` e por ref de DOM, não
+  pela árvore de componentes;
+- a classe-gancho `RUtil RUtilsDropdown` vai no próprio `popover`, então viaja junto;
+- o `has-[:focus]` do `RDate` fica no wrapper da referência, que nunca conteve o
+  painel.
+
+**`#teleports`, e não `body`.** O painel é `v-show`, então **renderiza no servidor**,
+com `display:none`, e o alvo precisa existir no HTML do SSR. O renderer do Nuxt 4
+trata os dois, mas de forma diferente: o conteúdo de `to="body"` sai como
+`bodyPrepend` — **antes** do `#__nuxt` — no modo não-streaming e depois no streaming;
+o de `#teleports` sai sempre dentro da `<div id="teleports">`, no fim do body, que é
+o alvo documentado. O ambiente do `@nuxt/test-utils` cria essa `div` no happy-dom, e
+é o que deixa o teleport real montar em teste.
+
+**Os testes de campo passam por um stub.** O `find` do VTU só anda a árvore sob o
+root do wrapper, então com o Teleport real todo `wrapper.findAll("li")` do
+`Select.test.ts` — e todo `find(".RUtilsDropdown")` — voltava vazio, e os painéis das
+instâncias anteriores se acumulavam no `#teleports` do mesmo arquivo.
+`test/nuxt/setup.ts` (via `setupFiles` do projeto `nuxt`) põe
+`config.global.stubs.teleport = true`, que renderiza o conteúdo no lugar; é o padrão
+que a própria doc do VTU recomenda. Um caso só do `dropdownPopover.test.ts` desliga o
+stub por mount (`global: { stubs: { teleport: false } }`) e asserta o painel em
+`#teleports` e fora do `.RField`.
+
+**O SSR é provado no e2e**, porque nenhum teste de componente o exercita:
+`test/e2e/basic.test.ts` corta o HTML no `id="teleports"` e exige `RUtilsDropdown`
+só depois do corte; `test/e2e/browser.test.ts` guarda o nó vindo do servidor num
+`MutationObserver` de `addInitScript` (roda antes de qualquer script da página) e,
+hidratado, exige que o nó em `#teleports` seja **o mesmo** — e um só. É a prova
+possível num build de produção, onde o Vue não emite aviso de hydration mismatch.
+
+Limites conhecidos, os mesmos de todo popover teleportado: o painel herda `color` e
+`font-size` do `body`, não do container do form; um `<dialog>` nativo em top layer
+continua por cima dele; Tab a partir do search do `RSelect` sai do fluxo da página
+em vez de ir ao próximo campo; e um app que troque `app.teleportAttrs.id` no
+`nuxt.config` perde o alvo.
+
 ### `v-mask` é nosso, não o `v-maska`
 
 Os cinco componentes com máscara — `Text`, `Textarea`, `Date`, `Hour` e `Utils/Calendar` — usam `vMask` (`src/runtime/utils/vMask.ts`), não a diretiva do maska. Nenhum lugar do `src/` importa `maska/vue`. Motivo: `maska/vue` faz

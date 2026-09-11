@@ -19,8 +19,9 @@ export type DropdownMiddlewareOptions = {
  * Dimensiona o painel contra o campo: a largura da referência e a altura livre do
  * lado em que o `flip()` parou.
  *
- * A largura sai como custom property, não como `width`: inline ganharia de qualquer
- * classe, e um `ui.Utils.Dropdown.popover` de `w-80` perderia calado.
+ * As duas saem como custom property, não como `width`/`max-height`: inline
+ * ganharia de qualquer classe, e um `ui.Utils.Dropdown.popover` de `w-80` ou de
+ * `[--max-height:30rem]` perderia calado. Quem lê é o `popover` do Dropdown.
  *
  * @example middleware: [dropdownFit()]
  */
@@ -31,7 +32,10 @@ export const dropdownFit = (minHeight: number = DROPDOWN_MIN_HEIGHT): Middleware
                 "--width",
                 `${Math.max(0, rects.reference.width)}px`
             );
-            elements.floating.style.maxHeight = `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`;
+            elements.floating.style.setProperty(
+                "--available-height",
+                `${Math.max(minHeight, availableHeight - VIEWPORT_GAP)}px`
+            );
         }
     });
 

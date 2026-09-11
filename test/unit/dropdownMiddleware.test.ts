@@ -9,16 +9,16 @@ import dropdownMiddleware, { dropdownFit } from "../../src/runtime/utils/dropdow
  *
  * O laço inteiro mora no layout do DOM, que nenhum ambiente de teste daqui tem,
  * então estes rodam o `computePosition` de verdade sobre uma plataforma sintética:
- * viewport fixa como clipping rect, e altura do painel limitada pelo `maxHeight`
- * que o `apply` escreveu.
+ * viewport fixa como clipping rect, e altura do painel limitada pela
+ * `--available-height` que o `apply` escreveu.
  */
 
 const VIEWPORT = { x: 0, y: 0, width: 1000, height: 800 };
 
 /**
- * `--width` só chega no CSS por `setProperty`, então a declaração sintética
- * precisa da mesma porta — e a largura renderizada sai dela, como no browser,
- * onde quem lê a variável é o `w-(--width)` do `ui`.
+ * `--width` e `--available-height` só chegam no CSS por `setProperty`, então a
+ * declaração sintética precisa da mesma porta — e as medidas renderizadas saem
+ * dela, como no browser, onde quem lê as variáveis é o `popover` do `ui`.
  */
 type Style = Record<string, string> & {
     setProperty: (name: string, value: string) => void;
@@ -56,7 +56,7 @@ const platform = {
     }),
     getDimensions: async (panel: Panel) => ({
         width: Math.min(panel.natural.width, parse(panel.style["--width"])),
-        height: Math.min(panel.natural.height, parse(panel.style.maxHeight))
+        height: Math.min(panel.natural.height, parse(panel.style["--available-height"]))
     }),
     getClippingRect: async () => VIEWPORT,
     getOffsetParent: async () => null,
@@ -97,7 +97,11 @@ const open = async (reference: ReturnType<typeof field>, content: number) => {
 
     const { placement } = await place(reference, floating, middleware);
 
-    return { placement, maxHeight: parse(floating.style.maxHeight), style: floating.style };
+    return {
+        placement,
+        available: parse(floating.style["--available-height"]),
+        style: floating.style
+    };
 };
 
 describe("dropdownMiddleware", () => {
@@ -114,18 +118,18 @@ describe("dropdownMiddleware", () => {
     });
 
     it("dá ao painel virado o espaço de cima, e não o mínimo", async () => {
-        const { maxHeight } = await open(field(700), 600);
+        const { available } = await open(field(700), 600);
 
         // 700 menos 5 de offset menos 10 de folga.
-        expect(maxHeight).toBe(685);
+        expect(available).toBe(685);
     });
 
     it("encolhe para o espaço de baixo quando o campo tem algum, sem virar", async () => {
-        const { placement, maxHeight } = await open(field(400), 600);
+        const { placement, available } = await open(field(400), 600);
 
         expect(placement).toBe("bottom-start");
         // 800 menos 450 menos 5 de offset menos 10 de folga.
-        expect(maxHeight).toBe(335);
+        expect(available).toBe(335);
     });
 
     it("entrega a largura da referência como --width, e não como width inline", async () => {
@@ -134,5 +138,14 @@ describe("dropdownMiddleware", () => {
         expect(style["--width"]).toBe("300px");
         // Um `width` inline ganharia de qualquer `w-*` do `ui`, calado.
         expect(style.width).toBeUndefined();
+    });
+
+    it("entrega a altura livre como --available-height, e não como max-height inline", async () => {
+        const { style } = await open(field(100), 600);
+
+        // 800 menos 150 menos 5 de offset menos 10 de folga.
+        expect(style["--available-height"]).toBe("635px");
+        // Um `max-height` inline ganharia do `[--max-height:…]` do `ui`, calado.
+        expect(style.maxHeight).toBeUndefined();
     });
 });

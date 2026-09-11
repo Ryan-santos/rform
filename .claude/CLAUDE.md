@@ -1175,9 +1175,9 @@ Ordem: `size` **depois** do `flip`, que é o que a doc recomenda para o `fallbac
 
 Nada disso aparece em teste de componente: jsdom e happy-dom não têm layout, todo rect é 0. `test/unit/dropdownMiddleware.test.ts` roda o `computePosition` de verdade sobre uma plataforma sintética (viewport fixa como clipping rect, altura do painel = conteúdo limitado pelo `maxHeight` que o `apply` escreveu) e computa **duas** vezes, fechado e aberto, porque o bug só existe no segundo.
 
-#### O painel é do Dropdown: `z-999`, `--width` e um endereço só
+#### O painel é do Dropdown: `z-999`, `--width`, `--available-height` e um endereço só
 
-O `apply` do `dropdownFit` escreve a largura da referência como `--width` no painel, por `setProperty` — custom property atribuída num `CSSStyleDeclaration` vira propriedade JS comum e nunca chega ao CSS. Quem lê é o `w-(--width)` do **default do `RUtilsDropdown`**, ao lado do `z-999` que os três campos repetiam.
+O `apply` do `dropdownFit` escreve a largura da referência como `--width` e a altura livre do lado escolhido como `--available-height` no painel, por `setProperty` — custom property atribuída num `CSSStyleDeclaration` vira propriedade JS comum e nunca chega ao CSS. Quem lê é o **default do `RUtilsDropdown`**, ao lado do `z-999` que os três campos repetiam: `w-(--width)` e `max-h-[min(var(--available-height),var(--max-height,100vh))]`.
 
 O motivo de a largura ser classe e não `width` inline é precedência: inline ganha de qualquer classe, então um `ui: { Utils: { Dropdown: { popover: "w-80" } } }` não tinha como vencer e perdia calado (é o caso do `playgrounds/i18n/app/components/Locale.vue`). Como classe, o override é o `twMerge` de sempre: `w-80` substitui `w-(--width)`, e a medida do `size` deixa de ser lida — o `reset: { rects: true }` continua acontecendo, porque a largura renderizada muda do mesmo jeito.
 
@@ -1185,15 +1185,19 @@ O motivo de a largura ser classe e não `width` inline é precedência: inline g
 
 | campo | `popover` | resultado do `twMerge` |
 |---|---|---|
-| `Select` | `overflow-auto rounded-… border… bg…` | `z-999 w-(--width) overflow-auto …` |
-| `Date` | `w-72` | `z-999 w-72` |
-| `Color` | `flex w-64 flex-col …` | `z-999 flex w-64 flex-col …` |
+| `Select` | `[--max-height:25rem] overflow-auto rounded-… border… bg…` | `z-999 w-(--width) max-h-[min(…)] [--max-height:25rem] overflow-auto …` |
+| `Date` | `w-72` | `z-999 w-72 max-h-[min(…)]` |
+| `Color` | `flex w-64 flex-col …` | `z-999 flex w-64 flex-col … max-h-[min(…)]` |
 
-`Date` e `Color` não passam `dropdownFit`, então não têm `--width` declarado — e `w-(--width)` sem a variável renderiza `width: auto`. Se a largura deles continuasse num `class` do template, as duas classes cairiam no mesmo elemento **sem passar pelo merge**, e quem ganha aí é a ordem da folha de estilo, não a ordem do atributo: o painel abriria com a largura errada, compilando e sem aviso. Foi por isso que o `popover` do `RDate` e o `picker.container` do `RColor` mudaram de endereço.
+`Date` e `Color` não passam `dropdownFit`, então não têm `--width` nem `--available-height` declarados — e `w-(--width)` sem a variável renderiza `width: auto`, enquanto o `min()` com uma variável indefinida é inválido em tempo de computação e cai em `max-height: none`. Se a largura deles continuasse num `class` do template, as duas classes cairiam no mesmo elemento **sem passar pelo merge**, e quem ganha aí é a ordem da folha de estilo, não a ordem do atributo: o painel abriria com a largura errada, compilando e sem aviso. Foi por isso que o `popover` do `RDate` e o `picker.container` do `RColor` mudaram de endereço.
 
-A variável é `--width` e não `--rf-width` de propósito: ela é medida por elemento, não é token de tema, e `test/unit/theme.test.ts` exige que todo `--rf-*` lido num componente esteja declarado no `style.css` — o que um valor inline nunca estará.
+As variáveis são `--width` e `--available-height`, e não `--rf-*`, de propósito: são medidas por elemento, não token de tema, e `test/unit/theme.test.ts` exige que todo `--rf-*` lido num componente esteja declarado no `style.css` — o que um valor inline nunca estará.
 
-As guardas: `test/unit/dropdownMiddleware.test.ts` mede a largura do painel a partir de `style["--width"]` e asserta que `style.width` fica `undefined` (o inline não pode voltar); `test/nuxt/dropdownPopover.test.ts` monta os três campos e confere o `z-999` em todos, o `w-(--width)` só onde há medida, a troca por `w-72`/`w-64` onde não há, e o override por `ui`.
+**A altura tem duas variáveis porque tem dois donos.** `--available-height` é a medida; `--max-height` é o **teto**, e quem o escreve é o `ui`. O `min()` dos dois mora uma vez só, no default do Dropdown, e o `Select` declara o teto de `25rem` (o `max-h-100`) com `[--max-height:25rem]` — uma lista de mil opções não toma a tela inteira, e o painel continua encolhendo quando a viewport tem menos que isso. **Isso já foi `maxHeight` inline**, escrito pelo próprio `apply`: o mesmo problema da largura, e um `max-h-100` no `popover` perdia calado do mesmo jeito.
+
+Trocar o teto é uma arbitrary property, por campo ou pelo `defineFieldDefaults`: `ui: { Utils: { Dropdown: { popover: "[--max-height:30rem]" } } }` — o `twMerge` substitui a mesma propriedade em vez de acumular, então o `25rem` do Select vai embora. Tirar o teto é `[--max-height:100vh]`, que é o fallback do `var()`: `min(livre, viewport)` é só a altura livre. Um `max-h-60` cru também funciona, substituindo o `min()` inteiro — e aí a medida do `size` deixa de ser lida, o mesmo preço que `w-80` paga; num viewport curto o painel passa da borda. Não é o que se recomenda.
+
+As guardas: `test/unit/dropdownMiddleware.test.ts` mede o painel a partir de `style["--width"]` e `style["--available-height"]` e asserta que `style.width` e `style.maxHeight` ficam `undefined` (o inline não pode voltar); `test/nuxt/dropdownPopover.test.ts` monta os três campos e confere o `z-999` e o `min()` em todos, o `w-(--width)` só onde há medida, a troca por `w-72`/`w-64` onde não há, o `[--max-height:25rem]` só no Select, e os dois overrides por `ui` — a largura, e o teto substituindo em vez de acumular.
 
 #### O painel mora em `#teleports`
 

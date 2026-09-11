@@ -167,7 +167,7 @@
             leaveToClass: "opacity-0",
             leaveFromClass: ""
         },
-        popover: "z-999 w-(--width)"
+        popover: "z-999 w-(--width) max-h-[min(var(--available-height),var(--max-height,100vh))]"
     };
 
     export const defaults = defineDefaults({ ui });

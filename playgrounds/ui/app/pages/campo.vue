@@ -85,6 +85,25 @@
                         }
                     }"
                 />
+                <RSelect
+                    name="teto"
+                    label="Teto padrão"
+                    placeholder="25rem, e encolhe à viewport"
+                    :options="muitas"
+                />
+                <RSelect
+                    name="tetoBaixo"
+                    label="Teto de 10rem"
+                    placeholder="[--max-height:10rem] substitui o de 25rem"
+                    :options="muitas"
+                    :ui="{
+                        Utils: {
+                            Dropdown: {
+                                popover: '[--max-height:10rem]'
+                            }
+                        }
+                    }"
+                />
             </RForm>
         </Scenario>
     </div>
@@ -102,6 +121,8 @@
             }
         }
     };
+
+    const muitas = Array.from({ length: 200 }, (_, i) => `Opção ${i + 1}`);
 
     const data = ref<Record<string, unknown>>({});
 </script>

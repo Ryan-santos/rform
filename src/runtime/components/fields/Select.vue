@@ -234,7 +234,7 @@
             },
             Utils: {
                 Dropdown: {
-                    popover: `overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-border) bg-(--rf-color-background-100)`
+                    popover: `[--max-height:25rem] overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-border) bg-(--rf-color-background-100)`
                 }
             }
         },

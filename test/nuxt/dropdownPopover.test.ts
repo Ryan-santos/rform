@@ -13,6 +13,9 @@ import { RColor, RDate, RSelect } from "#components";
 const popover = (wrapper: { find: (s: string) => { classes: () => string[] } }) =>
     wrapper.find(".RUtilsDropdown").classes();
 
+/** O `min()` entre o que o `dropdownFit` mediu e o teto que o `ui` declara. */
+const FIT = "max-h-[min(var(--available-height),var(--max-height,100vh))]";
+
 describe("painel do dropdown", () => {
     it("põe z-999 em todo painel, pelos defaults do próprio Dropdown", async () => {
         for (const [component, props] of [
@@ -60,6 +63,47 @@ describe("painel do dropdown", () => {
         // O resto da aparência do painel sobrevive ao override de largura.
         expect(classes).toContain("overflow-auto");
         expect(classes).toContain("z-999");
+    });
+
+    it("compõe a altura livre com o teto em todo painel, pelos defaults do Dropdown", async () => {
+        for (const [component, props] of [
+            [RSelect, { options: ["a"] }],
+            [RDate, {}],
+            [RColor, {}]
+        ] as const) {
+            const wrapper = await mountSuspended(component, { props: props as never });
+
+            expect(popover(wrapper)).toContain(FIT);
+        }
+    });
+
+    it("declara o teto de 25rem só no Select, que é quem tem lista para crescer", async () => {
+        const select = await mountSuspended(RSelect, { props: { options: ["a"] } as never });
+
+        expect(popover(select)).toContain("[--max-height:25rem]");
+
+        for (const component of [RDate, RColor]) {
+            const wrapper = await mountSuspended(component, { props: {} as never });
+
+            expect(popover(wrapper).some((c) => c.startsWith("[--max-height:"))).toBe(false);
+        }
+    });
+
+    it("troca o teto quando o ui escreve outro, sem tocar no min()", async () => {
+        const wrapper = await mountSuspended(RSelect, {
+            props: {
+                options: ["a"],
+                ui: { Utils: { Dropdown: { popover: "[--max-height:30rem]" } } }
+            } as never
+        });
+
+        const classes = popover(wrapper);
+
+        expect(classes).toContain("[--max-height:30rem]");
+        // A mesma arbitrary property substitui, não acumula.
+        expect(classes).not.toContain("[--max-height:25rem]");
+        expect(classes).toContain(FIT);
+        expect(classes).toContain("overflow-auto");
     });
 });
 describe("onde o painel mora", () => {

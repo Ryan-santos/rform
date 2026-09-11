@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v0.2.0
+
+[compare changes](https://github.com/Ryan-santos/nuxt-rform/compare/v0.1.2...v0.2.0)
+
+### 🚀 Enhancements
+
+- Isolando os ícones num namespace ([d5bc5ef](https://github.com/Ryan-santos/nuxt-rform/commit/d5bc5ef))
+- Expondo o autocomplete nos campos ([54ca16e](https://github.com/Ryan-santos/nuxt-rform/commit/54ca16e))
+- Tornando a busca do RSelect opt-in ([19b60dc](https://github.com/Ryan-santos/nuxt-rform/commit/19b60dc))
+
+### 🩹 Fixes
+
+- Tipando o que sai do RSelect closes #4 ([#4](https://github.com/Ryan-santos/nuxt-rform/issues/4))
+
+### ❤️ Contributors
+
+- Ryan Santos <ryandossantosfelix22@gmail.com>
+
 ## v0.1.2
 
 [compare changes](https://github.com/Ryan-santos/nuxt-rform/compare/v0.1.1...v0.1.2)

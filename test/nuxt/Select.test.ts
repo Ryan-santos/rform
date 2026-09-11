@@ -48,6 +48,34 @@ describe("RSelect", () => {
         expect(emits?.at(-1)?.[0]).toBe("b");
     });
 
+    it("só renderiza a busca quando search é passado", async () => {
+        const semBusca = await mountSuspended(RSelect, {
+            props: { options: ["a", "b"] } as never
+        });
+
+        await open(semBusca);
+        expect(semBusca.findAll("input[type=search]")).toHaveLength(0);
+        expect(semBusca.findAll("li")).toHaveLength(2);
+
+        const comBusca = await mountSuspended(RSelect, {
+            props: { options: ["a", "b"], search: true } as never
+        });
+
+        await open(comBusca);
+        expect(comBusca.findAll("input[type=search]")).toHaveLength(1);
+    });
+
+    it("filtra as opções pelo termo digitado", async () => {
+        const wrapper = await mountSuspended(RSelect, {
+            props: { options: ["alfa", "beta", "gama"], search: true } as never
+        });
+
+        await open(wrapper);
+        await wrapper.find("input[type=search]").setValue("ga");
+
+        expect(wrapper.findAll("li").map((li) => li.text())).toEqual(["gama"]);
+    });
+
     it("guarda as seleções num array quando multiple é true", async () => {
         const wrapper = await mountSuspended(RSelect, {
             props: { options: ["a", "b"], multiple: true, modelValue: [] } as never

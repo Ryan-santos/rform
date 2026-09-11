@@ -1241,6 +1241,35 @@ positivo (passando `selected.value` e o payload do evento a funções tipadas) e
 casos pelo negativo, com `<!-- @vue-expect-error -->`. Vale conferir que ela morde:
 contra o `Select.vue` anterior são dez erros e duas diretivas ociosas.
 
+#### A busca é opt-in, e o ref teve de mudar de nome
+
+`search: false` mora no `defaults`, então o painel abre sem busca e `<RSelect
+search>` a liga. No `defaults` e não fora dele como o `focusError` do `RForm`: a
+regra "não apaga" do `merger` só morde quando o **resultado** já é truthy, e um
+default falsy não é — as duas direções passam.
+
+Ela ainda entra no `withDefaults` como `undefined`, junto do `disabled`: sem isso
+o boolean casting faria a prop ausente chegar como `false`, e um
+`defineFieldDefaults({ Select: { search: true } })` seria apagado por todo campo
+que não escrevesse a prop.
+
+**O limite é o outro sentido**, e é o mesmo do `upload`/`remove` do `RFile`: com o
+app ligando a busca pelo `defineFieldDefaults`, `:search="false"` numa tag não a
+desliga — o `true` é o resultado truthy que a regra protege. Desligar num campo só
+exigiria ler o `_props` cru. `test/nuxt/selectSearch.test.ts` grava as duas
+direções; o caso sem defaults do app fica no `Select.test.ts`, porque o `vi.mock`
+é do arquivo inteiro.
+
+**O termo digitado virou `term`, e não é gosto.** O vue-tsc intersecciona as props
+com os bindings do `setup` para montar o contexto do template, então um
+`const search = ref("")` ao lado de uma prop `search?: boolean` reduz o
+componente inteiro a `never` — `string` e `boolean` são disjuntos. O erro não
+aponta para o ref: sai como `Property 'props' does not exist on type 'never'` na
+**linha 2 do template**, repetido por binding, com a explicação
+`property 'search' has conflicting types in some constituents` no fim de uma
+mensagem longa. Vale para qualquer campo: prop nova não pode ter o nome de um
+binding do `<script setup>`.
+
 ### `addComponentsDir` não aninha
 
 O scanner do Nuxt guarda cada diretório já varrido e pula todo arquivo sob ele (`if (scannedPaths.some(d => filePath.startsWith(d))) continue`). Registrar `components/` deixaria `components/fields` e `components/utils` **vazios**, sem erro nenhum — some a tag, não o build. Por isso `Form` e `Dynamic` entram por `addComponent`, um a um, e só `fields/` e `utils/` (mais as duas raízes do usuário, com `priority: 10`) entram como diretório.

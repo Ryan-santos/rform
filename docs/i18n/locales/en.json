@@ -106,6 +106,8 @@
             "variosObjetos": "Several objects, with a slot",
             "jaVemEscolhido": "Already chosen",
             "uf": "State",
+            "comBusca": "Long list — with search",
+            "semBusca": "Short list — the default, no search",
             "erro": "That option left the catalogue."
         },
         "switch": {

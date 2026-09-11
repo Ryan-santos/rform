@@ -63,13 +63,16 @@
             </template>
 
             <template #content>
-                <div :class="props.ui?.list?.search?.container">
+                <div
+                    v-if="props.search"
+                    :class="props.ui?.list?.search?.container"
+                >
                     <Icon
                         :name="icon('search')"
                         :class="props.ui?.list?.search?.icon"
                     />
                     <input
-                        v-model="search"
+                        v-model="term"
                         :disabled="props.disabled"
                         type="search"
                         :placeholder="tr(props.text?.search)"
@@ -108,9 +111,10 @@
     /**
      * Campo de seleção com dropdown e busca. As `options` podem ser array primitivo,
      * array de objetos (`keyValue` / `keyLabel`) ou objeto `{ chave: rótulo }`;
-     * `multiple` e `modelFull` decidem o que chega ao model.
+     * `multiple` e `modelFull` decidem o que chega ao model, e `search` liga o campo
+     * de busca dentro do painel.
      *
-     * @example <RSelect name="uf" :options="ufs" multiple />
+     * @example <RSelect name="uf" :options="ufs" multiple search />
      */
     import { computed, ref } from "vue";
 
@@ -232,6 +236,7 @@
         default: null,
         keyValue: "id",
         keyLabel: "name",
+        search: false,
         text: {
             search: "search"
         }
@@ -278,6 +283,7 @@
             keyLabel?: KeyLabel & OptionKey<Opts> & string;
             modelFull?: ModelFull & boolean;
             multiple?: Multiple & boolean;
+            search?: boolean;
             default?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
             modelValue?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
             "onUpdate:modelValue"?: ($event: ModelOf<Opts, KeyValue, ModelFull, Multiple>) => void;
@@ -298,6 +304,7 @@
             keyLabel?: string;
             modelFull?: boolean;
             multiple?: boolean;
+            search?: boolean;
             default?: unknown;
             modelValue?: unknown;
         };
@@ -317,11 +324,14 @@
     // `disabled: undefined` como nos outros campos: `disabled?: boolean` compila com
     // `type: Boolean`, e o boolean casting do Vue apagaria a diferença entre a prop
     // ausente e um `:disabled="false"`. Este era o único campo sem `withDefaults`
-    // nenhum — o `required` e o `loading` daqui continuam sendo castados.
+    // nenhum — o `required` e o `loading` daqui continuam sendo castados. O `search`
+    // entra pelo mesmo motivo: sem isso a prop ausente chegaria como `false` e
+    // apagaria um `defineFieldDefaults({ Select: { search: true } })`.
     const _props = withDefaults(
         defineProps<Props<Opts, Multiple, KeyValue, KeyLabel, ModelFull>>(),
         {
-            disabled: undefined
+            disabled: undefined,
+            search: undefined
         }
     );
 
@@ -392,19 +402,22 @@
         return [];
     });
 
-    const search = ref("");
+    // `term`, e não `search`: o vue-tsc intersecciona props e bindings do setup no
+    // contexto do template, e um ref de string com o nome da prop booleana reduz o
+    // componente inteiro a `never`.
+    const term = ref("");
 
     const filteredOptions = computed<Item[]>(() => {
-        const term = search.value.trim().toLowerCase();
+        const query = term.value.trim().toLowerCase();
 
-        if (!term) {
+        if (!query || !props.value.search) {
             return _options.value;
         }
 
         return _options.value.filter(({ label }) => {
             return String(label ?? "")
                 .toLowerCase()
-                .includes(term);
+                .includes(query);
         });
     });
 

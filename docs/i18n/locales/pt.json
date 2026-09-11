@@ -106,6 +106,8 @@
             "variosObjetos": "Vários objetos, com slot",
             "jaVemEscolhido": "Já vem escolhido",
             "uf": "UF",
+            "comBusca": "Lista longa — com search",
+            "semBusca": "Lista curta — o padrão, sem busca",
             "erro": "Essa opção saiu do catálogo."
         },
         "switch": {

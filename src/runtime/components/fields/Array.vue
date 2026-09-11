@@ -72,7 +72,7 @@
                     leaveToClass: "opacity-0"
                 },
                 container: `
-                    relative flex flex-col gap-6 rounded-(--rf-radius-xl) border border-current/10
+                    relative flex flex-col gap-6 rounded-(--rf-radius-xl) border border-(--rf-color-border)
                     p-4
                 `,
                 item: {
@@ -83,7 +83,7 @@
                     `
                 },
                 add: `
-                    w-full rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-contrast)/20 px-2 py-1
+                    w-full rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-border) px-2 py-1
                     text-(--rf-color-contrast)/20 transition-all duration-300
                     hover:border-(--rf-color-primary) hover:text-(--rf-color-primary)
                 `

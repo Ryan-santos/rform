@@ -221,7 +221,7 @@
                         placeholder:text-current/30
                     `
                 },
-                container: "divide-y divide-(--rf-color-contrast)/10",
+                container: "divide-y divide-(--rf-color-border)",
                 option: {
                     container: `
                         flex w-full cursor-pointer flex-row items-center gap-1 p-3
@@ -234,7 +234,7 @@
             },
             Utils: {
                 Dropdown: {
-                    popover: `overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-contrast)/10 bg-(--rf-color-background-100)`
+                    popover: `overflow-auto rounded-(--rf-radius-lg) border border-(--rf-color-border) bg-(--rf-color-background-100)`
                 }
             }
         },

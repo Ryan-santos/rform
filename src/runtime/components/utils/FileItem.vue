@@ -107,7 +107,7 @@
 
     const ui = {
         container: `
-            flex flex-row items-center gap-3 rounded-(--rf-radius-lg) border border-(--rf-color-contrast)/10
+            flex flex-row items-center gap-3 rounded-(--rf-radius-lg) border border-(--rf-color-border)
             bg-(--rf-color-background-100) p-2
         `,
         thumb: "size-10 shrink-0 rounded-(--rf-radius-md) bg-(--rf-color-background) object-cover object-center",

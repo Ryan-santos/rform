@@ -25,7 +25,7 @@
         ui: {
             container: "flex flex-col gap-1",
             disabled: "pointer-events-none opacity-60",
-            group: "flex flex-col gap-6 rounded-(--rf-radius-xl) border border-current/10 p-4"
+            group: "flex flex-col gap-6 rounded-(--rf-radius-xl) border border-(--rf-color-border) p-4"
         },
         default: {}
     });

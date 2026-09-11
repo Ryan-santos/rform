@@ -126,7 +126,7 @@
                 },
                 field: {
                     container: "flex grow flex-row gap-3 p-3",
-                    swatch: "block size-6 rounded-(--rf-radius-md) border border-(--rf-color-contrast)/20 shadow-inner",
+                    swatch: "block size-6 rounded-(--rf-radius-md) border border-(--rf-color-border) shadow-inner",
                     content: "flex grow flex-col",
                     text: "my-auto leading-none font-medium uppercase tracking-wide"
                 }
@@ -146,7 +146,7 @@
                     border-2 border-white shadow
                 `,
                 footer: "flex flex-row items-center gap-2",
-                preview: "size-8 rounded-(--rf-radius-md) border border-(--rf-color-contrast)/20",
+                preview: "size-8 rounded-(--rf-radius-md) border border-(--rf-color-border)",
                 input: `
                     grow rounded-(--rf-radius-md) bg-(--rf-color-background-300) px-2 py-1 font-mono text-sm
                     uppercase outline-none
@@ -159,7 +159,7 @@
                 },
                 Dropdown: {
                     popover: `
-                        flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-contrast)/10
+                        flex w-64 flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-border)
                         bg-(--rf-color-background-100) p-3 shadow-lg
                     `
                 }

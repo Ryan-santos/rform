@@ -62,7 +62,13 @@ const BANNED = [
      */
     /^(?:text|bg)-(?:white|black)$/,
     // A escala de radius também é token; `full`/`none` são estruturais e ficam.
-    /^rounded(?:-[trblxyse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl|4xl)$/
+    /^rounded(?:-[trblxyse]{1,2})?-(?:xs|sm|md|lg|xl|2xl|3xl|4xl)$/,
+    /**
+     * Borda de repouso é `--rf-color-border`, não "contrast a 10%" nem `current`
+     * reescrito em cada componente. Só a de repouso: `border-(--rf-color-primary)` num
+     * `hover:` é estado, e passa.
+     */
+    /^(?:border|divide)(?:-[trblxyse]{1,2})?-(?:current|\(--rf-color-(?:contrast|background(?:-\d{3})?)\))$/
 ];
 
 describe("tokens de tema", () => {

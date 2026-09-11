@@ -50,6 +50,16 @@
             var(--rf-color-contrast) 20%
         );
 
+        /**
+         * Translúcida, e não um degrau opaco: a borda pousa sobre `background` e
+         * sobre `-100`, e um tom igual ao `-100` sumiria no popover do RSelect e na
+         * dropzone do RFile, contra a própria superfície.
+         */
+        --rf-color-border: var(
+            --color-border,
+            color-mix(in oklab, var(--rf-color-contrast) 10%, transparent)
+        );
+
         --rf-color-primary: var(--color-primary, #005bdf);
         --rf-color-danger: var(--color-danger, #fb2c36);
         --rf-color-success: var(--color-success, #00c950);

@@ -80,6 +80,7 @@
             vars: {
                 "--rf-color-primary": "oklch(0.55 0.22 300)",
                 "--rf-color-primary-fg": "#ffffff",
+                "--rf-color-border": "oklch(0.55 0.22 300 / 40%)",
                 "--rf-radius-xl": "1.5rem"
             }
         },

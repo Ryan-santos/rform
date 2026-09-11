@@ -122,7 +122,7 @@
             group: {
                 dropzone: `
                     relative flex cursor-pointer flex-row items-center justify-center gap-3
-                    rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-contrast)/10 bg-(--rf-color-background-100) p-4 text-center
+                    rounded-(--rf-radius-xl) border-2 border-dashed border-(--rf-color-border) bg-(--rf-color-background-100) p-4 text-center
                     transition-all duration-500
                     hover:border-(--rf-color-primary) hover:text-(--rf-color-primary)
                 `,

@@ -63,7 +63,7 @@
             group: {
                 container: "relative z-0 flex cursor-pointer items-center justify-between gap-4",
                 ifPlaceholder:
-                    "rounded-(--rf-radius-xl) border border-(--rf-color-background-100) p-2",
+                    "rounded-(--rf-radius-xl) border border-(--rf-color-border) p-2 pl-4",
                 button: {
                     container: `
                         relative flex w-11 flex-row rounded-full bg-(--rf-color-background-100) p-0.5

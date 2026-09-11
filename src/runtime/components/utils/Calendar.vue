@@ -241,7 +241,7 @@
 
     const ui = {
         container: `
-            flex w-full flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-contrast)/10
+            flex w-full flex-col gap-3 rounded-(--rf-radius-xl) border border-(--rf-color-border)
             bg-(--rf-color-background-100) p-3 shadow-lg
         `,
         header: {
@@ -305,7 +305,7 @@
             `
         },
         time: {
-            container: "flex flex-row gap-3 border-t border-(--rf-color-contrast)/10 pt-3",
+            container: "flex flex-row gap-3 border-t border-(--rf-color-border) pt-3",
             block: "flex grow flex-row items-center justify-between gap-2",
             label: "text-xs opacity-60",
             input: `

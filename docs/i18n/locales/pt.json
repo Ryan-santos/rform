@@ -108,6 +108,7 @@
             "uf": "UF",
             "comBusca": "Lista longa — com search",
             "semBusca": "Lista curta — o padrão, sem busca",
+            "cidade": "Cidade — busque também pela UF",
             "erro": "Essa opção saiu do catálogo."
         },
         "switch": {

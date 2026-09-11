@@ -108,6 +108,7 @@
             "uf": "State",
             "comBusca": "Long list — with search",
             "semBusca": "Short list — the default, no search",
+            "cidade": "City — search by state too",
             "erro": "That option left the catalogue."
         },
         "switch": {

@@ -1,6 +1,6 @@
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 // @vitest-environment nuxt
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { RSelect } from "#components";
 
@@ -74,6 +74,58 @@ describe("RSelect", () => {
         await wrapper.find("input[type=search]").setValue("ga");
 
         expect(wrapper.findAll("li").map((li) => li.text())).toEqual(["gama"]);
+    });
+
+    it("reporta o termo digitado pelo @search", async () => {
+        const onSearch = vi.fn();
+
+        const wrapper = await mountSuspended(RSelect, {
+            props: { options: ["alfa", "beta"], search: true, onSearch } as never
+        });
+
+        await open(wrapper);
+        await wrapper.find("input[type=search]").setValue("be");
+
+        expect(onSearch).toHaveBeenCalledWith("be");
+    });
+
+    // A lista que voltou já é a resposta ao termo. Filtrar de novo esconderia o
+    // item que o servidor casou por um campo que não é a label.
+    it("deixa o filtro com quem escuta o @search", async () => {
+        const wrapper = await mountSuspended(RSelect, {
+            props: {
+                options: ["alfa", "beta", "gama"],
+                search: true,
+                onSearch: () => {}
+            } as never
+        });
+
+        await open(wrapper);
+        await wrapper.find("input[type=search]").setValue("ga");
+
+        expect(wrapper.findAll("li").map((li) => li.text())).toEqual([
+            "alfa",
+            "beta",
+            "gama"
+        ]);
+    });
+
+    // O termo só nasce no input, então sem isso um `@search` sem `search` ao lado
+    // nunca dispararia — calado.
+    it("liga a busca sozinho quando há @search", async () => {
+        const onSearch = vi.fn();
+
+        const wrapper = await mountSuspended(RSelect, {
+            props: { options: ["alfa", "beta"], onSearch } as never
+        });
+
+        await open(wrapper);
+
+        const input = wrapper.find("input[type=search]");
+        expect(input.exists()).toBe(true);
+
+        await input.setValue("al");
+        expect(onSearch).toHaveBeenCalledWith("al");
     });
 
     it("guarda as seleções num array quando multiple é true", async () => {

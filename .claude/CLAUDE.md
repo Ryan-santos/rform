@@ -1315,6 +1315,39 @@ aponta para o ref: sai como `Property 'props' does not exist on type 'never'` na
 mensagem longa. Vale para qualquer campo: prop nova não pode ter o nome de um
 binding do `<script setup>`.
 
+#### `@search`: quem escuta assume o filtro
+
+`onSearch?: (term: string) => void` é a prop-callback do padrão da casa (a mesma
+forma do `onComplete` do `RPin`), e com ela o `filteredOptions` **desiste de
+filtrar**: o campo passa a mostrar exatamente as `options` que recebeu.
+
+Não é atalho de implementação, é o único comportamento correto. O servidor casa o
+termo com o que ele quiser — telefone, documento, UF —, e um segundo filtro pelo
+rótulo esconderia justamente a linha que ele acabou de casar. O modo de falha é
+mudo e parece bug do back: a lista chega com 3 itens e a tela mostra 0.
+
+Ele é lido de `_props`, e não de `props.value`: é um callback do call site, e não
+há sentido em um `defineFieldDefaults` decidir quem responde à busca de um campo.
+O debounce fica **fora** do módulo — quanto esperar depende da rota que responde.
+
+**E ele liga o input de busca sozinho**: o `v-if` do painel lê `searchable`, que
+é `props.search || Boolean(_props.onSearch)`. O termo só nasce naquele input, então
+um `<RSelect @search>` sem `search` ao lado nunca dispararia nada — calado, que é a
+classe de falha que este repo persegue. Não existe caso de quem escuta `@search` e
+não quer a busca, então `search` vira redundante ao lado dele, e o demo do site o
+omite de propósito. Fica num `computed` e não num `_props` solto no template, porque
+nenhum campo lê `_props` fora do script — o `File` e o `Pin` fazem o mesmo.
+
+**O que o `term` não faz é ser limpo.** Escolher ou fechar mantém o termo e a última
+lista; reabrir mostra a resposta anterior sem disparar `@search` de novo. Decisão
+explícita, e a mesma da busca local.
+
+**O que não é do campo**: manter o selecionado dentro de `options`. O rótulo sai
+do casamento com a lista, então uma busca que não devolva o item já escolhido
+deixa o campo em branco com o model intacto. Resolver aqui exigiria o campo
+guardar um cache de rótulos que ele não tem como invalidar; quem tem os dados é
+quem responde ao `@search`. Está escrito como aviso nas duas páginas do site.
+
 ### `addComponentsDir` não aninha
 
 O scanner do Nuxt guarda cada diretório já varrido e pula todo arquivo sob ele (`if (scannedPaths.some(d => filePath.startsWith(d))) continue`). Registrar `components/` deixaria `components/fields` e `components/utils` **vazios**, sem erro nenhum — some a tag, não o build. Por isso `Form` e `Dynamic` entram por `addComponent`, um a um, e só `fields/` e `utils/` (mais as duas raízes do usuário, com `priority: 10`) entram como diretório.

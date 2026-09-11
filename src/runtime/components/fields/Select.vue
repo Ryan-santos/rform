@@ -64,7 +64,7 @@
 
             <template #content>
                 <div
-                    v-if="props.search"
+                    v-if="searchable"
                     :class="props.ui?.list?.search?.container"
                 >
                     <Icon
@@ -114,9 +114,14 @@
      * `multiple` e `modelFull` decidem o que chega ao model, e `search` liga o campo
      * de busca dentro do painel.
      *
+     * `@search` reporta o termo digitado e transfere o filtro para quem escuta —
+     * é o que permite buscar no servidor em vez de na lista já carregada. Ele
+     * liga o campo de busca sozinho.
+     *
      * @example <RSelect name="uf" :options="ufs" multiple search />
+     * @example <RSelect name="form" :options :loading @search="buscar" />
      */
-    import { computed, ref } from "vue";
+    import { computed, ref, watch } from "vue";
 
     import { useField } from "#rform/composables";
     import type { Element, TextProp } from "#rform/types";
@@ -284,6 +289,7 @@
             modelFull?: ModelFull & boolean;
             multiple?: Multiple & boolean;
             search?: boolean;
+            onSearch?: (term: string) => void;
             default?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
             modelValue?: ModelOf<Opts, KeyValue, ModelFull, Multiple>;
             "onUpdate:modelValue"?: ($event: ModelOf<Opts, KeyValue, ModelFull, Multiple>) => void;
@@ -305,6 +311,7 @@
             modelFull?: boolean;
             multiple?: boolean;
             search?: boolean;
+            onSearch?: (term: string) => void;
             default?: unknown;
             modelValue?: unknown;
         };
@@ -407,10 +414,23 @@
     // componente inteiro a `never`.
     const term = ref("");
 
+    // O termo sai por `_props`, e não por `props.value`: é um callback do call site,
+    // como o `onComplete` do `RPin` — não há sentido em um `defineFieldDefaults`
+    // decidir quem responde à busca de um campo.
+    watch(term, (current) => _props.onSearch?.(current));
+
+    // `@search` liga a busca sozinho: o termo só nasce no input, então um
+    // `<RSelect @search>` sem `search` nunca dispararia nada — calado.
+    const searchable = computed(() => props.value.search || Boolean(_props.onSearch));
+
     const filteredOptions = computed<Item[]>(() => {
         const query = term.value.trim().toLowerCase();
 
-        if (!query || !props.value.search) {
+        // Quem escuta `@search` assume o filtro: a lista que voltou já é a resposta
+        // ao termo, e filtrá-la de novo aqui esconderia item que o servidor casou
+        // por um campo que não é a label — um contato achado pelo telefone sumiria
+        // enquanto se digita o telefone.
+        if (!query || !props.value.search || _props.onSearch) {
             return _options.value;
         }
 
